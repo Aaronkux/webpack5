@@ -1,0 +1,9 @@
+import { Link, RequestConfig } from 'umi';
+
+export const request: RequestConfig = {
+  timeout: 10000,
+  // errorConfig: {},
+  middlewares: [],
+  requestInterceptors: [],
+  responseInterceptors: [],
+};
