@@ -1,5 +1,6 @@
 import { defineConfig } from 'umi';
-import { routes } from './route';
+import { resolve } from 'path'
+import { routes } from './config/route';
 
 export default defineConfig({
   nodeModulesTransform: {
@@ -12,9 +13,9 @@ export default defineConfig({
   },
   // remove selectlang warning bug
   locale: {},
-  request: {
-    dataField: 'data',
-  },
+  // request: {
+  //   dataField: 'data',
+  // },
   routes: routes,
   theme: {
     // 'layout-sider-background': '#fff',

@@ -22,6 +22,8 @@
   "dependencies": {
     "@ant-design/pro-layout": "^6.5.0",
     "@umijs/preset-react": "1.x",
+    "path": "^0.12.7",
+    "path-to-regexp": "^1.8.0",
     "umi": "^3.3.9"
   },
   "devDependencies": {

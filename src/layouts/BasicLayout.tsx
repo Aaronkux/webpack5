@@ -1,9 +1,45 @@
-import React from 'react'
+import React from 'react';
+import { Helmet, useModel } from 'umi';
+import { useLocation, useHistory } from 'react-router-dom';
 
-export default function BasicLayout({children}: {children?: React.ReactNode}) {
+import PrimaryLayout from './PrimaryLayout';
+import PublicLayout from './PublicLayout';
+import config from '@/utils/config';
+import { queryLayout } from '@/utils';
+
+interface PropsType {
+  children: React.ReactNode;
+}
+
+const LayoutMap = {
+  primary: PrimaryLayout,
+  public: PublicLayout,
+};
+
+export default function BasicLayout({ children }: PropsType) {
+  const location = useLocation();
+  const history = useHistory();
+  const Container = LayoutMap[queryLayout(config.layouts, location.pathname)];
+  const { initialState, loading, error, refresh, setInitialState } = useModel(
+    '@@initialState',
+  );
+  if (
+    !loading &&
+    (error || initialState?.success === false) &&
+    location.pathname !== '/login'
+  ) {
+    history.replace('/login');
+  } else if (!loading && !error && initialState?.success === true && location.pathname === '/login') {
+    history.replace('/');
+  }
+
   return (
-    <div>
-      {children}
-    </div>
-  )
+    <>
+      <Helmet>
+        <meta charSet="utf-8" />
+        <title>Global Pay System</title>
+      </Helmet>
+      {loading ? 'loading' : <Container>{children}</Container>}
+    </>
+  );
 }
