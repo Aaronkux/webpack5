@@ -5,11 +5,10 @@ export const routes: IBestAFSRoute[] = [
     path: '/',
     component: '@/layouts/index',
     routes: [
-      { exact: true, path: '/', redirect: '/dashboard' },
+      { path: '/', redirect: '/dashboard' },
       {
         path: '/dashboard',
-        exact: true,
-        component: '@/pages/index',
+        component: '@/pages/dashboard',
         name: 'Dashboard',
         icon: 'DashboardOutlined',
       },
@@ -18,6 +17,13 @@ export const routes: IBestAFSRoute[] = [
         component: '@/pages/login/',
         name: 'Login',
         icon: 'ContactsOutlined',
+      },
+      {
+        path: '/',
+        exact: false,
+        component: '@/pages/404/',
+        name: '404',
+        icon: 'FrownOutlined',
       },
     ],
   },

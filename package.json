@@ -21,9 +21,12 @@
   },
   "dependencies": {
     "@ant-design/pro-layout": "^6.5.0",
+    "@types/store": "^2.0.2",
+    "@umijs/hooks": "^1.9.3",
     "@umijs/preset-react": "1.x",
     "path": "^0.12.7",
     "path-to-regexp": "^1.8.0",
+    "store": "^2.0.12",
     "umi": "^3.3.9"
   },
   "devDependencies": {

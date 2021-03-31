@@ -1,7 +1,7 @@
 import React from 'react';
-import { Helmet, useModel } from 'umi';
+import { Helmet } from 'umi';
 import { useLocation, useHistory } from 'react-router-dom';
-
+import store from 'store';
 import PrimaryLayout from './PrimaryLayout';
 import PublicLayout from './PublicLayout';
 import config from '@/utils/config';
@@ -20,16 +20,12 @@ export default function BasicLayout({ children }: PropsType) {
   const location = useLocation();
   const history = useHistory();
   const Container = LayoutMap[queryLayout(config.layouts, location.pathname)];
-  const { initialState, loading, error, refresh, setInitialState } = useModel(
-    '@@initialState',
-  );
-  if (
-    !loading &&
-    (error || initialState?.success === false) &&
-    location.pathname !== '/login'
-  ) {
-    history.replace('/login');
-  } else if (!loading && !error && initialState?.success === true && location.pathname === '/login') {
+  const user = store.get('user');
+
+  if (!user && location.pathname !== '/login') {
+    history.replace('/login', { redirectPath: location.pathname });
+  }
+  if ( user && location.pathname === '/login') {
     history.replace('/');
   }
 
@@ -39,7 +35,7 @@ export default function BasicLayout({ children }: PropsType) {
         <meta charSet="utf-8" />
         <title>Global Pay System</title>
       </Helmet>
-      {loading ? 'loading' : <Container>{children}</Container>}
+      {<Container>{children}</Container>}
     </>
   );
 }

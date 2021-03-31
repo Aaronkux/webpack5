@@ -1,6 +1,8 @@
 import React from 'react';
+import { useHistory } from 'react-router-dom';
 import { useRequest, useModel } from 'umi';
 import { Form, Input, Button, Checkbox } from 'antd';
+import store from 'store';
 
 import { login } from '@/services/user';
 
@@ -19,20 +21,16 @@ const tailLayout = {
   },
 };
 
-const onFinish = (values: any) => {
-  console.log('Success:', values);
-};
-
-const onFinishFailed = (errorInfo: any) => {
-  console.log('Failed:', errorInfo);
-};
-
 export default function Login() {
-  const { setInitialState } = useModel('@@initialState');
-  const { data, loading, run } = useRequest(login, {
+  const history = useHistory();
+  const { loading, run } = useRequest(login, {
     manual: true,
-    onSuccess: (result: any, params) => {
-      setInitialState(result)
+    onSuccess: (data) => {
+      store.set('user', data.users);
+      history.replace('/')
+    },
+    onError: (error) => {
+      console.log(error);
     },
   });
   return (
@@ -42,8 +40,6 @@ export default function Login() {
       initialValues={{
         remember: true,
       }}
-      // onFinish={onFinish}
-      // onFinishFailed={onFinishFailed}
     >
       <Form.Item
         label="Username"
