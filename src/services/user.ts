@@ -17,6 +17,13 @@ export interface UserInfo {
   success: boolean;
 }
 
+export interface UserType {
+  firstname: string;
+  lastname: string;
+  email: string;
+  access: string[];
+}
+
 export function login(username?: string, password?: string) {
   return request<UserInfo>('/api/login', {
     method: 'post',

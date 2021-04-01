@@ -26,7 +26,21 @@ export default function Login() {
   const { loading, run } = useRequest(login, {
     manual: true,
     onSuccess: (data) => {
-      store.set('user', data.users);
+      let access: string[] = [];
+      const {firstname, lastname, email, salesPermission, clientPermission, orderPermission, emailPermission} = data.users
+      if (salesPermission) {
+        access.push('salesPermission')
+      }
+      if (clientPermission) {
+        access.push('clientPermission')
+      }
+      if (orderPermission) {
+        access.push('orderPermission')
+      }
+      if (emailPermission) {
+        access.push('emailPermission')
+      }
+      store.set('user', {firstname, lastname, email, access});
       history.replace('/')
     },
     onError: (error) => {
