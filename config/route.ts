@@ -9,39 +9,42 @@ export const routes: IBestAFSRoute[] = [
       { path: '/', redirect: '/dashboard', hideInMenu: true },
       {
         path: '/dashboard',
-        component: '@/layouts/EmptyLayout',
-        // component: '@/pages/dashboard',
         name: 'Dashboard',
         icon: 'DashboardOutlined',
-        routes: [
-          {
-            path: '/dashboard/dashboard1',
-            component: '@/pages/dashboard',
-            name: 'Dashboard',
-            icon: 'DashboardOutlined',
-          },
-          {
-            path: '/dashboard/test',
-            component: '@/pages/dashboard',
-            name: 'test',
-            icon: 'DashboardOutlined',
-          },
-        ],
+        component: '@/pages/dashboard',
+      },
+      {
+        path: '/order',
+        name: 'Order',
+        icon: 'SnippetsOutlined',
+        redirect: '/order/order1',
+      },
+      {
+        path: '/order/order1',
+        component: '@/pages/order',
+        name: 'All Order',
+        icon: 'ContactsOutlined',
+        parentPath: '/order'
+      },
+      {
+        path: '/order/order2',
+        component: '@/pages/order',
+        name: 'Running Order',
+        icon: 'FrownOutlined',
+        parentPath: '/order'
       },
       {
         path: '/login',
         component: '@/pages/login/',
         name: 'Login',
-        icon: 'ContactsOutlined',
-        hideInMenu: true
+        hideInMenu: true,
       },
       {
         path: '/',
         exact: false,
         component: '@/pages/404/',
         name: '404',
-        icon: 'FrownOutlined',
-        hideInMenu: true
+        hideInMenu: true,
       },
     ],
   },

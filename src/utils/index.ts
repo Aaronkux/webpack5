@@ -3,6 +3,7 @@ import { LayoutConfig } from '@/utils/config';
 import { Pathname } from 'history';
 import { IBestAFSRoute } from '@umijs/plugin-layout';
 import { UserType } from '@/services/user';
+import { IRoute } from '@umijs/core/lib/Route/types';
 
 // query layout
 export function queryLayout(layouts: LayoutConfig[], pathname: Pathname) {
@@ -43,11 +44,16 @@ export function queryLayout(layouts: LayoutConfig[], pathname: Pathname) {
 
   return result;
 }
-
+/***
+ * valid route rule
+ * @route route config
+ * @user user info
+ */
 function validNavRoute(route: IBestAFSRoute, user: UserType) {
   if (
     !route.hideInMenu &&
-    (!route.access || user.access.includes(route.access))
+    (!route.access || user.access.includes(route.access)) &&
+    route.path
   ) {
     return true;
   }
@@ -56,27 +62,73 @@ function validNavRoute(route: IBestAFSRoute, user: UserType) {
 
 // convert route config to navbar needed routelist
 export function route2List(
-  routeList: IBestAFSRoute[],
+  routeList: IBestAFSRoute[] | IRoute[],
   user: UserType,
-): IBestAFSRoute[] {
-  let res = [];
+): [Map<string, IBestAFSRoute>, Map<string, IBestAFSRoute>] {
+  let res = new Map<string, IBestAFSRoute>();
+  let list = new Map<string, IBestAFSRoute>();
   for (let route of routeList) {
     if (validNavRoute(route, user)) {
-      const { name, path, icon } = route;
-      let childRoutes: IBestAFSRoute[] = [];
-      if (route.routes) {
-        for (let childRoute of route.routes) {
-          if (validNavRoute(childRoute, user)) {
-            const { name, path, icon } = childRoute;
-            childRoutes.push({ name, path, icon });
-          }
-        }
-      }
-      if (childRoutes.length > 0) {
-        res.push({ name, path, icon, routes: childRoutes });
+      const { name, path, icon, parentPath } = route;
+      list.set(path as string, route);
+      if (parentPath) {
+        const item = res.get(parentPath);
+        const parentName = item?.name;
+        const parentIcon = item?.icon;
+        const parentRoutes = item?.routes ?? [];
+        res.set(parentPath, {
+          name: parentName,
+          path: parentPath,
+          icon: parentIcon,
+          routes: [...parentRoutes, { name, path, icon, parentPath }],
+        });
       } else {
-        res.push({ name, path, icon });
+        res.set(path as string, { name, path, icon, parentPath });
       }
+    }
+    if (res.size == 0 && route.routes) {
+      return route2List(route.routes, user);
+    }
+  }
+  return [res, list];
+}
+
+/***
+ * valid route rule
+ * @route route config
+ * @user user info
+ */
+function validBreadRoute(route: IBestAFSRoute, user: UserType) {
+  if (
+    !route.hideInMenu &&
+    (!route.access || user.access.includes(route.access)) &&
+    route.component &&
+    route.path
+  ) {
+    return true;
+  }
+  return false;
+}
+
+interface BreadcrumbType {
+  [index: string]: string;
+}
+
+export function route2Bread(
+  routeList: IBestAFSRoute[] | IRoute[],
+  user: UserType,
+): BreadcrumbType {
+  let res: BreadcrumbType = {};
+  for (let route of routeList) {
+    if (validBreadRoute(route, user)) {
+      const { name, path } = route;
+      if (path) res[path] = name;
+      if (route.routes) {
+        res = Object.assign(res, route2Bread(route.routes, user));
+      }
+    }
+    if (route.routes) {
+      return Object.assign(res, route2Bread(route.routes, user));
     }
   }
   return res;
