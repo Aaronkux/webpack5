@@ -1,3 +1,4 @@
 import Sider from './Sider';
+import Bread from './Bread';
 
-export { Sider };
+export { Sider, Bread };
