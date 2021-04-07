@@ -1,6 +1,7 @@
 import React from 'react';
 import { Card, Col, Row } from 'antd';
 import SalesCard from './SalesCard';
+import EditAndCreate from './EditAndCreate';
 import styles from './index.less';
 
 const salesInfo = {
@@ -41,6 +42,7 @@ export default function Sales() {
           <SalesCard salesInfo={salesInfo} />
         </Col>
       </Row>
+      <EditAndCreate />
     </div>
   );
 }

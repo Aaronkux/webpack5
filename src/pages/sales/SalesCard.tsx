@@ -32,7 +32,7 @@ export default function SalesCard({ salesInfo }: PropsType) {
       }}
       actions={[
         <Popover content="orders">
-          <AccountBookOutlined key="setting" />
+            <AccountBookOutlined key="setting" />
         </Popover>,
         <Popover content="edit">
           <EditOutlined key="edit" />

@@ -2,7 +2,7 @@ import React, { useMemo } from 'react';
 import { Layout, Drawer, Menu } from 'antd';
 import { NavLink } from 'react-router-dom';
 import styles from './Sider.less';
-import { interopRequireDefault } from '@/utils/tools';
+import { interopRequireDefault } from '@/utils';
 import { IBestAFSRoute } from '@umijs/plugin-layout';
 import { route2List } from '@/utils';
 import { useResponsive } from '@umijs/hooks';
