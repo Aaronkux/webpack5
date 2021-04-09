@@ -39,7 +39,7 @@ export default function EditAndCreate({ children }: PropsType) {
         <Form.Item label="E-mail" name="email" initialValue="123">
           <Input />
         </Form.Item>
-        <Form.Item label="Active" name="status" valuePropName='checked' initialValue={true}>
+        <Form.Item label="Active " name="status" valuePropName='checked' initialValue={true}>
           <Switch checkedChildren="active" unCheckedChildren="inactive" />
         </Form.Item>
       </Form>

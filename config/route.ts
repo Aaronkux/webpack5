@@ -42,15 +42,38 @@ export const routes: IBestAFSRoute[] = [
       },
 
       {
+        path: '/clients',
+        name: 'Clients',
+        icon: 'ContactsOutlined',
+        redirect: '/clients/individual',
+      },
+      {
+        path: '/clients/individual',
+        component: '@/pages/clients/individual',
+        name: 'Individual Client',
+        icon: 'ContactsOutlined',
+        parentPath: '/clients'
+      },
+      {
+        path: '/clients/company',
+        component: '@/pages/clients/company',
+        name: 'Company Client',
+        icon: 'HomeOutlined',
+        parentPath: '/clients'
+      }, 
+
+      
+
+      {
         path: '/login',
-        component: '@/pages/login/',
+        component: '@/pages/login',
         name: 'Login',
         hideInMenu: true,
       },
       {
         path: '/',
         exact: false,
-        component: '@/pages/404/',
+        component: '@/pages/404',
         name: '404',
         hideInMenu: true,
       },

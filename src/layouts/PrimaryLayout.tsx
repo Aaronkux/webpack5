@@ -14,7 +14,7 @@ export default function PrimaryLayout({ children }: PropsType) {
     <Layout style={{ minHeight: '100vh' }}>
       <Sider collapsed={collapsed} setCollapsed={setCollapsed} />
       <Layout>
-        <Header style={{ backgroundColor: '#fff', height: '82px' }}>
+        <Header style={{ backgroundColor: '#fff', height: '60px' }}>
           <Button type="primary" onClick={() => setCollapsed(!collapsed)}>
             Collapsed
           </Button>
