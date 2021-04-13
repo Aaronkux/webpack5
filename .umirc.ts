@@ -12,7 +12,7 @@ export default defineConfig({
     hmr: true,
   },
   // remove selectlang warning bug
-  locale: {},
+  locale: { default: 'en-US' },
   // request: {
   //   dataField: 'data',
   // },

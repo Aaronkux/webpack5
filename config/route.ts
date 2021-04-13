@@ -49,14 +49,21 @@ export const routes: IBestAFSRoute[] = [
       },
       {
         path: '/clients/individual',
-        component: '@/pages/clients/individual',
+        component: '@/pages/clients',
         name: 'Individual Client',
         icon: 'ContactsOutlined',
         parentPath: '/clients'
       },
       {
+        path: '/clients/individual/:id',
+        component: '@/pages/clients/individual',
+        name: 'Individual Client',
+        icon: 'ContactsOutlined',
+        hideInMenu: true,
+      },
+      {
         path: '/clients/company',
-        component: '@/pages/clients/company',
+        component: '@/pages/clients',
         name: 'Company Client',
         icon: 'HomeOutlined',
         parentPath: '/clients'
