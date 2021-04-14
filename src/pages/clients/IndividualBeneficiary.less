@@ -1,0 +1,68 @@
+.container {
+  margin-top: 20px;
+  display: flex;
+  :global {
+    .ant-menu-item {
+      height: auto;
+      line-height: 25px;
+    }
+  }
+  .form {
+    margin-left: 15px;
+    .title {
+      font-size: 30px;
+      font-weight: 900;
+    }
+  }
+
+  .subNav {
+    height: ~'calc(100vh - 224px)';
+    overflow-y: scroll;
+    overflow-x: hidden;
+    flex-basis: 200px;
+    flex-shrink: 0;
+    background-color: rgba(0, 0, 0, 0);
+    background-clip: text;
+
+    &:hover {
+      background-color: rgba(68, 102, 242, 0.15);
+    }
+
+    &::-webkit-scrollbar {
+      transition: width 10s linear;
+      width: 5px;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background-color: inherit;
+      border-radius: 10px;
+    }
+    .navCard {
+      position: relative;
+      .navCountry {
+        color: #aaaaaa;
+      }
+      .address {
+        font-weight: 900;
+        font-size: 18px;
+        word-break: break-word;
+        white-space:normal;
+      }
+      .contact {
+        color: #aaaaaa;
+      }
+      .selfTag {
+        position: absolute;
+        top: 5px;
+        right: -19px;
+        z-index: 999;
+      }
+    }
+  }
+  .divider {
+    height: ~'calc(100vh - 224px)';;
+  }
+  .content {
+    flex: 1;
+  }
+}

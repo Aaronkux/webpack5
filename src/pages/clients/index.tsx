@@ -1,6 +1,9 @@
 import React from 'react';
-import { Card, Table } from 'antd';
+import { Card, Table, Popover } from 'antd';
 import Filter from './components/Filter';
+import { Link } from 'react-router-dom';
+
+import edit from '@/assets/edit.svg';
 
 const clientlistcolumns = [
   'name',
@@ -130,121 +133,9 @@ const data = [
     annualIncome: '1010',
     country: 'china',
   },
-  {
-    name: 'test1',
-    gender: 'male',
-    email: 'test@test.com',
-    annualIncome: '1010',
-    country: 'china',
-  },
-  {
-    name: 'test1',
-    gender: 'male',
-    email: 'test@test.com',
-    annualIncome: '1010',
-    country: 'china',
-  },
-  {
-    name: 'test1',
-    gender: 'male',
-    email: 'test@test.com',
-    annualIncome: '1010',
-    country: 'china',
-  },
-  {
-    name: 'test1',
-    gender: 'male',
-    email: 'test@test.com',
-    annualIncome: '1010',
-    country: 'china',
-  },
-  {
-    name: 'test1',
-    gender: 'male',
-    email: 'test@test.com',
-    annualIncome: '1010',
-    country: 'china',
-  },
-  {
-    name: 'test1',
-    gender: 'male',
-    email: 'test@test.com',
-    annualIncome: '1010',
-    country: 'china',
-  },
-  {
-    name: 'test1',
-    gender: 'male',
-    email: 'test@test.com',
-    annualIncome: '1010',
-    country: 'china',
-  },
-  {
-    name: 'test1',
-    gender: 'male',
-    email: 'test@test.com',
-    annualIncome: '1010',
-    country: 'china',
-  },
-  {
-    name: 'test1',
-    gender: 'male',
-    email: 'test@test.com',
-    annualIncome: '1010',
-    country: 'china',
-  },
-  {
-    name: 'test1',
-    gender: 'male',
-    email: 'test@test.com',
-    annualIncome: '1010',
-    country: 'china',
-  },
-  {
-    name: 'test1',
-    gender: 'male',
-    email: 'test@test.com',
-    annualIncome: '1010',
-    country: 'china',
-  },
-  {
-    name: 'test1',
-    gender: 'male',
-    email: 'test@test.com',
-    annualIncome: '1010',
-    country: 'china',
-  },
-  {
-    name: 'test1',
-    gender: 'male',
-    email: 'test@test.com',
-    annualIncome: '1010',
-    country: 'china',
-  },
-  {
-    name: 'test1',
-    gender: 'male',
-    email: 'test@test.com',
-    annualIncome: '1010',
-    country: 'china',
-  },
-  {
-    name: 'test1',
-    gender: 'male',
-    email: 'test@test.com',
-    annualIncome: '1010',
-    country: 'china',
-  },
-  {
-    name: 'test1',
-    gender: 'male',
-    email: 'test@test.com',
-    annualIncome: '1010',
-    country: 'china',
-  },
 ];
 
-const columns = clientlistcolumns.map((value) => {
+const dynamicColumns = clientlistcolumns.map((value) => {
   const upperCase = value.charAt(0).toUpperCase() + value.slice(1);
   return {
     title: upperCase,
@@ -252,6 +143,21 @@ const columns = clientlistcolumns.map((value) => {
     key: value,
   };
 });
+const operators = {
+  title: 'Action',
+  dataIndex: 'action',
+  key: 'action',
+  render: (text: string, record: any) => {
+    return (
+      <Link to="#">
+        <Popover content={'edit'}>
+          <img src={edit} alt="logo" />
+        </Popover>
+      </Link>
+    );
+  },
+};
+dynamicColumns.push(operators);
 
 export default function Clients() {
   return (
@@ -261,7 +167,7 @@ export default function Clients() {
       </Card>
       <Card>
         <Table
-          columns={columns}
+          columns={dynamicColumns}
           dataSource={data}
           pagination={{
             defaultCurrent: 1,
