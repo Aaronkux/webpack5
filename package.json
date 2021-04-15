@@ -24,6 +24,7 @@
     "@types/store": "^2.0.2",
     "@umijs/hooks": "^1.9.3",
     "@umijs/preset-react": "1.x",
+    "antd-img-crop": "^3.14.1",
     "path": "^0.12.7",
     "path-to-regexp": "^1.8.0",
     "store": "^2.0.12",
