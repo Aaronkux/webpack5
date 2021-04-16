@@ -1,5 +1,5 @@
-import React from 'react';
-import { Card, Col, Row } from 'antd';
+import React, { useState } from 'react';
+import { Button, Col, Row } from 'antd';
 import SalesCard from './SalesCard';
 import EditAndCreate from './EditAndCreate';
 import styles from './index.less';
@@ -14,6 +14,7 @@ const salesInfo = {
 };
 
 export default function Sales() {
+  const [visible, setVisible] = useState(false);
   return (
     <div className={styles.container}>
       <Row gutter={[8, 8]}>
@@ -42,7 +43,8 @@ export default function Sales() {
           <SalesCard salesInfo={salesInfo} />
         </Col>
       </Row>
-      <EditAndCreate />
+      <Button type='primary' onClick={() => setVisible(true)} >New</Button>
+      <EditAndCreate visible={visible} setVisible={setVisible} />
     </div>
   );
 }

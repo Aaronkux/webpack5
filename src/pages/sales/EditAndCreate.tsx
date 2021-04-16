@@ -5,6 +5,8 @@ import styles from './EditAndCreate.less';
 
 interface PropsType {
   children?: React.ReactNode;
+  visible: boolean
+  setVisible: React.Dispatch<React.SetStateAction<boolean>>
 }
 
 const layout = {
@@ -12,14 +14,15 @@ const layout = {
   wrapperCol: { span: 16 },
 };
 
-export default function EditAndCreate({ children }: PropsType) {
+export default function EditAndCreate({ children, visible, setVisible }: PropsType) {
   const [form] = Form.useForm();
-
+  
   return (
     <Modal
-      visible={true}
+      visible={visible}
       closeIcon={<CloseCircleOutlined />}
       onOk={() => form.submit()}
+      onCancel={() => setVisible(false)}
       okText="Save"
       cancelText="Cancel"
       maskClosable={false}
@@ -39,7 +42,12 @@ export default function EditAndCreate({ children }: PropsType) {
         <Form.Item label="E-mail" name="email" initialValue="123">
           <Input />
         </Form.Item>
-        <Form.Item label="Active " name="status" valuePropName='checked' initialValue={true}>
+        <Form.Item
+          label="Active "
+          name="status"
+          valuePropName="checked"
+          initialValue={true}
+        >
           <Switch checkedChildren="active" unCheckedChildren="inactive" />
         </Form.Item>
       </Form>
