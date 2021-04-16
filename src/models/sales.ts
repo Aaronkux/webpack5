@@ -1,5 +1,6 @@
 import { Effect, ImmerReducer, Subscription } from 'umi';
 import { queryAllSales } from '@/services/sales';
+import type { SalesResponse } from '@/services/sales';
 
 export interface SalesModelState {
   id: number;
@@ -34,12 +35,16 @@ const IndexModel: IndexModelType = {
     *query({ payload }, { call, put }) {},
     *queryAll({ payload }, { call, put }) {
       const { current = 0, pageSize = 8 } = payload;
-      const res = yield call(queryAllSales, current, pageSize);
+      const res: SalesResponse = yield call(queryAllSales, current, pageSize);
+      if (res.success && res.data) {
+        yield put({ type: 'save', payload: res.data });
+      }
     },
   },
   reducers: {
     save(state, action) {
-      state.name = action.payload;
+      console.log(state);
+      state = action.payload;
     },
     // 启用 immer 之后
     // save(state, action) {
@@ -50,15 +55,8 @@ const IndexModel: IndexModelType = {
     setup({ dispatch, history }) {
       dispatch({
         type: 'queryAll',
-        payload: {}
+        payload: {},
       });
-      // return history.listen(({ pathname }) => {
-      //   if (pathname === '/') {
-      //     dispatch({
-      //       type: 'query',
-      //     });
-      //   }
-      // });
     },
   },
 };

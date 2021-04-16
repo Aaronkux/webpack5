@@ -29,20 +29,4 @@ export default {
     ],
     success: true,
   }),
-  // data: [
-  //   {
-  //     id: 1,
-  //     name: Random.name(),
-  //     email: 'test1@gmail.com',
-  //     photo: 'test',
-  //     isActive: true,
-  //   },
-  //   {
-  //     id: 2,
-  //     name: 'test2',
-  //     email: 'test2@gmail.com',
-  //     photo: 'test2',
-  //     isActive: true,
-  //   },
-  // ],
 };

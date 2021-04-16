@@ -1,7 +1,7 @@
-import { request, ErrorShowType } from 'umi';
+import { request } from 'umi';
 import type { ResponseType } from './index';
 
-interface SalesResponse {
+interface SalesInfo {
   id: number;
   name: string;
   email: string;
@@ -9,13 +9,14 @@ interface SalesResponse {
   isActive: boolean;
 }
 
-export async function queryAllSales(current: number, pageSize: number) {
-  const res = await request<ResponseType<SalesResponse[]>>('/api/sales', {
+export type SalesResponse = ResponseType<SalesInfo[]>;
+
+export function queryAllSales(current: number, pageSize: number) {
+  return request<SalesResponse>('/api/sales', {
     method: 'get',
     params: {
       current,
       pageSize,
     },
   });
-  console.log(res);
 }
