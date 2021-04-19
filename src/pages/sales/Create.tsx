@@ -1,12 +1,12 @@
 import React from 'react';
 import { Modal, Form, Input, Switch } from 'antd';
 import { CloseCircleOutlined } from '@ant-design/icons';
-import styles from './EditAndCreate.less';
+import Avatar from '@/components/Avatar';
+import styles from './Create.less';
 
 interface PropsType {
-  children?: React.ReactNode;
-  visible: boolean
-  setVisible: React.Dispatch<React.SetStateAction<boolean>>
+  visible: boolean;
+  onCancelHandler: () => void;
 }
 
 const layout = {
@@ -14,20 +14,19 @@ const layout = {
   wrapperCol: { span: 16 },
 };
 
-export default function EditAndCreate({ children, visible, setVisible }: PropsType) {
+export default function EditAndCreate({ visible, onCancelHandler }: PropsType) {
   const [form] = Form.useForm();
-  
   return (
     <Modal
       visible={visible}
       closeIcon={<CloseCircleOutlined />}
       onOk={() => form.submit()}
-      onCancel={() => setVisible(false)}
-      okText="Save"
+      onCancel={onCancelHandler}
+      okText={'Add'}
       cancelText="Cancel"
-      maskClosable={false}
+      maskClosable={true}
       className={styles.container}
-      width={1000}
+      width={520}
       // confirmLoading={true}
     >
       <Form
@@ -36,18 +35,16 @@ export default function EditAndCreate({ children, visible, setVisible }: PropsTy
         form={form}
         onFinish={(values) => console.log(values)}
       >
-        <Form.Item label="Name" name="name" initialValue="aaron">
+        <Form.Item label="Photo" name="photo">
+          <Avatar />
+        </Form.Item>
+        <Form.Item label="Name" name="name">
           <Input />
         </Form.Item>
-        <Form.Item label="E-mail" name="email" initialValue="123">
+        <Form.Item label="E-mail" name="email">
           <Input />
         </Form.Item>
-        <Form.Item
-          label="Active "
-          name="status"
-          valuePropName="checked"
-          initialValue={true}
-        >
+        <Form.Item label="Active " name="status" valuePropName="checked">
           <Switch checkedChildren="active" unCheckedChildren="inactive" />
         </Form.Item>
       </Form>

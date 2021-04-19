@@ -18,15 +18,28 @@ export default {
     success: true,
   },
   'GET /api/sales': Mock.mock({
-    'data|30-50': [
-      {
-        id: '@id',
-        name: '@name',
-        email: '@email',
-        photo: '@IMG',
-        isActive: '@boolean',
-      },
-    ],
+    data: {
+      'sales|8': [
+        {
+          id: '@id',
+          name: '@name',
+          email: '@email',
+          photo: '@IMG',
+          isActive: '@boolean(1, 1, true)',
+        },
+      ],
+      total: 100,
+    },
+    success: true,
+  }),
+  'GET /api/sales/:id': Mock.mock({
+    'data': {
+      id: '@id',
+      name: '@name',
+      email: '@email',
+      photo: '@IMG',
+      isActive: '@boolean(1, 1, true)',
+    },
     success: true,
   }),
 };

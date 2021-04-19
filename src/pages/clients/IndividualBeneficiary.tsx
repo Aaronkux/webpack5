@@ -72,7 +72,7 @@ export default function IndividualBeneficiary() {
   const [form] = Form.useForm();
   const location = useLocation();
   const history = useHistory();
-  let params = search2Param(location.search);
+  let params = search2Param();
   const selectedParam = params.q
     ? params.q
     : mockData[0]?.key?.toString() ?? null;

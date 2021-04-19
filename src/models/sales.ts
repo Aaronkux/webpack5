@@ -1,13 +1,10 @@
 import { Effect, ImmerReducer, Subscription } from 'umi';
 import { queryAllSales } from '@/services/sales';
-import type { SalesResponse } from '@/services/sales';
+import type { SalesResponse, SalesInfo } from '@/services/sales';
 
 export interface SalesModelState {
-  id: number;
-  name: string;
-  email: string;
-  photo: string;
-  isActive: boolean;
+  sales: SalesInfo[];
+  total: number;
 }
 
 export interface QueryAllSalesType {
@@ -17,7 +14,7 @@ export interface QueryAllSalesType {
 
 export interface IndexModelType {
   namespace: 'sales';
-  state: SalesModelState[];
+  state: SalesModelState;
   effects: {
     query: Effect;
     queryAll: Effect;
@@ -25,16 +22,16 @@ export interface IndexModelType {
   reducers: {
     save: ImmerReducer<SalesModelState>;
   };
-  subscriptions: { setup: Subscription };
+  // subscriptions: { setup: Subscription };
 }
 
 const IndexModel: IndexModelType = {
   namespace: 'sales',
-  state: [],
+  state: { sales: [], total: 0 },
   effects: {
     *query({ payload }, { call, put }) {},
     *queryAll({ payload }, { call, put }) {
-      const { current = 0, pageSize = 8 } = payload;
+      const { current, pageSize } = payload;
       const res: SalesResponse = yield call(queryAllSales, current, pageSize);
       if (res.success && res.data) {
         yield put({ type: 'save', payload: res.data });
@@ -43,22 +40,18 @@ const IndexModel: IndexModelType = {
   },
   reducers: {
     save(state, action) {
-      console.log(state);
       state = action.payload;
-    },
-    // 启用 immer 之后
-    // save(state, action) {
-    //   state.name = action.payload;
-    // },
-  },
-  subscriptions: {
-    setup({ dispatch, history }) {
-      dispatch({
-        type: 'queryAll',
-        payload: {},
-      });
+      return state;
     },
   },
+  // subscriptions: {
+  //   setup({ dispatch, history }) {
+  //     dispatch({
+  //       type: 'queryAll',
+  //       payload: {},
+  //     });
+  //   },
+  // },
 };
 
 export default IndexModel;

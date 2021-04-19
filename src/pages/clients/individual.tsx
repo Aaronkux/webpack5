@@ -30,9 +30,8 @@ const layout = {
 
 export default function Individual() {
   const [form] = Form.useForm();
-  const location = useLocation();
   const history = useHistory();
-  let params = search2Param(location.search);
+  let params = search2Param();
   const selectedParam = params.p ? params.p : 'remitter';
   const [isRemitter, setIsRemitter] = useState(
     () => selectedParam == 'remitter',
@@ -45,7 +44,7 @@ export default function Individual() {
           <Menu.Item
             onClick={() => {
               params.p = 'remitter';
-              history.replace(location.pathname + param2Search(params));
+              history.replace(param2Search(params));
               setIsRemitter(true);
             }}
             key="remitter"
@@ -55,7 +54,7 @@ export default function Individual() {
           <Menu.Item
             onClick={() => {
               params.p = 'beneficiary';
-              history.replace(location.pathname + param2Search(params));
+              history.replace(param2Search(params));
               setIsRemitter(false);
             }}
             key="beneficiary"

@@ -3,24 +3,21 @@ import { Card, Avatar, Skeleton, Popover, Tag } from 'antd';
 import { EditOutlined, AccountBookOutlined } from '@ant-design/icons';
 import styles from './SalesCard.less';
 import { SalesInfo } from '@/services/sales';
-//test
-function delay(cb: () => void, time: number) {
-  setTimeout(cb, time);
-}
 
 interface PropsType {
   salesInfo: SalesInfo;
+  loading: boolean;
+  onCardClick: React.MouseEventHandler<HTMLDivElement>;
 }
 
-export default function SalesCard({ salesInfo }: PropsType) {
-  const tagColor = salesInfo.active ? '#2db7f5' : '#f50';
-  const tagText = salesInfo.active ? 'active' : 'inactive';
-  // test
-  const [loading, setLoading] = useState(true);
-  // test
-  useEffect(() => {
-    delay(() => setLoading(false), 1000);
-  }, []);
+export default function SalesCard({
+  salesInfo,
+  loading,
+  onCardClick,
+}: PropsType) {
+  const tagColor = salesInfo.isActive ? '#2db7f5' : '#f50';
+  const tagText = salesInfo.isActive ? 'active' : 'inactive';
+
   return (
     <Card
       hoverable
@@ -32,10 +29,15 @@ export default function SalesCard({ salesInfo }: PropsType) {
       }}
       actions={[
         <Popover content="orders">
-            <AccountBookOutlined key="setting" />
+          <AccountBookOutlined
+            onClick={(e) => {
+              console.log('click orders');
+            }}
+            key="setting"
+          />
         </Popover>,
         <Popover content="edit">
-          <EditOutlined key="edit" />
+          <EditOutlined onClick={onCardClick} key="edit" />
         </Popover>,
       ]}
     >

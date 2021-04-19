@@ -139,13 +139,14 @@ export const interopRequireDefault = (obj: any) => {
 };
 
 export interface ParamsObjType {
-  [key: string]: string;
+  [key: string]: any;
 }
 
-export const search2Param = (search: string): ParamsObjType => {
-  if (!search) {
-    return {};
-  }
+export const search2Param = (): ParamsObjType => {
+  const search = window.location.search;
+  if (!search) return {};
+  if (search.charAt(0) !== '?') return {};
+
   const paramsArr = search.substring(1).split('&');
   let res: any = {};
   for (let param of paramsArr) {
@@ -185,5 +186,5 @@ export const param2Search = (params: ParamsObjType): string => {
     }
     res += `${key}=${value}`;
   }
-  return res;
+  return window.location.pathname + res;
 };
