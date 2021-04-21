@@ -1,8 +1,17 @@
 import React, { useRef, useState } from 'react';
-import { Upload, Slider, message, Avatar } from 'antd';
-import { UserOutlined } from '@ant-design/icons';
+import { Modal, Upload, message } from 'antd';
+import { PlusOutlined } from '@ant-design/icons';
 import type { UploadFile, RcFile } from 'antd/lib/upload/interface';
 import styles from './index.less';
+
+function getBase64(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = (error) => reject(error);
+  });
+}
 
 const isUnderLimit = (size: number, limitMB: number) => {
   if (size / 1024 / 1024 < limitMB) return true;
@@ -27,6 +36,8 @@ export default function UploadPicture({
   value,
   onChange,
 }: PropsType) {
+  const [visible, setVisible] = useState(false);
+  const [previewImage, setPreviewImage] = useState<string>();
   const extension = typeof value === 'string' ? value.split('.').pop() : '';
   const initialextension = extension ? `image/${extension ?? 'jpeg'}` : '';
   const initialImgName = extension ? `avatar.${extension ?? 'jpg'}` : '';
@@ -43,6 +54,7 @@ export default function UploadPicture({
   const [fileList, setFileList] = useState(() =>
     typeof value === 'string' ? [initialImg] : [],
   );
+
   const onChangeHandler = async ({
     file,
     fileList: newFileList,
@@ -52,6 +64,14 @@ export default function UploadPicture({
   }) => {
     onChange?.(file.originFileObj as File);
     setFileList(newFileList);
+  };
+
+  const onPreview = async (file: UploadFile) => {
+    if (!file.url && !file.preview) {
+      file.preview = await getBase64(file.originFileObj as File);
+    }
+    setPreviewImage(file.url || file.preview);
+    setVisible(true);
   };
 
   const beforeUpload = (file: RcFile) => {
@@ -76,30 +96,17 @@ export default function UploadPicture({
       <Upload
         accept={acceptableTypes.join(', ')}
         maxCount={1}
-        listType="text"
+        listType="picture-card"
         fileList={fileList}
         onChange={onChangeHandler}
         beforeUpload={beforeUpload}
-        onPreview={() => false}
-        className={styles.container}
+        onPreview={onPreview}
       >
-        {fileList.length > 0 ? (
-          <img
-            ref={imgRef}
-            style={{
-              width: '128px',
-              height: '128px',
-              cursor: 'pointer',
-              display: fileList[0] ? 'initial' : 'none',
-            }}
-            src={fileList[0].url}
-            alt="avatar"
-          />
-        ) : (
-          <Avatar shape="square" size={128} icon={<UserOutlined />} />
-        )}
+        {fileList.length < 1 && '+ Upload'}
       </Upload>
-      <Slider style={{ display: 'none' }} />
+      <Modal visible={visible} footer={null} onCancel={() => setVisible(false)}>
+        <img alt="example" style={{ width: '100%' }} src={previewImage} />
+      </Modal>
     </div>
   );
 }

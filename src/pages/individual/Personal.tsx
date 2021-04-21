@@ -258,48 +258,28 @@ const Personal = ({
           <Divider />
           <Row>
             <Col xs={24} sm={24} md={24} lg={12} xl={12}>
-              <Form.Item
-                label="Front"
-                name="id1front"
-                initialValue={individualClientDetail.id1front}
-              >
+              <Form.Item label="Front" name="id1front" initialValue={individualClientDetail.id1front}>
                 <UploadPicture />
               </Form.Item>
             </Col>
             <Col xs={24} sm={24} md={24} lg={12} xl={12}>
-              <Form.Item
-                label="Back"
-                name="id1back"
-                initialValue={individualClientDetail.id1back}
-              >
+              <Form.Item label="Back" name="id1back"  initialValue={individualClientDetail.id1back}>
+              <UploadPicture />
+              </Form.Item>
+            </Col>
+            <Col xs={24} sm={24} md={24} lg={12} xl={12}>
+              <Form.Item label="Face" name="faceimage"  initialValue={individualClientDetail.faceImage}>
+              <UploadPicture />
+              </Form.Item>
+            </Col>
+            <Col xs={24} sm={24} md={24} lg={12} xl={12}>
+              <Form.Item label="FaceTest" name="facetest"  initialValue={individualClientDetail.faceTest}>
                 <UploadPicture />
               </Form.Item>
             </Col>
             <Col xs={24} sm={24} md={24} lg={12} xl={12}>
-              <Form.Item
-                label="Face"
-                name="faceimage"
-                initialValue={individualClientDetail.faceImage}
-              >
-                <UploadPicture />
-              </Form.Item>
-            </Col>
-            <Col xs={24} sm={24} md={24} lg={12} xl={12}>
-              <Form.Item
-                label="FaceTest"
-                name="facetest"
-                initialValue={individualClientDetail.faceTest}
-              >
-                <UploadPicture />
-              </Form.Item>
-            </Col>
-            <Col xs={24} sm={24} md={24} lg={12} xl={12}>
-              <Form.Item
-                label="Signature"
-                name="signature"
-                initialValue={individualClientDetail.signature}
-              >
-                <UploadPicture />
+              <Form.Item label="Signature" name="signature"  initialValue={individualClientDetail.signature}>
+              <UploadPicture />
               </Form.Item>
             </Col>
             <Col xs={24} sm={24} md={24} lg={12} xl={12}>
