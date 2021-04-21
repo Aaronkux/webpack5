@@ -17,7 +17,6 @@ export const routes: IBestAFSRoute[] = [
         path: '/order',
         name: 'Order',
         icon: 'SnippetsOutlined',
-        redirect: '/order/order1',
       },
       {
         path: '/order/order1',
@@ -45,34 +44,27 @@ export const routes: IBestAFSRoute[] = [
         path: '/clients',
         name: 'Clients',
         icon: 'ContactsOutlined',
-        redirect: '/clients/individual',
       },
       {
         path: '/clients/individual',
-        component: '@/pages/clients',
+        component: '@/pages/individual',
         name: 'Individual Client',
         icon: 'ContactsOutlined',
         parentPath: '/clients'
       },
       {
         path: '/clients/individual/:id',
-        component: '@/pages/clients/individual',
+        component: '@/pages/individual/Detail',
         name: 'Individual Client',
         icon: 'ContactsOutlined',
         hideInMenu: true,
       },
       {
         path: '/clients/company',
-        component: '@/pages/clients',
+        component: '@/pages/individual',
         name: 'Company Client',
         icon: 'HomeOutlined',
         parentPath: '/clients'
-      }, 
-      {
-        path: '/test',
-        component: '@/pages/test',
-        name: 'Test',
-        icon: 'HomeOutlined',
       }, 
       {
         path: '/login',

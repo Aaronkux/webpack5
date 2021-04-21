@@ -27,5 +27,6 @@ export interface UserType {
 export function login(username?: string, password?: string) {
   return request<UserInfo>('/api/login', {
     method: 'post',
+    body: JSON.stringify({ username, password }),
   });
 }

@@ -12,7 +12,7 @@ import {
 } from 'antd';
 import { useLocation, useHistory } from 'react-router-dom';
 import moment from 'moment';
-import styles from './IndividualBeneficiary.less';
+import styles from './Beneficiary.less';
 import { search2Param, param2Search } from '@/utils';
 
 const { Option } = Select;
@@ -68,7 +68,7 @@ const data = [
   },
 ];
 
-export default function IndividualBeneficiary() {
+const Beneficiary = () => {
   const [form] = Form.useForm();
   const location = useLocation();
   const history = useHistory();
@@ -96,7 +96,13 @@ export default function IndividualBeneficiary() {
                 className={styles.address}
               >{`${item.address}, ${item.suburb}`}</p>
               <p className={styles.contact}>{`${item.name} ${item.phone}`}</p>
-              {item.type === 0 ? <Tag className={styles.selfTag} color="#f50">Self</Tag> : ''}
+              {item.type === 0 ? (
+                <Tag className={styles.selfTag} color="#f50">
+                  Self
+                </Tag>
+              ) : (
+                ''
+              )}
             </div>
           </Menu.Item>
         ))}
@@ -242,4 +248,5 @@ export default function IndividualBeneficiary() {
       </div>
     </div>
   );
-}
+};
+export default React.memo(Beneficiary);

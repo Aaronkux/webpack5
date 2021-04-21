@@ -1,6 +1,5 @@
 import React, { useRef, useState } from 'react';
 import { Upload, Slider, message, Avatar } from 'antd';
-import type { FormInstance } from 'antd';
 import { UserOutlined } from '@ant-design/icons';
 import type { UploadFile, RcFile } from 'antd/lib/upload/interface';
 import ImgCrop from 'antd-img-crop';

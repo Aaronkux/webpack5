@@ -16,12 +16,9 @@ const layout = {
   wrapperCol: { span: 16 },
 };
 
-export default function EditAndCreate({
-  saleId,
-  onCancelHandler,
-}: PropsType) {
+export default function EditAndCreate({ saleId, onCancelHandler }: PropsType) {
   const [form] = Form.useForm();
-  const { data, error, loading } = useRequest(() => querySale(saleId));
+  const { data, error, loading, run } = useRequest(() => querySale(saleId));
   return (
     <Modal
       visible={true}

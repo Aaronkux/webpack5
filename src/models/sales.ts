@@ -12,7 +12,7 @@ export interface QueryAllSalesType {
   pageSize: number;
 }
 
-export interface IndexModelType {
+export interface SalesModelType {
   namespace: 'sales';
   state: SalesModelState;
   effects: {
@@ -25,7 +25,7 @@ export interface IndexModelType {
   // subscriptions: { setup: Subscription };
 }
 
-const IndexModel: IndexModelType = {
+const SalesModel: SalesModelType = {
   namespace: 'sales',
   state: { sales: [], total: 0 },
   effects: {
@@ -54,4 +54,4 @@ const IndexModel: IndexModelType = {
   // },
 };
 
-export default IndexModel;
+export default SalesModel;

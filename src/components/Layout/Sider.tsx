@@ -73,7 +73,7 @@ const MenuComponent = ({
       collapsed={canCollapsed}
       trigger={null}
       collapsible
-      width="280"
+      width="250"
       theme="light"
       breakpoint="lg"
       className={styles.sider}

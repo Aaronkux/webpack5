@@ -27,26 +27,38 @@ export default function Login() {
     manual: true,
     onSuccess: (data) => {
       let access: string[] = [];
-      const {firstname, lastname, email, salesPermission, clientPermission, orderPermission, emailPermission} = data.users
+      const {
+        firstname,
+        lastname,
+        email,
+        salesPermission,
+        clientPermission,
+        orderPermission,
+        emailPermission,
+      } = data.users;
       if (salesPermission) {
-        access.push('salesPermission')
+        access.push('salesPermission');
       }
       if (clientPermission) {
-        access.push('clientPermission')
+        access.push('clientPermission');
       }
       if (orderPermission) {
-        access.push('orderPermission')
+        access.push('orderPermission');
       }
       if (emailPermission) {
-        access.push('emailPermission')
+        access.push('emailPermission');
       }
-      store.set('user', {firstname, lastname, email, access});
-      history.replace('/')
+      store.set('user', { firstname, lastname, email, access });
+      history.replace('/');
     },
     onError: (error) => {
       console.log(error);
     },
   });
+
+  const onFinishHandler = (values: any) => {
+    run(values.username, values.password);
+  };
   return (
     <Form
       {...layout}
@@ -54,6 +66,7 @@ export default function Login() {
       initialValues={{
         remember: true,
       }}
+      onFinish={onFinishHandler}
     >
       <Form.Item
         label="Username"
@@ -81,15 +94,15 @@ export default function Login() {
         <Input.Password />
       </Form.Item>
 
-      <Form.Item {...tailLayout} name="remember" valuePropName="checked">
+      {/* <Form.Item {...tailLayout} name="remember" valuePropName="checked">
         <Checkbox>Remember me</Checkbox>
-      </Form.Item>
+      </Form.Item> */}
 
       <Form.Item {...tailLayout}>
         <Button
           type="primary"
           htmlType="submit"
-          onClick={() => run('test', 'test')}
+          // onClick={() => run('test', 'test')}
         >
           Submit
         </Button>

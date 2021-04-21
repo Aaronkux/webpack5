@@ -1,9 +1,10 @@
 import React, { useRef, useState } from 'react';
-import { Upload, Slider, message } from 'antd';
+import { Upload, Slider, message, Avatar } from 'antd';
+import { UserOutlined } from '@ant-design/icons';
 import type { UploadFile, RcFile } from 'antd/lib/upload/interface';
-import ImgCrop from 'antd-img-crop';
+import styles from './index.less';
 
-const isUnderLimit = (size: number, limitMB: 5) => {
+const isUnderLimit = (size: number, limitMB: number) => {
   if (size / 1024 / 1024 < limitMB) return true;
   return false;
 };
@@ -13,26 +14,43 @@ const isAcceptImgType = (type: string, acceptableTypes: string[]) => {
   return false;
 };
 
-export default function Test() {
-  const acceptableTypes = ['image/jpeg', 'image/png'];
-  const limitMB = 5;
+interface PropsType {
+  acceptableTypes?: string[];
+  limitMB?: number;
+  value?: string | File;
+  onChange?: (value: File) => void;
+}
 
+export default function UploadPicture({
+  acceptableTypes = ['image/jpeg', 'image/png'],
+  limitMB = 5,
+  value,
+  onChange,
+}: PropsType) {
+  const extension = typeof value === 'string' ? value.split('.').pop() : '';
+  const initialextension = extension ? `image/${extension ?? 'jpeg'}` : '';
+  const initialImgName = extension ? `avatar.${extension ?? 'jpg'}` : '';
   const initialImg: UploadFile = {
     uid: '-1',
-    name: 'image.png',
+    name: initialImgName,
     status: 'done',
-    url:
-      'https://zos.alipayobjects.com/rmsportal/jkjgkEfvpUPVyRjUImniVslZfWPnJuuZ.png',
-    type: 'image/png',
+    url: typeof value === 'string' ? value : '',
+    type: initialextension,
     size: 1,
   };
+
   const imgRef = useRef<HTMLImageElement>(null);
-  const [fileList, setFileList] = useState([initialImg]);
-  const onChange = async ({
+  const [fileList, setFileList] = useState(() =>
+    typeof value === 'string' ? [initialImg] : [],
+  );
+  const onChangeHandler = async ({
+    file,
     fileList: newFileList,
   }: {
+    file: UploadFile;
     fileList: UploadFile[];
   }) => {
+    onChange?.(file.originFileObj as File);
     setFileList(newFileList);
   };
 
@@ -54,27 +72,23 @@ export default function Test() {
     return false;
   };
   return (
-    <ImgCrop shape="round">
+    <div>
       <Upload
         accept={acceptableTypes.join(', ')}
         maxCount={1}
         listType="text"
         fileList={fileList}
-        onChange={onChange}
+        onChange={onChangeHandler}
         beforeUpload={beforeUpload}
         onPreview={() => false}
-        onRemove={(file) => {
-          setFileList([]);
-          return true;
-        }}
+        className={styles.container}
       >
         {fileList.length > 0 ? (
           <img
             ref={imgRef}
             style={{
-              width: '80px',
-              height: '80px',
-              borderRadius: '50%',
+              width: '128px',
+              height: '128px',
               cursor: 'pointer',
               display: fileList[0] ? 'initial' : 'none',
             }}
@@ -82,12 +96,10 @@ export default function Test() {
             alt="avatar"
           />
         ) : (
-          ''
+          <Avatar shape="square" size={128} icon={<UserOutlined />} />
         )}
-        {!fileList[0] ? '+ Upload' : ''}
       </Upload>
-      {/* 组件样式按需加载，为了加载裁切modal页面的slider引入 */}
       <Slider style={{ display: 'none' }} />
-    </ImgCrop>
+    </div>
   );
 }
