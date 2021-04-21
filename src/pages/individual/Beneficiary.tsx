@@ -9,8 +9,11 @@ import {
   DatePicker,
   Tag,
   Select,
+  Button,
+  Modal,
 } from 'antd';
 import { useLocation, useHistory } from 'react-router-dom';
+import NormalText from './components/normalText';
 import moment from 'moment';
 import styles from './Beneficiary.less';
 import { search2Param, param2Search } from '@/utils';
@@ -72,6 +75,8 @@ const Beneficiary = () => {
   const [form] = Form.useForm();
   const location = useLocation();
   const history = useHistory();
+  const [editing, setEditing] = useState(false);
+  const [modalVisible, setModalVisible] = useState(false);
   let params = search2Param();
   const selectedParam = params.q
     ? params.q
@@ -115,22 +120,63 @@ const Beneficiary = () => {
           form={form}
           onFinish={(values) => console.log(values)}
         >
-          <h1 className={styles.title}>Remit Info</h1>
+          <div className={styles.titleAndButton}>
+            <h1 className={styles.title}>Remit Information</h1>
+            <Row gutter={[16, 0]} justify="end">
+              <Col>
+                <Button
+                  type="primary"
+                  htmlType="reset"
+                  onClick={() => form.resetFields()}
+                >
+                  Reset
+                </Button>
+              </Col>
+              <Col>
+                {editing ? (
+                  <Button type="primary" onClick={() => setModalVisible(true)}>
+                    Cancel
+                  </Button>
+                ) : (
+                  <Button type="primary" onClick={() => setEditing(true)}>
+                    Edit
+                  </Button>
+                )}
+              </Col>
+              <Col>
+                <Form.Item>
+                  <Button type="primary" htmlType="submit">
+                    Save
+                  </Button>
+                </Form.Item>
+              </Col>
+            </Row>
+          </div>
           <Divider />
           <Row>
             <Col xs={24} sm={24} md={24} lg={24} xl={12}>
               <Form.Item label="Type" name="type" initialValue={0}>
-                <Select onChange={(value: number) => setRemitType(value)}>
-                  <Option value={0}>Remit to my personal account</Option>
-                  <Option value={1}>Remit to other's account</Option>
-                </Select>
+                {editing ? (
+                  <Select onChange={(value: number) => setRemitType(value)}>
+                    <Option value={0}>Remit to my personal account</Option>
+                    <Option value={1}>Remit to other's account</Option>
+                  </Select>
+                ) : (
+                  <NormalText
+                    transform={(value) =>
+                      value === 0
+                        ? 'Remit to my personal account'
+                        : `Remit to other's account`
+                    }
+                  />
+                )}
               </Form.Item>
             </Col>
             {remitType === 1 ? (
               <>
                 <Col xs={24} sm={24} md={24} lg={24} xl={12}>
                   <Form.Item label="Name" name="name" initialValue="aaron">
-                    <Input />
+                    {editing ? <Input /> : <NormalText />}
                   </Form.Item>
                 </Col>
                 <Col xs={24} sm={24} md={24} lg={24} xl={12}>
@@ -139,7 +185,7 @@ const Beneficiary = () => {
                     name="dob"
                     initialValue={moment('1999/1/1')}
                   >
-                    <DatePicker style={{ width: '100%' }} />
+                    <DatePicker disabled={!editing} style={{ width: '100%' }} />
                   </Form.Item>
                 </Col>
                 <Col xs={24} sm={24} md={24} lg={24} xl={12}>
@@ -148,17 +194,17 @@ const Beneficiary = () => {
                     name="address"
                     initialValue="aaron"
                   >
-                    <Input />
+                    {editing ? <Input /> : <NormalText />}
                   </Form.Item>
                 </Col>
                 <Col xs={24} sm={24} md={24} lg={24} xl={12}>
                   <Form.Item label="Suburb" name="suburb" initialValue="aaron">
-                    <Input />
+                    {editing ? <Input /> : <NormalText />}
                   </Form.Item>
                 </Col>
                 <Col xs={24} sm={24} md={24} lg={24} xl={12}>
                   <Form.Item label="State" name="state" initialValue="aaron">
-                    <Input />
+                    {editing ? <Input /> : <NormalText />}
                   </Form.Item>
                 </Col>
                 <Col xs={24} sm={24} md={24} lg={24} xl={12}>
@@ -167,7 +213,7 @@ const Beneficiary = () => {
                     name="postcode"
                     initialValue="aaron"
                   >
-                    <Input />
+                    {editing ? <Input /> : <NormalText />}
                   </Form.Item>
                 </Col>
                 <Col xs={24} sm={24} md={24} lg={24} xl={12}>
@@ -176,12 +222,12 @@ const Beneficiary = () => {
                     name="country"
                     initialValue="aaron"
                   >
-                    <Input />
+                    {editing ? <Input /> : <NormalText />}
                   </Form.Item>
                 </Col>
                 <Col xs={24} sm={24} md={24} lg={24} xl={12}>
                   <Form.Item label="Phone" name="phone" initialValue="aaron">
-                    <Input />
+                    {editing ? <Input /> : <NormalText />}
                   </Form.Item>
                 </Col>
                 <Col xs={24} sm={24} md={24} lg={24} xl={12}>
@@ -190,7 +236,7 @@ const Beneficiary = () => {
                     name="occupation"
                     initialValue="aaron"
                   >
-                    <Input />
+                    {editing ? <Input /> : <NormalText />}
                   </Form.Item>
                 </Col>
                 <Col xs={24} sm={24} md={24} lg={24} xl={12}>
@@ -199,7 +245,7 @@ const Beneficiary = () => {
                     name="relationship"
                     initialValue="aaron"
                   >
-                    <Input />
+                    {editing ? <Input /> : <NormalText />}
                   </Form.Item>
                 </Col>
               </>
@@ -208,7 +254,7 @@ const Beneficiary = () => {
             )}
             <Col xs={24} sm={24} md={24} lg={24} xl={12}>
               <Form.Item label="Bank Name" name="bankName" initialValue="aaron">
-                <Input />
+                {editing ? <Input /> : <NormalText />}
               </Form.Item>
             </Col>
             <Col xs={24} sm={24} md={24} lg={24} xl={12}>
@@ -217,7 +263,7 @@ const Beneficiary = () => {
                 name="accountName"
                 initialValue="aaron"
               >
-                <Input />
+                {editing ? <Input /> : <NormalText />}
               </Form.Item>
             </Col>
             <Col xs={24} sm={24} md={24} lg={24} xl={12}>
@@ -226,12 +272,12 @@ const Beneficiary = () => {
                 name="accountNumber"
                 initialValue="aaron"
               >
-                <Input />
+                {editing ? <Input /> : <NormalText />}
               </Form.Item>
             </Col>
             <Col xs={24} sm={24} md={24} lg={24} xl={12}>
               <Form.Item label="BSB" name="bsb" initialValue="aaron">
-                <Input />
+                {editing ? <Input /> : <NormalText />}
               </Form.Item>
             </Col>
             <Col xs={24} sm={24} md={24} lg={24} xl={12}>
@@ -240,12 +286,54 @@ const Beneficiary = () => {
                 name="branchName"
                 initialValue="aaron"
               >
-                <Input />
+                {editing ? <Input /> : <NormalText />}
+              </Form.Item>
+            </Col>
+          </Row>
+          <Row gutter={[16, 0]} justify="end">
+            <Col>
+              <Button
+                type="primary"
+                htmlType="reset"
+                onClick={() => form.resetFields()}
+              >
+                Reset
+              </Button>
+            </Col>
+            <Col>
+              {editing ? (
+                <Button type="primary" onClick={() => setModalVisible(true)}>
+                  Cancel
+                </Button>
+              ) : (
+                <Button type="primary" onClick={() => setEditing(true)}>
+                  Edit
+                </Button>
+              )}
+            </Col>
+            <Col>
+              <Form.Item>
+                <Button type="primary" htmlType="submit">
+                  Save
+                </Button>
               </Form.Item>
             </Col>
           </Row>
         </Form>
       </div>
+      <Modal
+        title="Unsaved confirm"
+        visible={modalVisible}
+        onOk={() => {
+          form.resetFields();
+          setEditing(false);
+          setModalVisible(false);
+          setRemitType(data[0].type);
+        }}
+        onCancel={() => setModalVisible(false)}
+      >
+        <p>All unsaved changes will be discharged.</p>
+      </Modal>
     </div>
   );
 };
