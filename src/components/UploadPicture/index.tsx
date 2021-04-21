@@ -1,8 +1,6 @@
 import React, { useRef, useState } from 'react';
 import { Modal, Upload, message } from 'antd';
-import { PlusOutlined } from '@ant-design/icons';
 import type { UploadFile, RcFile } from 'antd/lib/upload/interface';
-import styles from './index.less';
 
 function getBase64(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -28,6 +26,7 @@ interface PropsType {
   limitMB?: number;
   value?: string | File;
   onChange?: (value: File) => void;
+  disabled?: boolean
 }
 
 export default function UploadPicture({
@@ -35,6 +34,7 @@ export default function UploadPicture({
   limitMB = 5,
   value,
   onChange,
+  disabled
 }: PropsType) {
   const [visible, setVisible] = useState(false);
   const [previewImage, setPreviewImage] = useState<string>();
@@ -94,6 +94,7 @@ export default function UploadPicture({
   return (
     <div>
       <Upload
+        disabled={disabled}
         accept={acceptableTypes.join(', ')}
         maxCount={1}
         listType="picture-card"
