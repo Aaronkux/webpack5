@@ -17,10 +17,10 @@ import {
 import { connect, useDispatch, useRouteMatch } from 'umi';
 import type { ClientsModelState, Loading } from 'umi';
 import moment from 'moment';
-import NormalText from './components/normalText';
+import NormalText from '../normalText';
 import UploadPicture from '@/components/UploadPicture';
 import type { IndividualClientInfo } from '@/services/clients';
-import styles from './Personal.less';
+import styles from './index.less';
 
 const { Option } = Select;
 
@@ -407,7 +407,7 @@ const Personal = ({
         onOk={() => {
           form.resetFields();
           setEditing(false);
-          setModalVisible(false)
+          setModalVisible(false);
         }}
         onCancel={() => setModalVisible(false)}
       >

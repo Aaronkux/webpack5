@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Button, Col, Row, Pagination } from 'antd';
-import type {PaginationProps} from 'antd'
+import type { PaginationProps } from 'antd';
 import { connect, useDispatch } from 'umi';
 import type { SalesModelState, Loading } from 'umi';
 import type { SalesInfo } from '@/services/sales';
@@ -19,14 +19,11 @@ interface PropsType {
 const Sales = ({ sales, total, loading }: PropsType) => {
   const [visible, setVisible] = useState(false);
   const dispatch = useDispatch();
-  const [pageState, setPageState] = useURLParams();
+  const [urlState, setURL] = useURLParams();
   const [saleId, setSaleId] = useState<number>();
 
   const onChangeHandler: PaginationProps['onChange'] = (page, pageSize) => {
-    setPageState({
-      ...pageState,
-      ...{ current: page.toString(), pageSize: pageSize?.toString() },
-    });
+    setURL({ current: page.toString(), pageSize: pageSize?.toString() });
   };
 
   const onCardClickHandler = (id: number) => {
@@ -40,9 +37,9 @@ const Sales = ({ sales, total, loading }: PropsType) => {
   useEffect(() => {
     dispatch({
       type: 'sales/queryAll',
-      payload: { current: pageState.current, pageSize: pageState.pageSize },
+      payload: { current: urlState.current, pageSize: urlState.pageSize },
     });
-  }, [pageState]);
+  }, [urlState]);
 
   return (
     <div className={styles.container}>
@@ -66,8 +63,8 @@ const Sales = ({ sales, total, loading }: PropsType) => {
         <Pagination
           onChange={onChangeHandler}
           showSizeChanger
-          current={pageState.current ? parseInt(pageState.current) : 1}
-          pageSize={pageState.pageSize ? parseInt(pageState.pageSize) : 8}
+          current={urlState.current ? parseInt(urlState.current) : 1}
+          pageSize={urlState.pageSize ? parseInt(urlState.pageSize) : 8}
           pageSizeOptions={['4', '8', '16']}
           total={total}
         />

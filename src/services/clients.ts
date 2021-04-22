@@ -30,12 +30,42 @@ export interface IndividualClientInfo {
   other?: string;
   signature: string;
 }
-
 export type IndividualClientsResponse = ResponseType<{
   clients: IndividualClientInfo[];
   total: number;
 }>;
 export type IndividualClientsDetailResponse = ResponseType<IndividualClientInfo>;
+
+export interface RemitterInfo {
+  id: string;
+  companyClientId: number;
+  individualClientId: number;
+  type: 0 | 1;
+  name: string;
+  DOB: string;
+  address: string;
+  suburb: string;
+  state: string;
+  postcode: string;
+  country: string;
+  phone: string;
+  occupation: string;
+  relationship: string;
+  bankName: string;
+  branchName: string;
+  accountName: string;
+  accountNumber: number;
+  bsb: number;
+  isTrustAccount: boolean;
+  idFront: string;
+  idBack: string;
+  relatedDoc: string;
+  idExpireDate: string;
+  companyName: string;
+  companyAddress: string;
+  companyABN: number;
+}
+export type RemittersResponse = ResponseType<RemitterInfo[]>;
 
 export function queryAllIndividualClients(current: number, pageSize: number) {
   return request<IndividualClientsResponse>('/api/individualclient', {
@@ -50,6 +80,16 @@ export function queryAllIndividualClients(current: number, pageSize: number) {
 export function queryIndividualClientDetail(id: string) {
   return request<IndividualClientsDetailResponse>(
     `/api/individualclient/${id}`,
+    {
+      method: 'get',
+    },
+  );
+
+}
+
+export function queryAllRemitters(id: string) {
+  return request<RemittersResponse>(
+    `/api/individualclient/${id}/receiver`,
     {
       method: 'get',
     },

@@ -56,21 +56,18 @@ interface PropsType {
 }
 
 const Clients = ({ individualClients, total, loading }: PropsType) => {
-  const [pageState, setPageState] = useURLParams();
+  const [urlState, setURL] = useURLParams();
   const dispatch = useDispatch();
   const onChangeHandler: PaginationProps['onChange'] = (page, pageSize) => {
-    setPageState({
-      ...pageState,
-      ...{ current: page.toString(), pageSize: pageSize?.toString() },
-    });
+    setURL({ current: page.toString(), pageSize: pageSize?.toString() });
   };
 
   useEffect(() => {
     dispatch({
       type: 'clients/queryIndividualClients',
-      payload: { current: pageState.current, pageSize: pageState.pageSize },
+      payload: { current: urlState.current, pageSize: urlState.pageSize },
     });
-  }, [pageState]);
+  }, [urlState]);
 
   return (
     <>
@@ -89,8 +86,8 @@ const Clients = ({ individualClients, total, loading }: PropsType) => {
           <Pagination
             onChange={onChangeHandler}
             showSizeChanger
-            current={pageState.current ? parseInt(pageState.current) : 1}
-            pageSize={pageState.pageSize ? parseInt(pageState.pageSize) : 10}
+            current={urlState.current ? parseInt(urlState.current) : 1}
+            pageSize={urlState.pageSize ? parseInt(urlState.pageSize) : 10}
             pageSizeOptions={['10', '15', '20']}
             total={total}
           />

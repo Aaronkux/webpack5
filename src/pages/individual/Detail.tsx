@@ -1,28 +1,23 @@
 import React, { useState } from 'react';
 import { Card, Menu } from 'antd';
-import { useHistory } from 'react-router-dom';
-import Personal from './Personal';
-import Beneficiary from './Beneficiary';
-import { search2Param, param2Search } from '@/utils';
+import Personal from './components/personal';
+import Beneficiary from './components/beneficiary';
+import useURLParams from '@/hooks/useURLParams';
 import styles from './Detail.less';
 
 export default function Detail() {
-  const history = useHistory();
-  let params = search2Param();
-  const selectedParam = params.p ? params.p : 'remitter';
-  const [isRemitter, setIsRemitter] = useState(
-    () => selectedParam == 'remitter',
-  );
+  const [urlState, setURL] = useURLParams();
   const [showOther, setShowOther] = useState(false);
   return (
     <div className={styles.container}>
       <Card className={styles.formContainer}>
-        <Menu defaultSelectedKeys={[selectedParam]} mode="horizontal">
+        <Menu
+          defaultSelectedKeys={[urlState.p ?? 'remitter']}
+          mode="horizontal"
+        >
           <Menu.Item
             onClick={() => {
-              params.p = 'remitter';
-              history.replace(param2Search(params));
-              setIsRemitter(true);
+              setURL({ p: 'remitter' });
             }}
             key="remitter"
           >
@@ -30,16 +25,14 @@ export default function Detail() {
           </Menu.Item>
           <Menu.Item
             onClick={() => {
-              params.p = 'beneficiary';
-              history.replace(param2Search(params));
-              setIsRemitter(false);
+              setURL({ p: 'beneficiary' });
             }}
             key="beneficiary"
           >
             Beneficiary
           </Menu.Item>
         </Menu>
-        {isRemitter ? (
+        {urlState.p === 'remitter' ? (
           <Personal showOther={showOther} setShowOther={setShowOther} />
         ) : (
           <Beneficiary />
