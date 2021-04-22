@@ -1,56 +1,79 @@
-import React from 'react';
+import React, { useEffect } from 'react';
+import { useDispatch, useRouteMatch } from 'umi';
 import useURLParams from '@/hooks/useURLParams';
-import { Menu, Tag } from 'antd';
+import type { BeneficiaryInfo } from '@/services/clients';
+import { Menu, Tag, Skeleton, Divider } from 'antd';
 import styles from './NavBar.less';
 
-let mockData: any[] = [];
-
-for (let i = 0; i < 10; i++) {
-  mockData.push({
-    key: i.toString(),
-    name: 'aaron',
-    type: 0,
-    address: `${i} test Rd asd, ppararmtata`,
-    suburb: 'Burwood',
-    state: 'NSW',
-    country: 'Australia',
-    phone: '0401836846',
-  });
+interface PropsType {
+  data: BeneficiaryInfo[];
+  loading: boolean;
 }
-export default function NavBar() {
+const NavBar = ({ data, loading }: PropsType) => {
   const [urlState, setURL] = useURLParams();
+  const dispatch = useDispatch();
+  const match = useRouteMatch<{ id?: string }>();
+  const { id } = match.params;
   const selectedParam = urlState.q
     ? urlState.q
-    : mockData[0]?.key?.toString() ?? null;
+    : data[0]?.id?.toString() ?? null;
+  useEffect(() => {
+    if (id) {
+      dispatch({
+        type: 'clients/queryAllBeneficiary',
+        payload: { id },
+      });
+    }
+  }, [id]);
+  useEffect(() => {
+    if (selectedParam) {
+      dispatch({
+        type: 'clients/queryBeneficiaryDetail',
+        payload: { id: selectedParam },
+      });
+    }
+  }, [selectedParam]);
   return (
     <>
-      <Menu defaultSelectedKeys={[selectedParam]} className={styles.subNav}>
-        {mockData.map((item) => (
-          <Menu.Item
-            onClick={() => {
-              setURL({ q: item.key });
-            }}
-            key={item.key}
-          >
-            <div className={styles.navCard}>
-              <p
-                className={styles.navCountry}
-              >{`${item.country}, ${item.state}`}</p>
-              <p
-                className={styles.address}
-              >{`${item.address}, ${item.suburb}`}</p>
-              <p className={styles.contact}>{`${item.name} ${item.phone}`}</p>
-              {item.type === 0 ? (
-                <Tag className={styles.selfTag} color="#f50">
-                  Self
-                </Tag>
-              ) : (
-                ''
-              )}
-            </div>
-          </Menu.Item>
-        ))}
-      </Menu>
+      {loading ? (
+        <Menu defaultSelectedKeys={[selectedParam]} className={styles.subNav}>
+          {data.map((item) => (
+            <Menu.Item
+              onClick={() => {
+                setURL({ q: item.id });
+              }}
+              key={item.id}
+            >
+              <div className={styles.navCard}>
+                <p
+                  className={styles.navCountry}
+                >{`${item.country}, ${item.state}`}</p>
+                <p
+                  className={styles.address}
+                >{`${item.address}, ${item.suburb}`}</p>
+                <p className={styles.contact}>{`${item.name} ${item.phone}`}</p>
+                {item.type === 0 ? (
+                  <Tag className={styles.selfTag} color="#f50">
+                    Self
+                  </Tag>
+                ) : (
+                  ''
+                )}
+              </div>
+              <Divider />
+            </Menu.Item>
+          ))}
+        </Menu>
+      ) : (
+        <div style={{ width: '275px' }}>
+          <Skeleton key={1} />
+          <Skeleton key={2} />
+          <Skeleton key={3} />
+          <Skeleton key={4} />
+        </div>
+      )}
     </>
   );
-}
+};
+
+export default React.memo(NavBar);

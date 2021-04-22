@@ -1,14 +1,24 @@
-import { Effect, ImmerReducer, Subscription } from 'umi';
-import { queryAllIndividualClients, queryIndividualClientDetail } from '@/services/clients';
+import { Effect, ImmerReducer } from 'umi';
+import {
+  queryAllIndividualClients,
+  queryIndividualClientDetail,
+  queryAllBeneficiary,
+  queryBeneficiaryDetail,
+} from '@/services/clients';
 import type {
   IndividualClientInfo,
   IndividualClientsResponse,
   IndividualClientsDetailResponse,
+  BeneficiaryInfo,
+  BeneficiaryResponse,
+  BeneficiaryDetailResponse,
 } from '@/services/clients';
 
 export interface ClientsModelState {
   individualClients: { clients: IndividualClientInfo[]; total: number };
   individualClientDetail?: IndividualClientInfo;
+  beneficiary: BeneficiaryInfo[];
+  beneficiaryDetail?: BeneficiaryInfo;
 }
 
 export interface QueryAllSalesType {
@@ -20,9 +30,10 @@ export interface ClientsModelType {
   namespace: 'clients';
   state: ClientsModelState;
   effects: {
-    query: Effect;
     queryIndividualClients: Effect;
     queryIndividualClientDetail: Effect;
+    queryAllBeneficiary: Effect;
+    queryBeneficiaryDetail: Effect;
   };
   reducers: {
     save: ImmerReducer<ClientsModelState>;
@@ -37,9 +48,9 @@ const ClientsModel: ClientsModelType = {
       clients: [],
       total: 0,
     },
+    beneficiary: [],
   },
   effects: {
-    *query({ payload }, { call, put }) {},
     *queryIndividualClients({ payload }, { call, put }) {
       const { current, pageSize } = payload;
       const res: IndividualClientsResponse = yield call(
@@ -61,6 +72,29 @@ const ClientsModel: ClientsModelType = {
         yield put({
           type: 'save',
           payload: { individualClientDetail: res.data },
+        });
+      }
+    },
+    *queryAllBeneficiary({ payload }, { call, put }) {
+      const { id } = payload;
+      const res: BeneficiaryResponse = yield call(queryAllBeneficiary, id);
+      if (res.success && res.data) {
+        yield put({
+          type: 'save',
+          payload: { beneficiary: res.data },
+        });
+      }
+    },
+    *queryBeneficiaryDetail({ payload }, { call, put }) {
+      const { id } = payload;
+      const res: BeneficiaryDetailResponse = yield call(
+        queryBeneficiaryDetail,
+        id,
+      );
+      if (res.success && res.data) {
+        yield put({
+          type: 'save',
+          payload: { beneficiaryDetail: res.data },
         });
       }
     },

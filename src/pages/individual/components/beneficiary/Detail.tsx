@@ -9,9 +9,11 @@ import {
   Select,
   Button,
   Modal,
+  InputNumber,
 } from 'antd';
 import NormalText from '../normalText';
 import UploadPicture from '@/components/UploadPicture';
+import type { BeneficiaryInfo } from '@/services/clients';
 import moment from 'moment';
 import styles from './Detail.less';
 
@@ -21,13 +23,16 @@ const layout = {
   labelCol: { span: 8 },
   wrapperCol: { span: 19 },
 };
+interface PropsType {
+  data: BeneficiaryInfo;
+}
 
-export default function Detail() {
+const Detail = ({ data }: PropsType) => {
   const [form] = Form.useForm();
   const [editing, setEditing] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
-  const [remitType, setRemitType] = useState(0);
-  const [accountType, setAccountType] = useState(1);
+  const [remitType, setRemitType] = useState(data.type);
+  const [accountType, setAccountType] = useState(data.isTrustAccount ? 1 : 0);
   return (
     <>
       <div className={styles.content}>
@@ -72,9 +77,9 @@ export default function Detail() {
           <Divider />
           <Row>
             <Col xs={24} sm={24} md={24} lg={24} xl={12}>
-              <Form.Item label="Type" name="type" initialValue={0}>
+              <Form.Item label="Type" name="type" initialValue={data.type}>
                 {editing ? (
-                  <Select onChange={(value: number) => setRemitType(value)}>
+                  <Select onChange={(value: 0 | 1) => setRemitType(value)}>
                     <Option value={0}>Remit to my personal account</Option>
                     <Option value={1}>Remit to other's account</Option>
                   </Select>
@@ -92,7 +97,7 @@ export default function Detail() {
             {remitType === 1 && (
               <>
                 <Col xs={24} sm={24} md={24} lg={24} xl={12}>
-                  <Form.Item label="Name" name="name" initialValue="aaron">
+                  <Form.Item label="Name" name="name" initialValue={data.name}>
                     {editing ? <Input /> : <NormalText />}
                   </Form.Item>
                 </Col>
@@ -100,7 +105,7 @@ export default function Detail() {
                   <Form.Item
                     label="DOB"
                     name="dob"
-                    initialValue={moment('1999/1/1')}
+                    initialValue={moment(data.DOB)}
                   >
                     <DatePicker disabled={!editing} style={{ width: '100%' }} />
                   </Form.Item>
@@ -109,18 +114,26 @@ export default function Detail() {
                   <Form.Item
                     label="Address"
                     name="address"
-                    initialValue="aaron"
+                    initialValue={data.address}
                   >
                     {editing ? <Input /> : <NormalText />}
                   </Form.Item>
                 </Col>
                 <Col xs={24} sm={24} md={24} lg={24} xl={12}>
-                  <Form.Item label="Suburb" name="suburb" initialValue="aaron">
+                  <Form.Item
+                    label="Suburb"
+                    name="suburb"
+                    initialValue={data.suburb}
+                  >
                     {editing ? <Input /> : <NormalText />}
                   </Form.Item>
                 </Col>
                 <Col xs={24} sm={24} md={24} lg={24} xl={12}>
-                  <Form.Item label="State" name="state" initialValue="aaron">
+                  <Form.Item
+                    label="State"
+                    name="state"
+                    initialValue={data.state}
+                  >
                     {editing ? <Input /> : <NormalText />}
                   </Form.Item>
                 </Col>
@@ -128,22 +141,30 @@ export default function Detail() {
                   <Form.Item
                     label="Postcode"
                     name="postcode"
-                    initialValue="aaron"
+                    initialValue={data.postcode}
                   >
-                    {editing ? <Input /> : <NormalText />}
+                    {editing ? (
+                      <InputNumber style={{ width: '100%' }} step="1" />
+                    ) : (
+                      <NormalText />
+                    )}
                   </Form.Item>
                 </Col>
                 <Col xs={24} sm={24} md={24} lg={24} xl={12}>
                   <Form.Item
                     label="Country"
                     name="country"
-                    initialValue="aaron"
+                    initialValue={data.country}
                   >
                     {editing ? <Input /> : <NormalText />}
                   </Form.Item>
                 </Col>
                 <Col xs={24} sm={24} md={24} lg={24} xl={12}>
-                  <Form.Item label="Phone" name="phone" initialValue="aaron">
+                  <Form.Item
+                    label="Phone"
+                    name="phone"
+                    initialValue={data.phone}
+                  >
                     {editing ? <Input /> : <NormalText />}
                   </Form.Item>
                 </Col>
@@ -151,7 +172,7 @@ export default function Detail() {
                   <Form.Item
                     label="Occupation"
                     name="occupation"
-                    initialValue="aaron"
+                    initialValue={data.occupation}
                   >
                     {editing ? <Input /> : <NormalText />}
                   </Form.Item>
@@ -160,7 +181,7 @@ export default function Detail() {
                   <Form.Item
                     label="Relationship"
                     name="relationship"
-                    initialValue="aaron"
+                    initialValue={data.relationship}
                   >
                     {editing ? <Input /> : <NormalText />}
                   </Form.Item>
@@ -168,7 +189,11 @@ export default function Detail() {
               </>
             )}
             <Col xs={24} sm={24} md={24} lg={24} xl={12}>
-              <Form.Item label="Bank Name" name="bankName" initialValue="aaron">
+              <Form.Item
+                label="Bank Name"
+                name="bankName"
+                initialValue={data.bankName}
+              >
                 {editing ? <Input /> : <NormalText />}
               </Form.Item>
             </Col>
@@ -176,7 +201,7 @@ export default function Detail() {
               <Form.Item
                 label="Account Name"
                 name="accountName"
-                initialValue="aaron"
+                initialValue={data.accountName}
               >
                 {editing ? <Input /> : <NormalText />}
               </Form.Item>
@@ -185,21 +210,29 @@ export default function Detail() {
               <Form.Item
                 label="Account Number"
                 name="accountNumber"
-                initialValue="aaron"
+                initialValue={data.accountNumber}
               >
-                {editing ? <Input /> : <NormalText />}
+                {editing ? (
+                  <InputNumber style={{ width: '100%' }} step="1" />
+                ) : (
+                  <NormalText />
+                )}
               </Form.Item>
             </Col>
             <Col xs={24} sm={24} md={24} lg={24} xl={12}>
-              <Form.Item label="BSB" name="bsb" initialValue="aaron">
-                {editing ? <Input /> : <NormalText />}
+              <Form.Item label="BSB" name="bsb" initialValue={data.bsb}>
+                {editing ? (
+                  <InputNumber style={{ width: '100%' }} step="1" />
+                ) : (
+                  <NormalText />
+                )}
               </Form.Item>
             </Col>
             <Col xs={24} sm={24} md={24} lg={24} xl={12}>
               <Form.Item
                 label="Branch Name"
                 name="branchName"
-                initialValue="aaron"
+                initialValue={data.branchName}
               >
                 {editing ? <Input /> : <NormalText />}
               </Form.Item>
@@ -210,11 +243,11 @@ export default function Detail() {
                   <Form.Item
                     label="Account Type"
                     name="isTrustAccount"
-                    initialValue={1}
+                    initialValue={data.isTrustAccount ? 1 : 0}
                   >
                     {editing ? (
                       <Select
-                        onChange={(value: number) => setAccountType(value)}
+                        onChange={(value: 0 | 1) => setAccountType(value)}
                       >
                         <Option value={0}>Non-Trust Account</Option>
                         <Option value={1}>Trust Account</Option>
@@ -234,7 +267,7 @@ export default function Detail() {
                       <Form.Item
                         label="Company Name"
                         name="companyName"
-                        initialValue="aaron"
+                        initialValue={data.companyName}
                       >
                         {editing ? <Input /> : <NormalText />}
                       </Form.Item>
@@ -243,7 +276,7 @@ export default function Detail() {
                       <Form.Item
                         label="Company Address"
                         name="companyAddress"
-                        initialValue="aaron"
+                        initialValue={data.companyAddress}
                       >
                         {editing ? <Input /> : <NormalText />}
                       </Form.Item>
@@ -252,9 +285,13 @@ export default function Detail() {
                       <Form.Item
                         label="Company ABN"
                         name="companyABN"
-                        initialValue="aaron"
+                        initialValue={data.companyABN}
                       >
-                        {editing ? <Input /> : <NormalText />}
+                        {editing ? (
+                          <InputNumber style={{ width: '100%' }} step="1" />
+                        ) : (
+                          <NormalText />
+                        )}
                       </Form.Item>
                     </Col>
                   </>
@@ -262,12 +299,20 @@ export default function Detail() {
                   <Col xs={24} sm={24} md={24} lg={24} xl={12}></Col>
                 )}
                 <Col xs={24} sm={24} md={24} lg={24} xl={12}>
-                  <Form.Item label="ID Front" name="idFront">
+                  <Form.Item
+                    label="ID Front"
+                    name="idFront"
+                    initialValue={data.idFront}
+                  >
                     <UploadPicture disabled={!editing} />
                   </Form.Item>
                 </Col>
                 <Col xs={24} sm={24} md={24} lg={24} xl={12}>
-                  <Form.Item label="ID Back" name="idBack">
+                  <Form.Item
+                    label="ID Back"
+                    name="idBack"
+                    initialValue={data.idBack}
+                  >
                     <UploadPicture disabled={!editing} />
                   </Form.Item>
                 </Col>
@@ -320,4 +365,6 @@ export default function Detail() {
       </Modal>
     </>
   );
-}
+};
+
+export default React.memo(Detail);

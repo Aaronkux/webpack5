@@ -32,10 +32,10 @@ export default function Detail() {
             Beneficiary
           </Menu.Item>
         </Menu>
-        {urlState.p === 'remitter' ? (
-          <Personal showOther={showOther} setShowOther={setShowOther} />
-        ) : (
+        {urlState.p === 'beneficiary' ? (
           <Beneficiary />
+        ) : (
+          <Personal showOther={showOther} setShowOther={setShowOther} />
         )}
       </Card>
     </div>

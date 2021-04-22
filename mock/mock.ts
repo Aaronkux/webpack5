@@ -120,7 +120,7 @@ export default {
     },
     success: true,
   }),
-  'GET /api/receiver': Mock.mock({
+  'GET /api/individualclient/:id/receiver': Mock.mock({
     'data|10': [
       {
         id: '@id',
@@ -182,7 +182,7 @@ export default {
       idExpireDate: '@date',
       companyName: '@csentence(3, 5)',
       companyAddress: '@csentence(3, 5)',
-      companyABN: '@csentence(3, 5)',
+      companyABN: Random.integer(10000000, 99999999),
     },
     success: true,
   }),

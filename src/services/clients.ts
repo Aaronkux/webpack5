@@ -36,7 +36,7 @@ export type IndividualClientsResponse = ResponseType<{
 }>;
 export type IndividualClientsDetailResponse = ResponseType<IndividualClientInfo>;
 
-export interface RemitterInfo {
+export interface BeneficiaryInfo {
   id: string;
   companyClientId: number;
   individualClientId: number;
@@ -65,7 +65,8 @@ export interface RemitterInfo {
   companyAddress: string;
   companyABN: number;
 }
-export type RemittersResponse = ResponseType<RemitterInfo[]>;
+export type BeneficiaryResponse = ResponseType<BeneficiaryInfo[]>;
+export type BeneficiaryDetailResponse = ResponseType<BeneficiaryInfo>;
 
 export function queryAllIndividualClients(current: number, pageSize: number) {
   return request<IndividualClientsResponse>('/api/individualclient', {
@@ -84,14 +85,16 @@ export function queryIndividualClientDetail(id: string) {
       method: 'get',
     },
   );
-
 }
 
-export function queryAllRemitters(id: string) {
-  return request<RemittersResponse>(
-    `/api/individualclient/${id}/receiver`,
-    {
-      method: 'get',
-    },
-  );
+export function queryAllBeneficiary(id: string) {
+  return request<BeneficiaryResponse>(`/api/individualclient/${id}/receiver`, {
+    method: 'get',
+  });
+}
+
+export function queryBeneficiaryDetail(id: string) {
+  return request<BeneficiaryDetailResponse>(`/api/receiver/${id}`, {
+    method: 'get',
+  });
 }

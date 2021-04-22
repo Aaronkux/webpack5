@@ -1,15 +1,50 @@
 import React from 'react';
-import { Divider } from 'antd';
+import { connect } from 'umi';
+import type { ClientsModelState, Loading } from 'umi';
+import type { BeneficiaryInfo } from '@/services/clients';
+import { Divider, Skeleton } from 'antd';
 import Detail from './Detail';
 import NavBar from './NavBar';
 import styles from './index.less';
 
-export default function Beneficiary() {
+interface PropsType {
+  beneficiary: BeneficiaryInfo[];
+  beneficiaryDetail?: BeneficiaryInfo;
+  beneficiaryLoading: boolean;
+  beneficiaryDetailLoading: boolean;
+}
+
+const Beneficiary = ({
+  beneficiary,
+  beneficiaryDetail,
+  beneficiaryLoading,
+  beneficiaryDetailLoading,
+}: PropsType) => {
   return (
     <div className={styles.container}>
-      <NavBar />
+      <NavBar
+        data={beneficiary}
+        loading={!beneficiaryLoading && beneficiary.length > 0}
+      />
       <Divider className={styles.divider} type="vertical" />
-      <Detail />
+      {beneficiary.length > 0 &&
+      !beneficiaryDetailLoading &&
+      beneficiaryDetail !== undefined ? (
+        <Detail data={beneficiaryDetail!} />
+      ) : (
+        <Skeleton paragraph={{ rows: 10 }} />
+      )}
     </div>
   );
-}
+};
+
+export default connect(
+  ({ clients, loading }: { clients: ClientsModelState; loading: Loading }) => ({
+    beneficiary: clients.beneficiary,
+    beneficiaryDetail: clients.beneficiaryDetail,
+    beneficiaryLoading: loading.effects['clients/queryAllBeneficiary']!,
+    beneficiaryDetailLoading: loading.effects[
+      'clients/queryBeneficiaryDetail'
+    ]!,
+  }),
+)(React.memo(Beneficiary));
