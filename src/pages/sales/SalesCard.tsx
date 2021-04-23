@@ -41,7 +41,13 @@ export default function SalesCard({
         </Popover>,
       ]}
     >
-      <Skeleton loading={loading} active avatar>
+      <Skeleton
+        className={styles.skeleton}
+        paragraph={{ rows: 5 }}
+        loading={loading}
+        active
+        avatar
+      >
         <Avatar className={styles.avatar} src={salesInfo.photo} />
         <div className={styles.name}>{salesInfo.name}</div>
         <div className={styles.email}>{salesInfo.email}</div>
