@@ -4,13 +4,15 @@ import useURLParams from '@/hooks/useURLParams';
 import type { BeneficiaryInfo } from '@/services/clients';
 import { Menu, Tag, Skeleton, Divider } from 'antd';
 import styles from './NavBar.less';
+import { search2Param, param2Search, ParamsObjType } from '@/utils';
 
 interface PropsType {
   data: BeneficiaryInfo[];
   loading: boolean;
+  urlState: ParamsObjType;
+  setURL: React.Dispatch<React.SetStateAction<ParamsObjType>>;
 }
-const NavBar = ({ data, loading }: PropsType) => {
-  const [urlState, setURL] = useURLParams();
+const NavBar = ({ data, loading, urlState, setURL }: PropsType) => {
   const dispatch = useDispatch();
   const match = useRouteMatch<{ id?: string }>();
   const { id } = match.params;

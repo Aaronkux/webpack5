@@ -1,4 +1,8 @@
 import { request } from 'umi';
+export interface OrderUser {
+  id: string;
+  photo: string;
+}
 
 export interface UserInfo {
   data: {
@@ -11,6 +15,16 @@ export interface UserInfo {
       orderPermission: boolean;
       emailPermission: boolean;
       token: string;
+      photo: string;
+      isActive: boolean;
+      isAdmin: boolean;
+      checkCompliance: OrderUser;
+      checkFundNotified: OrderUser;
+      checkFundReceived: OrderUser;
+      checkClientComfirmed: OrderUser;
+      checkFundPaid: OrderUser;
+      clientlistcolumns: [];
+      orderlistcolumns: [];
     };
   };
   errorMessage?: string;

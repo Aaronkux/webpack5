@@ -5,6 +5,7 @@ import type { BeneficiaryInfo } from '@/services/clients';
 import { Divider, Skeleton } from 'antd';
 import Detail from './Detail';
 import NavBar from './NavBar';
+import type { ParamsObjType } from '@/utils';
 import styles from './index.less';
 
 interface PropsType {
@@ -12,6 +13,8 @@ interface PropsType {
   beneficiaryDetail?: BeneficiaryInfo;
   beneficiaryLoading: boolean;
   beneficiaryDetailLoading: boolean;
+  urlState: ParamsObjType;
+  setURL: React.Dispatch<React.SetStateAction<ParamsObjType>>;
 }
 
 const Beneficiary = ({
@@ -19,10 +22,14 @@ const Beneficiary = ({
   beneficiaryDetail,
   beneficiaryLoading,
   beneficiaryDetailLoading,
+  urlState,
+  setURL,
 }: PropsType) => {
   return (
     <div className={styles.container}>
       <NavBar
+        urlState={urlState}
+        setURL={setURL}
         data={beneficiary}
         loading={!beneficiaryLoading && beneficiary.length > 0}
       />

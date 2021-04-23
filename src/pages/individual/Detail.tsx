@@ -33,7 +33,7 @@ export default function Detail() {
           </Menu.Item>
         </Menu>
         {urlState.p === 'beneficiary' ? (
-          <Beneficiary />
+          <Beneficiary urlState={urlState} setURL={setURL} />
         ) : (
           <Personal showOther={showOther} setShowOther={setShowOther} />
         )}

@@ -17,22 +17,8 @@ export const routes: IBestAFSRoute[] = [
         path: '/order',
         name: 'Order',
         icon: 'SnippetsOutlined',
-      },
-      {
-        path: '/order/order1',
         component: '@/pages/order',
-        name: 'All Order',
-        icon: 'ContactsOutlined',
-        parentPath: '/order'
       },
-      {
-        path: '/order/order2',
-        component: '@/pages/order',
-        name: 'Running Order',
-        icon: 'FrownOutlined',
-        parentPath: '/order'
-      }, 
-
       {
         path: '/sales',
         component: '@/pages/sales',

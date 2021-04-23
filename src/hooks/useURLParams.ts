@@ -11,8 +11,8 @@ export default function useURLParams(): [
   useEffect(() => {
     history.replace(param2Search(urlState));
   }, [urlState]);
-  const setURL = useCallback((obj: ParamsObjType) => {
+  const setURL = (obj: ParamsObjType) => {
     setURLState({ ...urlState, ...obj });
-  }, []);
+  };
   return [urlState, setURL];
 }

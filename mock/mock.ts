@@ -2,12 +2,13 @@ import Mock, { Random } from 'mockjs';
 
 export default {
   // 支持值为 Object 和 Array
-  'POST /api/login': {
+  'POST /api/login': Mock.mock({
     data: {
       users: {
         firstname: 'aaron',
         lastname: 'wo',
         email: 'sbvjaiwxd@gmail.com',
+        photo: '@IMG',
         isActive: true,
         isAdmin: true,
         salesPermission: true,
@@ -25,7 +26,7 @@ export default {
       },
     },
     success: true,
-  },
+  }),
   'GET /api/sales': Mock.mock({
     data: {
       'sales|8': [
