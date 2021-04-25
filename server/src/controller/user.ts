@@ -19,7 +19,7 @@ import { NotFoundError } from '../errors';
 import { parseIntOrThrowValidationError } from '../utils';
 
 @Provide()
-@Controller('/api/users')
+@Controller('/api/user')
 export class UserController {
   @Inject()
   ctx: Context;
@@ -132,6 +132,12 @@ export class UserController {
   @Validate()
   async createUser(@Body(ALL) user: UserCreateDTO) {
     const res = await this.userService.createUser(user);
+    return { success: true, data: res };
+  }
+
+  @Post('/test')
+  async testUser() {
+    const res = await this.userService.test();
     return { success: true, data: res };
   }
 }
