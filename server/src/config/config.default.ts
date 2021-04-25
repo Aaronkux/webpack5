@@ -1,11 +1,16 @@
 import { EggAppConfig, EggAppInfo, PowerPartial } from 'egg';
-import * as typegoose from '@midwayjs/typegoose';
 
 export type DefaultConfig = PowerPartial<EggAppConfig>;
 
-export const mongoose: typegoose.DefaultConfig = {
-  uri: '',
-  options: {},
+export const orm = {
+  type: 'mysql',
+  host: 'localhost',
+  port: 3306,
+  username: 'root',
+  password: '123456',
+  database: 'globalpay',
+  synchronize: true,
+  logging: false,
 };
 
 export default (appInfo: EggAppInfo) => {
@@ -15,12 +20,16 @@ export default (appInfo: EggAppInfo) => {
   config.keys = appInfo.name + '_1618386847240_9317';
 
   // add your config here
-  config.middleware = [];
+  config.middleware = ['errorHandler', 'notFoundHandler'];
 
   config.security = {
     csrf: {
       enable: false,
     },
+  };
+
+  config.multipart = {
+    mode: 'file',
   };
 
   config.midwayFeature = {
