@@ -76,6 +76,7 @@ const Clients = ({ individualClients, total, loading }: PropsType) => {
       </Card>
       <Card>
         <Table
+          bordered
           loading={loading}
           columns={dynamicColumns}
           dataSource={individualClients}

@@ -17,7 +17,7 @@ import {
 import { connect, useDispatch, useRouteMatch } from 'umi';
 import type { ClientsModelState, Loading } from 'umi';
 import moment from 'moment';
-import NormalText from '@/components/NormalText';
+import NormalText from '@/components/normalText';
 import UploadPicture from '@/components/UploadPicture';
 import type { IndividualClientInfo } from '@/services/clients';
 import styles from './index.less';
@@ -30,18 +30,11 @@ const layout = {
 };
 
 interface PropsType {
-  showOther: boolean;
-  setShowOther: React.Dispatch<React.SetStateAction<boolean>>;
   individualClientDetail?: IndividualClientInfo;
   loading: boolean;
 }
 
-const Personal = ({
-  showOther,
-  setShowOther,
-  individualClientDetail,
-  loading,
-}: PropsType) => {
+const Detail = ({ individualClientDetail, loading }: PropsType) => {
   const [form] = Form.useForm();
   const match = useRouteMatch<{ id?: string }>();
   const dispatch = useDispatch();
@@ -117,7 +110,9 @@ const Personal = ({
                   </Radio.Group>
                 ) : (
                   <NormalText
-                    transform={(value) => (value === 0 ? 'Male' : 'Female')}
+                    transform={(value: any) =>
+                      value === 0 ? 'Male' : 'Female'
+                    }
                   />
                 )}
               </Form.Item>
@@ -200,36 +195,6 @@ const Personal = ({
             </Col>
             <Col xs={24} sm={24} md={24} lg={12} xl={12}>
               <Form.Item
-                label="Purpose"
-                name="purpose"
-                initialValue={individualClientDetail?.purpose}
-              >
-                {editing ? (
-                  <Select
-                    onChange={(value) => {
-                      if (value === 'other') {
-                        setShowOther(true);
-                      } else if (showOther === true) {
-                        setShowOther(false);
-                      }
-                    }}
-                  >
-                    <Option value="property">Property</Option>
-                    <Option value="pepayment">Repayment</Option>
-                    <Option value="immigration">Immigration</Option>
-                    <Option value="investment">Investment</Option>
-                    <Option value="living">Living</Option>
-                    <Option value="deposit">Deposit</Option>
-                    <Option value="gift">Gift</Option>
-                    <Option value="other">Other</Option>
-                  </Select>
-                ) : (
-                  <NormalText />
-                )}
-              </Form.Item>
-            </Col>
-            <Col xs={24} sm={24} md={24} lg={12} xl={12}>
-              <Form.Item
                 label="unsubscribe"
                 name="Unsubscribe"
                 valuePropName="checked"
@@ -238,19 +203,6 @@ const Personal = ({
                 <Switch disabled={!editing} />
               </Form.Item>
             </Col>
-            {showOther ? (
-              <Col xs={24} sm={24} md={24} lg={12} xl={12}>
-                <Form.Item
-                  label="Other"
-                  name="other"
-                  initialValue={individualClientDetail?.other}
-                >
-                  {editing ? <Input /> : <NormalText />}
-                </Form.Item>
-              </Col>
-            ) : (
-              <></>
-            )}
           </Row>
 
           <h1 className={styles.title}>Address</h1>
@@ -422,4 +374,4 @@ export default connect(
     individualClientDetail: clients.individualClientDetail,
     loading: loading.models.clients,
   }),
-)(React.memo(Personal));
+)(React.memo(Detail));

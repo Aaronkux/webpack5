@@ -11,7 +11,7 @@ import {
   Modal,
   InputNumber,
 } from 'antd';
-import NormalText from '../normalText';
+import NormalText from '@/components/NormalText';
 import UploadPicture from '@/components/UploadPicture';
 import type { BeneficiaryInfo } from '@/services/clients';
 import moment from 'moment';

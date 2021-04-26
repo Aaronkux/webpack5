@@ -307,6 +307,7 @@ export default function Order() {
       </Card>
       <Card>
         <Table
+          bordered
           columns={columns}
           dataSource={data}
           scroll={{ x: 1500 }}
