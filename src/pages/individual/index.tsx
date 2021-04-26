@@ -71,7 +71,7 @@ const Clients = ({ individualClients, total, loading }: PropsType) => {
 
   return (
     <>
-      <Card>
+      <Card className={styles.filterContainer}>
         <Filter />
       </Card>
       <Card>

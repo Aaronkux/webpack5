@@ -16,11 +16,12 @@ const layout = {
   wrapperCol: { span: 16 },
 };
 
-export default function EditAndCreate({ saleId, onCancelHandler }: PropsType) {
+export default function Edit({ saleId, onCancelHandler }: PropsType) {
   const [form] = Form.useForm();
   const { data, error, loading, run } = useRequest(() => querySale(saleId));
   return (
     <Modal
+      centered
       visible={true}
       closeIcon={<CloseCircleOutlined />}
       onOk={() => form.submit()}

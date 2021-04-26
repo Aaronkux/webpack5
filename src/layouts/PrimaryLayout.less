@@ -1,6 +1,32 @@
 :global(.ant-menu-item-active) {
   background-color: #f4f0ff !important;
 }
-:global(.ant-menu-item-selected) {
-  background-color: #dad6ff !important;
+
+
+.container {
+  min-height: 100vh;
+  .header {
+    background-color: #fff;
+    height: 50px;
+    line-height: 50px;
+    padding-left: 20px;
+    position: sticky;
+    top: 0;
+    z-index: 99;
+
+    .menuFold {
+      &:hover {
+        color: #7366ff;
+      }
+    }
+  }
+  .content {
+    background-color: #f5f5f5;
+    padding: 10px;
+  }
+  .footer {
+    background-color: #fff;
+    display: flex;
+    justify-content: center;
+  }
 }

@@ -402,6 +402,7 @@ const Personal = ({
         </>
       )}
       <Modal
+        centered
         title="Unsaved confirm"
         visible={modalVisible}
         onOk={() => {

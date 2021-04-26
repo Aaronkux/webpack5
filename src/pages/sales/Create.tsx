@@ -14,10 +14,11 @@ const layout = {
   wrapperCol: { span: 16 },
 };
 
-export default function EditAndCreate({ visible, onCancelHandler }: PropsType) {
+export default function Create({ visible, onCancelHandler }: PropsType) {
   const [form] = Form.useForm();
   return (
     <Modal
+      centered
       visible={visible}
       closeIcon={<CloseCircleOutlined />}
       onOk={() => form.submit()}

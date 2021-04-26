@@ -105,7 +105,7 @@ export default function UploadPicture({
       >
         {fileList.length < 1 && '+ Upload'}
       </Upload>
-      <Modal visible={visible} footer={null} onCancel={() => setVisible(false)}>
+      <Modal centered visible={visible} footer={null} onCancel={() => setVisible(false)}>
         <img alt="example" style={{ width: '100%' }} src={previewImage} />
       </Modal>
     </div>

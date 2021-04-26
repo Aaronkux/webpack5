@@ -351,6 +351,7 @@ const Detail = ({ data }: PropsType) => {
         </Form>
       </div>
       <Modal
+        centered
         title="Unsaved confirm"
         visible={modalVisible}
         onOk={() => {

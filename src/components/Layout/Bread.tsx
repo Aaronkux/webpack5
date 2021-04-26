@@ -28,7 +28,6 @@ export default function Bread() {
       </Breadcrumb.Item>
     );
   });
-  console.log(extraBreadcrumbItems);
   const breadcrumbItems = [
     <Breadcrumb.Item key="home">
       <Link to="/">Home</Link>
