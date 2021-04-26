@@ -6,10 +6,10 @@ export class ValidationError extends Error {
   }
 }
 
-export class NotFoundError extends Error {
-  constructor(message) {
+export class MyError extends Error {
+  constructor(message, name) {
     super(message);
     this.message = message;
-    this.name = 'NotFoundError';
+    this.name = name;
   }
 }

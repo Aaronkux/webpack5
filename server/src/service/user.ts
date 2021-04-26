@@ -1,19 +1,49 @@
-import { Provide } from '@midwayjs/decorator';
+import { Provide, Config, Plugin } from '@midwayjs/decorator';
 import { InjectEntityModel } from '@midwayjs/orm';
+import { Jwt, JwtEggConfig } from '@waiting/egg-jwt';
+import { JwtAuthMiddlewareConfig } from '../config/config.types';
 import { User } from '../entity/user';
 import { Role } from '../entity/role';
 import { Permission } from '../entity/permission';
 import { Repository } from 'typeorm';
 import { UserCreateDTO } from '../dto/user';
+import { LoginDTO } from '../dto/auth';
 
 @Provide()
 export class UserService {
+  @Config('jwt')
+  jwtConfig: JwtEggConfig;
+
+  @Config('jwtAuth')
+  jwtAuthConfig: JwtAuthMiddlewareConfig;
+
   @InjectEntityModel(User)
   userModel: Repository<User>;
   @InjectEntityModel(Role)
   roleModel: Repository<Role>;
   @InjectEntityModel(Permission)
   permissionModel: Repository<Permission>;
+
+  @Plugin()
+  jwt: Jwt;
+
+  async authUser(user: LoginDTO) {
+    const res = await this.userModel.findOne({
+      where: {
+        email: user.email,
+        password: user.password,
+      },
+      relations: ['roles', 'roles.permissions'],
+    });
+    const permissions = await res.getPermissions();
+    const { roles, ...rest } = res;
+    const token: string = this.jwt.sign(
+      { id: res.id },
+      this.jwtConfig.client.secret,
+      { expiresIn: this.jwtAuthConfig.accessTokenExpiresIn }
+    );
+    return { ...rest, permissions, token };
+  }
 
   async getUser(id: number) {
     let res = await this.userModel.findOne({
@@ -29,11 +59,11 @@ export class UserService {
 
   async getUserList(current: number, pageSize: number) {
     const [res, total] = await this.userModel.findAndCount({
-      skip: current,
+      select: ['firstname', 'lastname', 'email', 'id', 'isActive'],
+      skip: (current - 1) * pageSize,
       take: pageSize,
     });
-    // const res = await this.userModel.createQueryBuilder("user").skip(current).take(pageSize).getMany();
-    return [res, total];
+    return { users: res, total };
   }
 
   async test() {
@@ -48,7 +78,7 @@ export class UserService {
     await this.permissionModel.save(permission2);
 
     let role = new Role();
-    role.roleName = 'readTest';
+    role.roleName = 'admin';
     role.permissions = [permission1, permission2];
     await this.roleModel.save(role);
 

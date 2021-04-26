@@ -17,6 +17,9 @@ export class User {
   email: string;
 
   @Column()
+  password: string;
+
+  @Column()
   isActive: boolean;
 
   @ManyToMany(type => Role, role => role.users)

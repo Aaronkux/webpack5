@@ -8,12 +8,11 @@ export class ErrorHandlerMiddleware {
         await next();
       } catch (err) {
         ctx.logger.error(err);
-
         switch (err.name) {
           case 'ValidationError':
             ctx.response.status = 400;
             ctx.body = {
-              success: 'false',
+              success: false,
               showType: 2,
               errorMessage: err.message.replace(/\"/g, ''),
             };
@@ -22,7 +21,7 @@ export class ErrorHandlerMiddleware {
           case 'NotFoundError':
             ctx.response.status = 404;
             ctx.body = {
-              success: 'false',
+              success: false,
               showType: 2,
               errorMessage: err.message,
             };
@@ -31,7 +30,7 @@ export class ErrorHandlerMiddleware {
           default:
             ctx.response.status = 400;
             ctx.body = {
-              success: 'false',
+              success: false,
               showType: 2,
               errorMessage: err.message,
             };

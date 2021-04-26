@@ -3,23 +3,18 @@ import {
   Get,
   Post,
   Param,
-  Body,
   Provide,
   Inject,
-  Validate,
-  HttpCode,
   Query,
 } from '@midwayjs/decorator';
 import { Context } from 'egg';
-import { ALL } from '@midwayjs/decorator';
 import { CreateApiDoc } from '@midwayjs/swagger';
 import { UserService } from '../service/user';
-import { UserCreateDTO } from '../dto/user';
-import { NotFoundError } from '../errors';
+import { MyError } from '../errors';
 import { parseIntOrThrowValidationError } from '../utils';
 
 @Provide()
-@Controller('/api/user')
+@Controller('/api/user', { tagName: '用户管理' })
 export class UserController {
   @Inject()
   ctx: Context;
@@ -28,17 +23,20 @@ export class UserController {
   userService: UserService;
 
   @(CreateApiDoc()
-    .summary('查询用户')
+    .summary('查询用户List')
     .respond(200, 'Success', 'json', {
       example: {
         success: true,
-        data: {
-          id: 1,
-          firstname: 'test',
-          lastname: 'test',
-          email: 'test',
-          isActive: true,
-        },
+        data: [
+          {
+            id: 1,
+            firstname: 'test',
+            lastname: 'test',
+            email: 'test',
+            isActive: true,
+            permissions: ['readDoc'],
+          },
+        ],
       },
     })
     .respond(400, 'ValidationError', 'json', {
@@ -104,34 +102,7 @@ export class UserController {
   async getUser(@Param() id: string) {
     const validId = parseIntOrThrowValidationError(id, 'Invalid user id');
     const res = await this.userService.getUser(validId);
-    if (!res) throw new NotFoundError(`User id=${id} not found`);
-    return { success: true, data: res };
-  }
-
-  @(CreateApiDoc()
-    .summary('创建用户')
-    .param('body', {
-      required: true,
-    })
-    .respond(201, 'Success', 'json', {
-      example: {
-        success: true,
-        message: 'create success',
-      },
-    })
-    .respond(400, 'Bad Request', 'json', {
-      example: {
-        success: false,
-        showType: 2,
-        errorMessage: 'firstname is required',
-      },
-    })
-    .build())
-  @HttpCode(201)
-  @Post('/')
-  @Validate()
-  async createUser(@Body(ALL) user: UserCreateDTO) {
-    const res = await this.userService.createUser(user);
+    if (!res) throw new MyError(`User id=${id} not found`, 'NotFoundError');
     return { success: true, data: res };
   }
 
