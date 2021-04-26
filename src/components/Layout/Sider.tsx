@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { Layout, Drawer, Menu } from 'antd';
-import { NavLink } from 'react-router-dom';
+import { NavLink, useRouteMatch } from 'react-router-dom';
 import styles from './Sider.less';
 import { interopRequireDefault } from '@/utils';
 import { IBestAFSRoute } from '@umijs/plugin-layout';
@@ -105,7 +105,12 @@ export default function MySider({ collapsed, setCollapsed }: PropsType) {
   const user = store.get('user');
   const [routeMap, routeList] = useMemo(() => route2List(routes, user), []);
   // prevent default pathname change
-  const defaultPathname = useMemo(() => location.pathname, []);
+  const defaultPathname = useMemo(() => {
+    let path = location.pathname;
+    const isDetailPathname = /\/\d+$/.test(path);
+    if (isDetailPathname) return path.replace(/\/\d+$/, '');
+    return location.pathname;
+  }, []);
   return (
     <>
       {drawerSider ? (

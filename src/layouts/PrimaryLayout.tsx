@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
+import { MenuFoldOutlined } from '@ant-design/icons';
 import { Layout, Button, Breadcrumb } from 'antd';
 import { Sider, Bread } from '@/components/Layout';
+import styles from './PrimaryLayout.less';
 
 const { Header, Content, Footer } = Layout;
 
@@ -11,27 +13,22 @@ interface PropsType {
 export default function PrimaryLayout({ children }: PropsType) {
   const [collapsed, setCollapsed] = useState(false);
   return (
-    <Layout style={{ minHeight: '100vh' }}>
+    <Layout className={styles.container}>
       <Sider collapsed={collapsed} setCollapsed={setCollapsed} />
       <Layout>
-        <Header
-          style={{
-            backgroundColor: '#fff',
-            height: '60px',
-            position: 'sticky',
-            top: 0,
-            zIndex: 99
-          }}
-        >
-          <Button type="primary" onClick={() => setCollapsed(!collapsed)}>
-            Collapsed
-          </Button>
+        <Header className={styles.header}>
+          <MenuFoldOutlined
+            className={styles.menuFold}
+            onClick={() => setCollapsed(!collapsed)}
+          />
         </Header>
-        <Content style={{ backgroundColor: '#f5f5f5', padding: '15px' }}>
+        <Content className={styles.content}>
           <Bread />
           {children}
         </Content>
-        <Footer style={{ backgroundColor: '#fff' }}>Footer</Footer>
+        <Footer className={styles.footer} >
+          Global Pay Admin ©2021 Aaron
+        </Footer>
       </Layout>
     </Layout>
   );

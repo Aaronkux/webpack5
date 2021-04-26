@@ -6,9 +6,8 @@ export const routes: IBestAFSRoute[] = [
     component: '@/layouts/index',
     hideInMenu: true,
     routes: [
-      { path: '/', redirect: '/dashboard', hideInMenu: true },
       {
-        path: '/dashboard',
+        path: '/',
         name: 'Dashboard',
         icon: 'DashboardOutlined',
         component: '@/pages/dashboard',
@@ -41,8 +40,7 @@ export const routes: IBestAFSRoute[] = [
       {
         path: '/clients/individual/:id',
         component: '@/pages/individual/Detail',
-        name: 'Individual Client',
-        icon: 'ContactsOutlined',
+        name: 'Individual Client Detail',
         hideInMenu: true,
       },
       {

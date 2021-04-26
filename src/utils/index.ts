@@ -100,7 +100,6 @@ export function route2List(
  */
 function validBreadRoute(route: IBestAFSRoute, user: UserType) {
   if (
-    !route.hideInMenu &&
     (!route.access || user.access.includes(route.access)) &&
     route.component &&
     route.path
