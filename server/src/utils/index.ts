@@ -1,4 +1,4 @@
-import { ValidationError } from '../errors';
+import { MyError } from '../errors';
 
 export function parseIntOrThrowValidationError(
   input: string,
@@ -6,7 +6,7 @@ export function parseIntOrThrowValidationError(
 ) {
   const validId = parseInt(input);
   if (isNaN(validId)) {
-    throw new ValidationError(errorMsg);
+    throw new MyError(errorMsg, 'ValidationError');
   }
   return validId;
 }
