@@ -187,4 +187,125 @@ export default {
     },
     success: true,
   }),
+  'GET /api/order/:id': Mock.mock({
+    data: {
+      id: '@id',
+      referral: '@csentence(3, 5)',
+      salesman: {
+        id: '@id',
+        name: '@name',
+        photo: '@IMG',
+      },
+      clientInfo: {
+        id: Random.integer(1, 10000).toString(),
+        name: '@name',
+      },
+      fromCurrency: 'AUD',
+      fromAmount: Random.float(1, 5000),
+      toCurreny: 'RMB',
+      toAmount: Random.float(1, 5000),
+      exchangeRate: Random.float(4, 5),
+      baseRate: Random.float(4, 5),
+      comment: '@csentence(10, 20)',
+      department: '@csentence(3, 5)',
+      specialConsideration: '@csentence(3, 5)',
+      dispensingBank: '@csentence(3, 5)',
+      receiver: {
+        id: Random.integer(1, 10000).toString(),
+        name: '@name',
+      },
+      compliance: {
+        id: Random.integer(1, 10000).toString(),
+        name: '@name',
+        photo: '@IMG',
+      },
+      fundNotified: {
+        id: Random.integer(1, 10000).toString(),
+        name: '@name',
+        photo: '@IMG',
+      },
+      fundReceived: {
+        id: Random.integer(1, 10000).toString(),
+        name: '@name',
+        photo: '@IMG',
+      },
+      confirmationSent: {
+        id: Random.integer(1, 10000).toString(),
+        name: '@name',
+        photo: '@IMG',
+      },
+      clientConfirmed: {
+        id: Random.integer(1, 10000).toString(),
+        name: '@name',
+        photo: '@IMG',
+      },
+      fundPaid: {
+        id: Random.integer(1, 10000).toString(),
+        name: '@name',
+        photo: '@IMG',
+      },
+    },
+    success: true,
+  }),
+  'GET /api/order': Mock.mock({
+    data: {
+      'orders|5': [
+        {
+          id: '@id',
+          referral: '@csentence(3, 5)',
+          clientInfo: {
+            id: Random.integer(1, 10000).toString(),
+            name: '@name',
+          },
+          salesman: {
+            id: '@id',
+            name: '@name',
+            photo: '@IMG',
+          },
+          fromCurrency: 'AUD',
+          fromAmount: Random.float(1, 5000, 2, 2),
+          toCurrency: 'RMB',
+          toAmount: Random.float(1, 5000, 2, 2),
+          exchangeRate: Random.float(4, 5, 2, 2),
+          baseRate: Random.float(4, 5, 2, 2),
+          comment: '@csentence(10, 20)',
+          department: '@csentence(3, 5)',
+          specialConsideration: '@csentence(3, 5)',
+          dispensingBank: '@csentence(3, 5)',
+          receiver: {
+            id: Random.integer(1, 10000).toString(),
+            name: '@name',
+          },
+          compliance: {
+            id: Random.integer(1, 10000).toString(),
+            name: '@name',
+            photo: '@IMG',
+          },
+          fundNotified: {
+            id: Random.integer(1, 10000).toString(),
+            name: '@name',
+            photo: '@IMG',
+          },
+          fundReceived: {
+            id: Random.integer(1, 10000).toString(),
+            name: '@name',
+            photo: '@IMG',
+          },
+          confirmationSent: false,
+          clientConfirmed: {
+            id: Random.integer(1, 10000).toString(),
+            name: '@name',
+            photo: '@IMG',
+          },
+          fundPaid: {
+            id: Random.integer(1, 10000).toString(),
+            name: '@name',
+            photo: '@IMG',
+          },
+        },
+      ],
+      total: 50,
+    },
+    success: true,
+  }),
 };

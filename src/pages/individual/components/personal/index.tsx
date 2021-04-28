@@ -51,7 +51,7 @@ const Personal = ({
   useEffect(() => {
     if (id) {
       dispatch({
-        type: 'clients/queryIndividualClientDetail',
+        type: 'clients/getIndividualClientsDetail',
         payload: { id },
       });
     }

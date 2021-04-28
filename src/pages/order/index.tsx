@@ -1,16 +1,30 @@
-import React, { useState } from 'react';
-import { Link } from 'umi';
-import { Row, Button, Table, Card, Popover, Avatar, Tag } from 'antd';
+import React, { useState, useEffect } from 'react';
+import { Link, useDispatch, connect } from 'umi';
+import { Row, Pagination, Table, Card, Popover, Avatar, Tag } from 'antd';
 import {
   CheckCircleOutlined,
   ClockCircleOutlined,
   SyncOutlined,
 } from '@ant-design/icons';
+import type { OrderModelState, Loading } from 'umi';
+import type { PaginationProps } from 'antd';
+import useURLParams from '@/hooks/useURLParams';
+import type { OrderInfo } from '@/services/order';
 import Filter from './Filter';
 import styles from './index.less';
 import edit from '@/assets/edit.svg';
+import next from '@/assets/next.svg';
+import del from '@/assets/del.svg';
 
-const orderedStage = [
+type StageType =
+  | 'compliance'
+  | 'fundNotified'
+  | 'fundReceived'
+  | 'confirmationSent'
+  | 'clientConfirmed'
+  | 'fundPaid';
+
+const orderedStage: StageType[] = [
   'compliance',
   'fundNotified',
   'fundReceived',
@@ -35,6 +49,31 @@ const getColorAndIcon = (position: number, currentStage: number) => {
   }
 };
 
+const StagePopoverContent = ({
+  name,
+  photo,
+}: {
+  name: string;
+  photo: string;
+}) => {
+  return (
+    <Card
+      style={{ width: '80px', height: '128px' }}
+      bordered={false}
+      bodyStyle={{
+        padding: 0,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+      }}
+    >
+      <Avatar src={photo} size={64} />
+      <p style={{ marginTop: '10px', textAlign: 'center' }}>{name}</p>
+    </Card>
+  );
+};
+
 const columns = [
   {
     title: 'ID',
@@ -49,9 +88,32 @@ const columns = [
     dataIndex: 'name',
     key: 'name',
     fixed: 'left' as 'left',
-    width: 80,
+    width: 150,
+    render: (_: any, record: OrderInfo) => record.clientInfo.name,
   },
   { title: 'Referral', dataIndex: 'referral', key: 'referral', width: 100 },
+  {
+    title: 'Salesman',
+    dataIndex: 'salesman',
+    key: 'salesman',
+    className: styles.salesman,
+    width: 100,
+    render: (salesman: any, record: OrderInfo) => (
+      <div>
+        {' '}
+        <Popover
+          content={
+            <StagePopoverContent
+              name={record.salesman?.name}
+              photo={record.salesman?.photo}
+            />
+          }
+        >
+          <span className={styles.salesman}>{record.salesman?.name}</span>
+        </Popover>
+      </div>
+    ),
+  },
   {
     title: 'From Currency',
     dataIndex: 'fromCurrency',
@@ -97,25 +159,28 @@ const columns = [
     key: 'dispensingBank',
     width: 120,
   },
-  { title: 'Receiver', dataIndex: 'receiver', key: 'receiver', width: 100 },
+  {
+    title: 'Receiver',
+    dataIndex: 'receiver',
+    key: 'receiver',
+    width: 150,
+    render: (stage: any, record: OrderInfo) => record.receiver.name,
+  },
   {
     title: 'Stage',
     dataIndex: 'stage',
     key: 'stage',
     width: 300,
+    className: styles.stage,
     fixed: 'right' as 'right',
-    render: (stage: any, record: any) => {
+    render: (stage: any, record: OrderInfo) => {
       let currentStage = 0;
       for (let i = 0; i < orderedStage.length; i++) {
-        if (
-          stage[orderedStage[i]] === false &&
-          i > 0 &&
-          stage[orderedStage[i - 1]] === true
-        ) {
+        if (!record[orderedStage[i]] && i > 0 && record[orderedStage[i - 1]]) {
           currentStage = i;
           break;
         }
-        if (i === 5 && stage[orderedStage[i]] === true) {
+        if (i === 5 && record[orderedStage[i]]) {
           currentStage = 6;
         }
       }
@@ -125,30 +190,46 @@ const columns = [
           <div>
             {orderedStage.slice(0, 3).map((text, index) => {
               const { color, icon } = getColorAndIcon(index, currentStage);
+              const { name, photo } = record[text];
               return (
-                <Tag
-                  style={{ marginBottom: '5px' }}
+                <Popover
                   key={index}
-                  icon={icon}
-                  color={color}
+                  content={<StagePopoverContent name={name} photo={photo} />}
                 >
-                  {text}
-                </Tag>
+                  <Tag
+                    className={styles.tag}
+                    key={index}
+                    icon={icon}
+                    color={color}
+                  >
+                    {text}
+                  </Tag>
+                </Popover>
               );
             })}
           </div>
           <div>
             {orderedStage.slice(3).map((text, index) => {
               const { color, icon } = getColorAndIcon(index + 3, currentStage);
+              const { name, photo } = record[text];
               return (
-                <Tag
-                  style={{ marginBottom: '5px' }}
-                  key={index}
-                  icon={icon}
-                  color={color}
-                >
-                  {text}
-                </Tag>
+                <div key={index + 3}>
+                  {name ? (
+                    <Popover
+                      content={
+                        <StagePopoverContent name={name} photo={photo} />
+                      }
+                    >
+                      <Tag className={styles.tag} icon={icon} color={color}>
+                        {text}
+                      </Tag>
+                    </Popover>
+                  ) : (
+                    <Tag className={styles.tag} icon={icon} color={color}>
+                      {text}
+                    </Tag>
+                  )}
+                </div>
               );
             })}
           </div>
@@ -160,146 +241,49 @@ const columns = [
     title: 'Action',
     dataIndex: 'action',
     key: 'action',
-    width: 100,
+    width: 150,
     align: 'center' as 'center',
     fixed: 'right' as 'right',
     render: (text: string, record: any) => {
       return (
-        <Link to={`/order/${record.id}`}>
-          <Popover content={'edit'}>
-            <img src={edit} alt="logo" />
+        <div className={styles.action}>
+          <Popover key={'edit'} content={'edit'}>
+            <Link to={`/order/${record.id}`}>
+              <img className={styles.logo} src={edit} alt="logo" />
+            </Link>
           </Popover>
-        </Link>
+          <Popover key={'next'} content={'next'}>
+            <img className={styles.logo} src={next} alt="logo" />
+          </Popover>
+          <Popover key={'del'} content={'delete'}>
+            <img className={styles.logo} src={del} alt="logo" />
+          </Popover>
+        </div>
       );
     },
   },
 ];
 
-const data = [
-  {
-    id: '1123213',
-    name: 'aaron',
-    referral: 'test',
-    fromCurrency: 'test',
-    fromAmount: 'test',
-    toCurrency: 'test',
-    toAmount: 'test',
-    exchangeRate: 'test',
-    baseRate: 'test',
-    comment: 'test',
-    department: 'test',
-    specialConsideration: 'test',
-    dispensingBank: 'test',
-    receiver: 'receiver',
-    stage: {
-      compliance: true,
-      fundNotified: true,
-      fundReceived: true,
-      confirmationSent: false,
-      clientConfirmed: false,
-      fundPaid: false,
-    },
-  },
-  {
-    id: '23213213',
-    name: 'aaron',
-    referral: 'test',
-    fromCurrency: 'test',
-    fromAmount: 'test',
-    toCurrency: 'test',
-    toAmount: 'test',
-    exchangeRate: 'test',
-    baseRate: 'test',
-    comment: 'test',
-    department: 'test',
-    specialConsideration: 'test',
-    dispensingBank: 'test',
-    receiver: 'receiver',
-    stage: {
-      compliance: false,
-      fundNotified: false,
-      fundReceived: false,
-      confirmationSent: false,
-      clientConfirmed: false,
-      fundPaid: false,
-    },
-  },
-  {
-    id: '2321321313213',
-    name: 'aaron',
-    referral: 'test',
-    fromCurrency: 'test',
-    fromAmount: 'test',
-    toCurrency: 'test',
-    toAmount: 'test',
-    exchangeRate: 'test',
-    baseRate: 'test',
-    comment: 'test',
-    department: 'test',
-    specialConsideration: 'test',
-    dispensingBank: 'test',
-    receiver: 'receiver',
-    stage: {
-      compliance: true,
-      fundNotified: true,
-      fundReceived: true,
-      confirmationSent: true,
-      clientConfirmed: true,
-      fundPaid: true,
-    },
-  },
-  {
-    id: '232134214213',
-    name: 'aaron',
-    referral: 'test',
-    fromCurrency: 'test',
-    fromAmount: 'test',
-    toCurrency: 'test',
-    toAmount: 'test',
-    exchangeRate: 'test',
-    baseRate: 'test',
-    comment: 'test',
-    department: 'test',
-    specialConsideration: 'test',
-    dispensingBank: 'test',
-    receiver: 'receiver',
-    stage: {
-      compliance: true,
-      fundNotified: true,
-      fundReceived: true,
-      confirmationSent: true,
-      clientConfirmed: true,
-      fundPaid: false,
-    },
-  },
-  {
-    id: '23213211233',
-    name: 'aaron',
-    referral: 'test',
-    fromCurrency: 'test',
-    fromAmount: 'test',
-    toCurrency: 'test',
-    toAmount: 'test',
-    exchangeRate: 'test',
-    baseRate: 'test',
-    comment: 'test',
-    department: 'test',
-    specialConsideration: 'test',
-    dispensingBank: 'test',
-    receiver: 'receiver',
-    stage: {
-      compliance: true,
-      fundNotified: true,
-      fundReceived: false,
-      confirmationSent: false,
-      clientConfirmed: false,
-      fundPaid: false,
-    },
-  },
-];
+interface PropsType {
+  orders: OrderInfo[];
+  total: number;
+  loading: boolean;
+}
 
-export default function Order() {
+const Order = ({ orders, total, loading }: PropsType) => {
+  const [urlState, setURL] = useURLParams();
+  const onChangeHandler: PaginationProps['onChange'] = (page, pageSize) => {
+    setURL({ current: page.toString(), pageSize: pageSize?.toString() });
+  };
   const [visible, setVisible] = useState(false);
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    dispatch({
+      type: 'orders/getOrders',
+      payload: { current: urlState.current, pageSize: urlState.pageSize },
+    });
+  }, [urlState]);
   return (
     <div className={styles.container}>
       <Card className={styles.filterContainer}>
@@ -308,13 +292,34 @@ export default function Order() {
       <Card>
         <Table
           bordered
+          loading={loading}
           columns={columns}
-          dataSource={data}
+          dataSource={orders}
+          rowKey="id"
+          pagination={false}
           scroll={{ x: 1500 }}
           sticky
-          rowKey="id"
+          className={styles.table}
         />
+        <Row justify="end" className={styles.pagination}>
+          <Pagination
+            onChange={onChangeHandler}
+            showSizeChanger
+            current={urlState.current ? parseInt(urlState.current) : 1}
+            pageSize={urlState.pageSize ? parseInt(urlState.pageSize) : 5}
+            pageSizeOptions={['5', '10', '15']}
+            total={total}
+          />
+        </Row>
       </Card>
     </div>
   );
-}
+};
+
+export default connect(
+  ({ orders, loading }: { orders: OrderModelState; loading: Loading }) => ({
+    orders: orders.orders,
+    loading: loading.models.orders,
+    total: orders.total,
+  }),
+)(React.memo(Order));

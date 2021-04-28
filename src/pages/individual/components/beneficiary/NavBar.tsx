@@ -22,7 +22,7 @@ const NavBar = ({ data, loading, urlState, setURL }: PropsType) => {
   useEffect(() => {
     if (id) {
       dispatch({
-        type: 'clients/queryAllBeneficiary',
+        type: 'clients/getBeneficiaries',
         payload: { id },
       });
     }
@@ -30,7 +30,7 @@ const NavBar = ({ data, loading, urlState, setURL }: PropsType) => {
   useEffect(() => {
     if (selectedParam) {
       dispatch({
-        type: 'clients/queryBeneficiaryDetail',
+        type: 'clients/getBeneficiaryDetail',
         payload: { id: selectedParam },
       });
     }
