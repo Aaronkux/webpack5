@@ -64,7 +64,7 @@ const Clients = ({ individualClients, total, loading }: PropsType) => {
 
   useEffect(() => {
     dispatch({
-      type: 'clients/queryIndividualClients',
+      type: 'clients/getIndividualClients',
       payload: { current: urlState.current, pageSize: urlState.pageSize },
     });
   }, [urlState]);
@@ -76,6 +76,8 @@ const Clients = ({ individualClients, total, loading }: PropsType) => {
       </Card>
       <Card>
         <Table
+          className={styles.table}
+          bordered
           loading={loading}
           columns={dynamicColumns}
           dataSource={individualClients}

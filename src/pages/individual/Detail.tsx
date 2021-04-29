@@ -4,13 +4,15 @@ import Personal from './components/personal';
 import Beneficiary from './components/beneficiary';
 import useURLParams from '@/hooks/useURLParams';
 import styles from './Detail.less';
+import BackButton from '@/components/BackButton';
 
 export default function Detail() {
   const [urlState, setURL] = useURLParams();
   const [showOther, setShowOther] = useState(false);
   return (
     <div className={styles.container}>
-      <Card className={styles.formContainer}>
+      <Card>
+        <BackButton />
         <Menu
           defaultSelectedKeys={[urlState.p ?? 'remitter']}
           mode="horizontal"

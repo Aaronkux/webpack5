@@ -16,7 +16,6 @@ export interface SalesModelType {
   namespace: 'sales';
   state: SalesModelState;
   effects: {
-    query: Effect;
     queryAll: Effect;
   };
   reducers: {
@@ -29,7 +28,6 @@ const SalesModel: SalesModelType = {
   namespace: 'sales',
   state: { sales: [], total: 0 },
   effects: {
-    *query({ payload }, { call, put }) {},
     *queryAll({ payload }, { call, put }) {
       const { current, pageSize } = payload;
       const res: SalesResponse = yield call(queryAllSales, current, pageSize);
@@ -44,14 +42,6 @@ const SalesModel: SalesModelType = {
       return state;
     },
   },
-  // subscriptions: {
-  //   setup({ dispatch, history }) {
-  //     dispatch({
-  //       type: 'queryAll',
-  //       payload: {},
-  //     });
-  //   },
-  // },
 };
 
 export default SalesModel;

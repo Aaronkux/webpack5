@@ -1,9 +1,9 @@
 import { Effect, ImmerReducer } from 'umi';
 import {
-  queryAllIndividualClients,
-  queryIndividualClientDetail,
-  queryAllBeneficiary,
-  queryBeneficiaryDetail,
+  getIndividualClients,
+  getIndividualClientsDetail,
+  getBeneficiaries,
+  getBeneficiaryDetail,
 } from '@/services/clients';
 import type {
   IndividualClientInfo,
@@ -30,15 +30,14 @@ export interface ClientsModelType {
   namespace: 'clients';
   state: ClientsModelState;
   effects: {
-    queryIndividualClients: Effect;
-    queryIndividualClientDetail: Effect;
-    queryAllBeneficiary: Effect;
-    queryBeneficiaryDetail: Effect;
+    getIndividualClients: Effect;
+    getIndividualClientsDetail: Effect;
+    getBeneficiaries: Effect;
+    getBeneficiaryDetail: Effect;
   };
   reducers: {
     save: ImmerReducer<ClientsModelState>;
   };
-  // subscriptions: { setup: Subscription };
 }
 
 const ClientsModel: ClientsModelType = {
@@ -51,10 +50,10 @@ const ClientsModel: ClientsModelType = {
     beneficiary: [],
   },
   effects: {
-    *queryIndividualClients({ payload }, { call, put }) {
+    *getIndividualClients({ payload }, { call, put }) {
       const { current, pageSize } = payload;
       const res: IndividualClientsResponse = yield call(
-        queryAllIndividualClients,
+        getIndividualClients,
         current,
         pageSize,
       );
@@ -62,10 +61,10 @@ const ClientsModel: ClientsModelType = {
         yield put({ type: 'save', payload: { individualClients: res.data } });
       }
     },
-    *queryIndividualClientDetail({ payload }, { call, put }) {
+    *getIndividualClientsDetail({ payload }, { call, put }) {
       const { id } = payload;
       const res: IndividualClientsDetailResponse = yield call(
-        queryIndividualClientDetail,
+        getIndividualClientsDetail,
         id,
       );
       if (res.success && res.data) {
@@ -75,9 +74,9 @@ const ClientsModel: ClientsModelType = {
         });
       }
     },
-    *queryAllBeneficiary({ payload }, { call, put }) {
+    *getBeneficiaries({ payload }, { call, put }) {
       const { id } = payload;
-      const res: BeneficiaryResponse = yield call(queryAllBeneficiary, id);
+      const res: BeneficiaryResponse = yield call(getBeneficiaries, id);
       if (res.success && res.data) {
         yield put({
           type: 'save',
@@ -85,10 +84,10 @@ const ClientsModel: ClientsModelType = {
         });
       }
     },
-    *queryBeneficiaryDetail({ payload }, { call, put }) {
+    *getBeneficiaryDetail({ payload }, { call, put }) {
       const { id } = payload;
       const res: BeneficiaryDetailResponse = yield call(
-        queryBeneficiaryDetail,
+        getBeneficiaryDetail,
         id,
       );
       if (res.success && res.data) {

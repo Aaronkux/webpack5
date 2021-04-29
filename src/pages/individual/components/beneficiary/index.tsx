@@ -49,9 +49,9 @@ export default connect(
   ({ clients, loading }: { clients: ClientsModelState; loading: Loading }) => ({
     beneficiary: clients.beneficiary,
     beneficiaryDetail: clients.beneficiaryDetail,
-    beneficiaryLoading: loading.effects['clients/queryAllBeneficiary']!,
+    beneficiaryLoading: loading.effects['clients/getBeneficiaries']!,
     beneficiaryDetailLoading: loading.effects[
-      'clients/queryBeneficiaryDetail'
+      'clients/getBeneficiaryDetail'
     ]!,
   }),
 )(React.memo(Beneficiary));

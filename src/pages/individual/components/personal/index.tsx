@@ -17,7 +17,7 @@ import {
 import { connect, useDispatch, useRouteMatch } from 'umi';
 import type { ClientsModelState, Loading } from 'umi';
 import moment from 'moment';
-import NormalText from '../normalText';
+import NormalText from '@/components/NormalText';
 import UploadPicture from '@/components/UploadPicture';
 import type { IndividualClientInfo } from '@/services/clients';
 import styles from './index.less';
@@ -51,7 +51,7 @@ const Personal = ({
   useEffect(() => {
     if (id) {
       dispatch({
-        type: 'clients/queryIndividualClientDetail',
+        type: 'clients/getIndividualClientsDetail',
         payload: { id },
       });
     }
