@@ -97,7 +97,7 @@ const columns = [
     dataIndex: 'salesman',
     key: 'salesman',
     className: styles.salesman,
-    width: 100,
+    width: 120,
     render: (salesman: any, record: OrderInfo) => (
       <div>
         {' '}
