@@ -197,6 +197,7 @@ export default {
         name: '@name',
         photo: '@IMG',
       },
+      createdDate: '2021-04-29T02:12:02.909344Z',
       clientInfo: {
         id: Random.integer(1, 10000).toString(),
         name: '@name',
@@ -276,6 +277,7 @@ export default {
             name: '@name',
             photo: '@IMG',
           },
+          createdDate: '2021-04-29T02:12:02.909344Z',
           fromCurrency: 'AUD',
           fromAmount: Random.float(1, 5000, 2, 2),
           toCurrency: 'RMB',

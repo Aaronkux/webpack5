@@ -83,13 +83,17 @@ export default async function generatePDF(
       contractDate: {
         x: 538,
         y: 1037,
-        text: '2-Mar-2021',
+        text: orderDetail.createdDate
+          ? formatDate(orderDetail.createdDate)
+          : '',
         font: fontType.boldFont,
       },
       valueDate: {
         x: 1440,
         y: 1037,
-        text: '31-Mar-2021',
+        text: orderDetail.createdDate
+          ? formatDate(orderDetail.createdDate)
+          : '',
         font: fontType.boldFont,
       },
       rate: {
@@ -281,7 +285,6 @@ export default async function generatePDF(
   const pageData = canvas.toDataURL('image/png', 1.0);
   const pdf = new jspdf('p', 'pt', 'a4', true);
   pdf.addImage(pageData, 'JPEG', 0, 0, 595.28, 841.89);
-  console.log(formatDate('2021-04-29T02:12:02.909344Z'));
   switch (method) {
     case 'download':
       pdf.save('test.pdf');
