@@ -190,6 +190,7 @@ export default {
   'GET /api/order/:id': Mock.mock({
     data: {
       id: '@id',
+      orderNumber: '@id',
       referral: '@csentence(3, 5)',
       salesman: {
         id: '@id',
@@ -199,10 +200,13 @@ export default {
       clientInfo: {
         id: Random.integer(1, 10000).toString(),
         name: '@name',
+        type: Random.boolean(1, 1, true) ? 'individual' : 'company',
+        abnOrAcn: Random.integer(1, 10000).toString(),
+        address: '301-28 Qianjin North Road, Zhuhai District, Guangzhou, China',
       },
       fromCurrency: 'AUD',
       fromAmount: Random.float(1, 5000),
-      toCurreny: 'RMB',
+      toCurrency: 'RMB',
       toAmount: Random.float(1, 5000),
       exchangeRate: Random.float(4, 5),
       baseRate: Random.float(4, 5),
@@ -210,9 +214,14 @@ export default {
       department: '@csentence(3, 5)',
       specialConsideration: '@csentence(3, 5)',
       dispensingBank: '@csentence(3, 5)',
+      feeCurrency: 'AUD',
+      feeAmount: Random.float(1, 50, 2, 2),
       receiver: {
         id: Random.integer(1, 10000).toString(),
         name: '@name',
+        bankName: '@name',
+        accountNumber: Random.integer(1, 10000).toString(),
+        bsb: Random.integer(1, 10000).toString(),
       },
       compliance: {
         id: Random.integer(1, 10000).toString(),
@@ -252,10 +261,15 @@ export default {
       'orders|5': [
         {
           id: '@id',
+          orderNumber: '@id',
           referral: '@csentence(3, 5)',
           clientInfo: {
             id: Random.integer(1, 10000).toString(),
             name: '@name',
+            type: Random.boolean(1, 1, true) ? 'individual' : 'company',
+            abnOrAcn: Random.integer(1, 10000).toString(),
+            address:
+              '301-28 Qianjin North Road, Zhuhai District, Guangzhou, China',
           },
           salesman: {
             id: '@id',
@@ -272,9 +286,14 @@ export default {
           department: '@csentence(3, 5)',
           specialConsideration: '@csentence(3, 5)',
           dispensingBank: '@csentence(3, 5)',
+          feeCurrency: 'AUD',
+          feeAmount: Random.float(1, 50, 2, 2),
           receiver: {
             id: Random.integer(1, 10000).toString(),
             name: '@name',
+            bankName: '@name',
+            accountNumber: Random.integer(1, 10000).toString(),
+            bsb: Random.integer(1, 10000).toString(),
           },
           compliance: {
             id: Random.integer(1, 10000).toString(),

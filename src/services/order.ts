@@ -3,56 +3,67 @@ import type { ResponseType } from './index';
 
 export interface OrderInfo {
   id: string;
-  referral: string;
-  salesman: {
+  orderNumber: string;
+  referral?: string;
+  salesman?: {
     id: string;
     name: string;
     photo: string;
   };
   clientInfo: {
     id: string;
-    name: string;
+    type: 'individual' | 'company';
+    name?: string;
+    abnOrAcn?: string;
+    address?: string;
   };
-  fromCurrency: string;
-  fromAmount: number;
-  toCurreny: string;
-  toAmount: number;
-  exchangeRate: number;
-  baseRate: number;
-  comment: string;
-  department: string;
-  specialConsideration: string;
-  dispensingBank: string;
+  fromCurrency?: string;
+  fromAmount?: number;
+  toCurrency?: string;
+  toAmount?: number;
+  feeCurrency?: string;
+  feeAmount?: number;
+  exchangeRate?: number;
+  baseRate?: number;
+  comment?: string;
+  department?: string;
+  specialConsideration?: string;
+  dispensingBank?: string;
+  createdDate?: string;
+
   receiver: {
     id: string;
     name: string;
+    bankName: string;
+    accountNumber: string;
+    bsb: string;
   };
-  compliance: {
+  compliance?: {
     id: string;
     name: string;
     photo: string;
   };
-  fundNotified: {
+  fundNotified?: {
     id: string;
     name: string;
     photo: string;
   };
-  fundReceived: {
+  fundReceived?: {
     id: string;
     name: string;
     photo: string;
   };
-  confirmationSent: {
+  confirmationSent?: {
     id: string;
     name: string;
     photo: string;
   };
-  clientConfirmed: {
+  clientConfirmed?: {
     id: string;
     name: string;
     photo: string;
   };
-  fundPaid: {
+  fundPaid?: {
     id: string;
     name: string;
     photo: string;

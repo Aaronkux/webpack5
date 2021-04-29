@@ -16,8 +16,9 @@ import { connect, useDispatch, useRouteMatch } from 'umi';
 import type { OrderModelState, Loading } from 'umi';
 import { ExclamationCircleOutlined } from '@ant-design/icons';
 import BackButton from '@/components/BackButton';
-import NormalText from '@/components/normalText';
+import NormalText from '@/components/NormalText';
 import type { OrderInfo } from '@/services/order';
+import generatePDF from '@/utils/generatePDF';
 import styles from './Detail.less';
 
 const { Option } = Select;
@@ -167,7 +168,7 @@ const Detail = ({ orderDetail, loading }: PropsType) => {
               <Form.Item
                 label="to Currency"
                 name="toCurrency"
-                initialValue={orderDetail?.toCurreny}
+                initialValue={orderDetail?.toCurrency}
               >
                 {editing ? (
                   <Select>
@@ -234,7 +235,7 @@ const Detail = ({ orderDetail, loading }: PropsType) => {
               <Form.Item
                 label="Base Rate"
                 name="baseRate"
-                initialValue={orderDetail?.baseRate.toFixed(2)}
+                initialValue={orderDetail?.baseRate?.toFixed(2)}
               >
                 {editing ? (
                   <InputNumber
@@ -302,7 +303,14 @@ const Detail = ({ orderDetail, loading }: PropsType) => {
             <Col>
               <Row gutter={[16, 0]}>
                 <Col>
-                  <Button type="primary" htmlType="reset" onClick={() => {}}>
+                  <Button
+                    type="primary"
+                    htmlType="reset"
+                    onClick={() => {
+                      if (!orderDetail) return;
+                      generatePDF(orderDetail, 'Tina', 'download');
+                    }}
+                  >
                     Confirm Letter
                   </Button>
                 </Col>
