@@ -1,10 +1,12 @@
 import React from 'react';
 import { useHistory } from 'react-router-dom';
-import { useRequest, useModel } from 'umi';
-import { Form, Input, Button, Checkbox } from 'antd';
+import { useRequest } from 'umi';
+import { Form, Input, Button, Card } from 'antd';
 import store from 'store';
 
 import { login } from '@/services/user';
+
+import styles from './index.less';
 
 const layout = {
   labelCol: {
@@ -60,53 +62,47 @@ export default function Login() {
     run(values.username, values.password);
   };
   return (
-    <Form
-      {...layout}
-      name="basic"
-      initialValues={{
-        remember: true,
-      }}
-      onFinish={onFinishHandler}
-    >
-      <Form.Item
-        label="Username"
-        name="username"
-        rules={[
-          {
-            required: true,
-            message: 'Please input your username!',
-          },
-        ]}
+    <div className={styles.container}>
+      <Form
+        requiredMark={false}
+        name="basic"
+        initialValues={{
+          remember: true,
+        }}
+        layout="vertical"
+        onFinish={onFinishHandler}
       >
-        <Input />
-      </Form.Item>
-
-      <Form.Item
-        label="Password"
-        name="password"
-        rules={[
-          {
-            required: true,
-            message: 'Please input your password!',
-          },
-        ]}
-      >
-        <Input.Password />
-      </Form.Item>
-
-      {/* <Form.Item {...tailLayout} name="remember" valuePropName="checked">
-        <Checkbox>Remember me</Checkbox>
-      </Form.Item> */}
-
-      <Form.Item {...tailLayout}>
-        <Button
-          type="primary"
-          htmlType="submit"
-          // onClick={() => run('test', 'test')}
+        <Form.Item
+          label="Username"
+          name="username"
+          rules={[
+            {
+              required: true,
+              message: 'Please input your username!',
+            },
+          ]}
         >
-          Submit
-        </Button>
-      </Form.Item>
-    </Form>
+          <Input className={styles.input} />
+        </Form.Item>
+
+        <Form.Item
+          label="Password"
+          name="password"
+          rules={[
+            {
+              required: true,
+              message: 'Please input your password!',
+            },
+          ]}
+        >
+          <Input type="password" className={styles.input} />
+        </Form.Item>
+        <Form.Item>
+          <Button className={styles.loginBtn} type="primary" htmlType="submit">
+            Submit
+          </Button>
+        </Form.Item>
+      </Form>
+    </div>
   );
 }
