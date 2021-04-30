@@ -329,4 +329,16 @@ export default {
     },
     success: true,
   }),
+  'POST /api/order': {
+    data: null,
+    success: true,
+  },
+  'PUT /api/order/:id': {
+    data: null,
+    success: true,
+  },
+  'DELETE /api/order/:id': {
+    data: null,
+    success: true,
+  },
 };

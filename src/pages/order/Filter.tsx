@@ -36,15 +36,6 @@ export default function Filter({ setVisible }: PropsType) {
           </Button>
         </Col>
         <Col>
-          <Button
-            type="primary"
-            htmlType="reset"
-            onClick={() => form.resetFields()}
-          >
-            Reset
-          </Button>
-        </Col>
-        <Col>
           <Button type="primary" htmlType="submit">
             Search
           </Button>
