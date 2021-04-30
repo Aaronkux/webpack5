@@ -50,7 +50,6 @@ const SalesModel: SalesModelType = {
       const { id } = payload;
       const res: OrderDetailResponse = yield call(getOrderDetail, id);
       if (res.success && res.data) {
-        console.log(res.data);
         yield put({ type: 'save', payload: { detail: res.data } });
       } else {
         message.warning('Updated Failed');

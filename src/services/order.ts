@@ -77,6 +77,7 @@ export type OrdersResponse = ResponseType<{
 export type OrderDetailResponse = ResponseType<OrderInfo>;
 
 export type OrderUpdateResponse = ResponseType<{}>;
+export type OrderAddResponse = ResponseType<{}>;
 export type OrderDeleteResponse = ResponseType<{}>;
 
 export function getOrders(current: number, pageSize: number) {
@@ -97,6 +98,12 @@ export function getOrderDetail(id: string) {
 
 export function updateOrder(id: string, fields: Partial<OrderInfo>) {
   return request<OrderUpdateResponse>(`/api/order/${id}`, {
+    method: 'put',
+    data: fields,
+  });
+}
+export function addOrder(fields: Partial<OrderInfo>) {
+  return request<OrderAddResponse>(`/api/order`, {
     method: 'put',
     data: fields,
   });

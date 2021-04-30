@@ -10,7 +10,7 @@ interface PropsType {
 }
 
 const layout = {
-  labelCol: { span: 4 },
+  labelCol: { span: 6 },
   wrapperCol: { span: 16 },
 };
 
@@ -23,12 +23,12 @@ export default function Create({ visible, onCancelHandler }: PropsType) {
       closeIcon={<CloseCircleOutlined />}
       onOk={() => form.submit()}
       onCancel={onCancelHandler}
+      maskClosable={false}
       okText={'Add'}
       cancelText="Cancel"
-      maskClosable={true}
       className={styles.container}
       width={520}
-      // confirmLoading={true}
+      confirmLoading={true}
     >
       <Form
         {...layout}
