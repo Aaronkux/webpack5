@@ -1,27 +1,12 @@
 import React from 'react';
 import { useHistory } from 'react-router-dom';
 import { useRequest } from 'umi';
-import { Form, Input, Button, Card } from 'antd';
+import { Form, Input, Button } from 'antd';
 import store from 'store';
 
 import { login } from '@/services/user';
-
+import logo from '@/assets/gplogo.png';
 import styles from './index.less';
-
-const layout = {
-  labelCol: {
-    span: 8,
-  },
-  wrapperCol: {
-    span: 16,
-  },
-};
-const tailLayout = {
-  wrapperCol: {
-    offset: 8,
-    span: 16,
-  },
-};
 
 export default function Login() {
   const history = useHistory();
@@ -33,6 +18,7 @@ export default function Login() {
         firstname,
         lastname,
         email,
+        photo,
         salesPermission,
         clientPermission,
         orderPermission,
@@ -50,7 +36,7 @@ export default function Login() {
       if (emailPermission) {
         access.push('emailPermission');
       }
-      store.set('user', { firstname, lastname, email, access });
+      store.set('user', { firstname, lastname, email, access, photo });
       history.replace('/');
     },
     onError: (error) => {
@@ -63,6 +49,8 @@ export default function Login() {
   };
   return (
     <div className={styles.container}>
+      <img className={styles.logo} src={logo} alt="" />
+      <h2 className={styles.title}>Global Pay Admin</h2>
       <Form
         requiredMark={false}
         name="basic"
@@ -71,9 +59,10 @@ export default function Login() {
         }}
         layout="vertical"
         onFinish={onFinishHandler}
+        className={styles.form}
       >
         <Form.Item
-          label="Username"
+          // label="Username"
           name="username"
           rules={[
             {
@@ -82,11 +71,11 @@ export default function Login() {
             },
           ]}
         >
-          <Input className={styles.input} />
+          <Input placeholder="Username" className={styles.input} />
         </Form.Item>
 
         <Form.Item
-          label="Password"
+          // label="Password"
           name="password"
           rules={[
             {
@@ -95,7 +84,11 @@ export default function Login() {
             },
           ]}
         >
-          <Input type="password" className={styles.input} />
+          <Input
+            placeholder="Password"
+            type="password"
+            className={styles.input}
+          />
         </Form.Item>
         <Form.Item>
           <Button className={styles.loginBtn} type="primary" htmlType="submit">
