@@ -1,12 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useDispatch, connect, request } from 'umi';
-import { Card, Table, Row, Pagination, message } from 'antd';
+import { Card, Table, Row, Pagination, message, Avatar, Popover, Popconfirm } from 'antd';
 import type { PaginationProps } from 'antd';
 import type { UsersModelState, Loading } from 'umi';
+import moment from 'moment';
+import { CheckCircleOutlined, CloseCircleOutlined } from '@ant-design/icons';
 import type { UserInfo } from '@/services/users';
 import useURLParams from '@/hooks/useURLParams';
 import Filter from './Filter';
 import styles from './index.less';
+import edit from '@/assets/edit.svg';
+import del from '@/assets/del.svg';
 
 interface PropsType {
   users: UserInfo[];
@@ -31,11 +35,154 @@ const Users = ({ users, total, loading }: PropsType) => {
       width: 50,
       render: (stage: any, record: any, index: number) => index + 1,
     },
+    {
+      title: 'Name',
+      dataIndex: 'name',
+      key: 'name',
+      fixed: 'left' as 'left',
+      width: 150,
+    },
+    {
+      title: 'Email',
+      dataIndex: 'email',
+      key: 'email',
+      width: 200,
+    },
+    {
+      title: 'Photo',
+      dataIndex: 'photo',
+      key: 'photo',
+      width: 100,
+      render: (img: string) => <Avatar src={img} size={48} />,
+    },
+    {
+      title: 'IsActive',
+      dataIndex: 'isActive',
+      key: 'isActive',
+      width: 100,
+      render: (isChecked: boolean) =>
+        isChecked ? <CheckCircleOutlined /> : <CloseCircleOutlined />,
+    },
+    {
+      title: 'IsAdmin',
+      dataIndex: 'isAdmin',
+      key: 'isAdmin',
+      width: 100,
+      render: (isChecked: boolean) =>
+        isChecked ? <CheckCircleOutlined /> : <CloseCircleOutlined />,
+    },
+    {
+      title: 'Sales Permission',
+      dataIndex: 'salesPermission',
+      key: 'salesPermission',
+      width: 100,
+      render: (isChecked: boolean) =>
+        isChecked ? <CheckCircleOutlined /> : <CloseCircleOutlined />,
+    },
+    {
+      title: 'Client Permission',
+      dataIndex: 'clientPermission',
+      key: 'clientPermission',
+      width: 100,
+      render: (isChecked: boolean) =>
+        isChecked ? <CheckCircleOutlined /> : <CloseCircleOutlined />,
+    },
+    {
+      title: 'Order Permission',
+      dataIndex: 'orderPermission',
+      key: 'orderPermission',
+      width: 100,
+      render: (isChecked: boolean) =>
+        isChecked ? <CheckCircleOutlined /> : <CloseCircleOutlined />,
+    },
+    {
+      title: 'Email Permission',
+      dataIndex: 'emailPermission',
+      key: 'emailPermission',
+      width: 100,
+      render: (isChecked: boolean) =>
+        isChecked ? <CheckCircleOutlined /> : <CloseCircleOutlined />,
+    },
+    {
+      title: 'Check Compliance',
+      dataIndex: 'checkCompliance',
+      key: 'checkCompliance',
+      width: 100,
+      render: (isChecked: boolean) =>
+        isChecked ? <CheckCircleOutlined /> : <CloseCircleOutlined />,
+    },
+    {
+      title: 'Check FundNotified',
+      dataIndex: 'checkFundNotified',
+      key: 'checkFundNotified',
+      width: 100,
+      render: (isChecked: boolean) =>
+        isChecked ? <CheckCircleOutlined /> : <CloseCircleOutlined />,
+    },
+    {
+      title: 'Check FundReceived',
+      dataIndex: 'checkFundReceived',
+      key: 'checkFundReceived',
+      width: 100,
+      render: (isChecked: boolean) =>
+        isChecked ? <CheckCircleOutlined /> : <CloseCircleOutlined />,
+    },
+    {
+      title: 'Check ClientComfirmed',
+      dataIndex: 'checkClientComfirmed',
+      key: 'checkClientComfirmed',
+      width: 100,
+      render: (isChecked: boolean) =>
+        isChecked ? <CheckCircleOutlined /> : <CloseCircleOutlined />,
+    },
+    {
+      title: 'Check FundPaid',
+      dataIndex: 'checkFundPaid',
+      key: 'checkFundPaid',
+      width: 100,
+      render: (isChecked: boolean) =>
+        isChecked ? <CheckCircleOutlined /> : <CloseCircleOutlined />,
+    },
+    {
+      title: 'Create Date',
+      dataIndex: 'create_date',
+      key: 'create_date',
+      width: 150,
+      render: (date: string) =>
+        moment(date).zone(6).format('DD-MMM-YYYY h:mm:ss'),
+    },
+    {
+      title: 'Action',
+      dataIndex: 'action',
+      key: 'action',
+      width: 150,
+      align: 'center' as 'center',
+      fixed: 'right' as 'right',
+      render: (text: string, record: any) => {
+        return (
+          <div className={styles.action}>
+            <Popover key={'edit'} content={'edit'}>
+              <Link to={`/users/${record.id}`}>
+                <img className={styles.logo} src={edit} alt="logo" />
+              </Link>
+            </Popover>
+            <Popover key={'del'} content={'delete'}>
+              <Popconfirm
+                title="Are you sure to delete this record?"
+                onConfirm={() => deleteHandler(record.id)}
+              >
+                <img className={styles.logo} src={del} alt="logo" />
+              </Popconfirm>
+            </Popover>
+          </div>
+        );
+      },
+    },
   ];
 
   const deleteHandler = async (orderId: string) => {
     setActionLoading(true);
-    const res = await request(`/api/order/${orderId}`, {
+    const res = await request(`/api/users/${orderId}`, {
       method: 'delete',
     });
     if (res.success) {
@@ -66,7 +213,7 @@ const Users = ({ users, total, loading }: PropsType) => {
         <Table
           bordered
           loading={loading || actionLoading}
-          // columns={columns}
+          columns={columns}
           dataSource={users}
           rowKey="id"
           pagination={false}

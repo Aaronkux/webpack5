@@ -30,8 +30,7 @@ export type UserAddResponse = ResponseType<{}>;
 export type UserDeleteResponse = ResponseType<{}>;
 
 export interface UserType {
-  firstname: string;
-  lastname: string;
+  name: string;
   email: string;
   access: string[];
 }

@@ -3,7 +3,7 @@ import { useHistory } from 'react-router-dom';
 import { useRequest } from 'umi';
 import { Form, Input, Button } from 'antd';
 import store from 'store';
-
+import type { UserInfo } from '@/services/users';
 import { login } from '@/services/users';
 import logo from '@/assets/gplogo.png';
 import styles from './index.less';
@@ -15,15 +15,14 @@ export default function Login() {
     onSuccess: (data) => {
       let access: string[] = [];
       const {
-        firstname,
-        lastname,
+        name,
         email,
         photo,
         salesPermission,
         clientPermission,
         orderPermission,
         emailPermission,
-      } = data.users;
+      } = data as UserInfo;
       if (salesPermission) {
         access.push('salesPermission');
       }
@@ -36,7 +35,7 @@ export default function Login() {
       if (emailPermission) {
         access.push('emailPermission');
       }
-      store.set('user', { firstname, lastname, email, access, photo });
+      store.set('user', { name, email, access, photo });
       history.replace('/');
     },
     onError: (error) => {

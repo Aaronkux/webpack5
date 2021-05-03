@@ -1,5 +1,30 @@
 .container {
   .filterContainer {
+    margin-bottom: 10px;
+  }
+  .table {
+    & td,
+    & th {
+      text-align: center;
+      vertical-align: middle;
+    }
+
+    td.stage {
+      text-align: start;
+      vertical-align: middle;
+    }
+
+    .action {
+      display: flex;
+      justify-content: space-around;
+      font-size: 0;
+
+      .logo {
+        cursor: pointer;
+      }
+    }
+  }
+  .pagination {
     margin-top: 10px;
   }
 }
