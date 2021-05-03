@@ -9,6 +9,7 @@ import {
   Select,
   InputNumber,
   message,
+  Divider,
 } from 'antd';
 import { CloseCircleOutlined } from '@ant-design/icons';
 import styles from './Create.less';
@@ -76,6 +77,8 @@ export default function Create({ newVisible, setNewVisible }: PropsType) {
         form={form}
         onFinish={finishHandler}
       >
+        <h1 className={styles.title}>Order Information</h1>
+        <Divider />
         <Row>
           <Col xs={24} sm={24} md={24} lg={12} xl={12}>
             <Form.Item

@@ -23,6 +23,7 @@ export default function BasicLayout({ children }: PropsType) {
   const user = store.get('user');
 
   if (!user && location.pathname !== '/login') {
+    console.log('blocked')
     history.replace('/login', { redirectPath: location.pathname });
   }
   if ( user && location.pathname === '/login') {

@@ -1,6 +1,6 @@
 import { useCallback } from 'react';
 import { RequestConfig, useModel, request as umiRequest } from 'umi';
-import { UserInfo } from '@/services/user'
+import { UserInfo } from '@/services/users'
 
 export const request: RequestConfig = {
   timeout: 10000,

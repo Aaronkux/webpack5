@@ -17,17 +17,19 @@ export default function PrimaryLayout({ children }: PropsType) {
       <Sider collapsed={collapsed} setCollapsed={setCollapsed} />
       <Layout>
         <Header className={styles.header}>
-          <MenuFoldOutlined
-            className={styles.menuFold}
-            onClick={() => setCollapsed(!collapsed)}
-          />
-          <HeaderRight />
+          <div className={styles.headerContainer}>
+            <MenuFoldOutlined
+              className={styles.menuFold}
+              onClick={() => setCollapsed(!collapsed)}
+            />
+            <HeaderRight />
+          </div>
         </Header>
         <Content className={styles.content}>
           <Bread />
           {children}
         </Content>
-        <Footer className={styles.footer}>Global Pay Admin ©2021 Aaron</Footer>
+        <Footer className={styles.footer}>Global Pay Admin ©2021</Footer>
       </Layout>
     </Layout>
   );

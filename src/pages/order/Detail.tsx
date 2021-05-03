@@ -454,6 +454,15 @@ const Detail = ({ orderDetail, loading }: PropsType) => {
             </Col>
             <Col>
               <Row gutter={[16, 0]}>
+                {editing && (
+                  <Col>
+                    <Form.Item>
+                      <Button loading={saving} type="primary" htmlType="submit">
+                        Save
+                      </Button>
+                    </Form.Item>
+                  </Col>
+                )}
                 <Col>
                   {editing ? (
                     <Button
@@ -468,17 +477,6 @@ const Detail = ({ orderDetail, loading }: PropsType) => {
                     </Button>
                   )}
                 </Col>
-                {editing ? (
-                  <Col>
-                    <Form.Item>
-                      <Button loading={saving} type="primary" htmlType="submit">
-                        Save
-                      </Button>
-                    </Form.Item>
-                  </Col>
-                ) : (
-                  ''
-                )}
               </Row>
             </Col>
           </Row>
@@ -511,6 +509,6 @@ const Detail = ({ orderDetail, loading }: PropsType) => {
 export default connect(
   ({ orders, loading }: { orders: OrderModelState; loading: Loading }) => ({
     orderDetail: orders.detail,
-    loading: loading.models.orders,
+    loading: loading.effects['orders/getOrderDetail']!,
   }),
 )(React.memo(Detail));
