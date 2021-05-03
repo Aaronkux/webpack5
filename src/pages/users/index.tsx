@@ -1,6 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useDispatch, connect, request } from 'umi';
-import { Card, Table, Row, Pagination, message, Avatar, Popover, Popconfirm } from 'antd';
+import {
+  Card,
+  Table,
+  Row,
+  Pagination,
+  message,
+  Avatar,
+  Popover,
+  Popconfirm,
+  Tag,
+} from 'antd';
 import type { PaginationProps } from 'antd';
 import type { UsersModelState, Loading } from 'umi';
 import moment from 'moment';
@@ -8,6 +18,7 @@ import { CheckCircleOutlined, CloseCircleOutlined } from '@ant-design/icons';
 import type { UserInfo } from '@/services/users';
 import useURLParams from '@/hooks/useURLParams';
 import Filter from './Filter';
+import Create from './Create';
 import styles from './index.less';
 import edit from '@/assets/edit.svg';
 import del from '@/assets/del.svg';
@@ -59,89 +70,265 @@ const Users = ({ users, total, loading }: PropsType) => {
       title: 'IsActive',
       dataIndex: 'isActive',
       key: 'isActive',
-      width: 100,
+      width: 130,
       render: (isChecked: boolean) =>
-        isChecked ? <CheckCircleOutlined /> : <CloseCircleOutlined />,
+        isChecked ? (
+          <Tag
+            className={styles.tag}
+            icon={<CheckCircleOutlined />}
+            color={'success'}
+          >
+            checked
+          </Tag>
+        ) : (
+          <Tag
+            className={styles.tag}
+            icon={<CloseCircleOutlined />}
+            color={'warning'}
+          >
+            unchecked
+          </Tag>
+        ),
     },
     {
       title: 'IsAdmin',
       dataIndex: 'isAdmin',
       key: 'isAdmin',
-      width: 100,
+      width: 130,
       render: (isChecked: boolean) =>
-        isChecked ? <CheckCircleOutlined /> : <CloseCircleOutlined />,
+        isChecked ? (
+          <Tag
+            className={styles.tag}
+            icon={<CheckCircleOutlined />}
+            color="success"
+          >
+            checked
+          </Tag>
+        ) : (
+          <Tag
+            className={styles.tag}
+            icon={<CloseCircleOutlined />}
+            color={'warning'}
+          >
+            unchecked
+          </Tag>
+        ),
     },
     {
       title: 'Sales Permission',
       dataIndex: 'salesPermission',
       key: 'salesPermission',
-      width: 100,
+      width: 130,
       render: (isChecked: boolean) =>
-        isChecked ? <CheckCircleOutlined /> : <CloseCircleOutlined />,
+        isChecked ? (
+          <Tag
+            className={styles.tag}
+            icon={<CheckCircleOutlined />}
+            color={'success'}
+          >
+            checked
+          </Tag>
+        ) : (
+          <Tag
+            className={styles.tag}
+            icon={<CloseCircleOutlined />}
+            color={'warning'}
+          >
+            unchecked
+          </Tag>
+        ),
     },
     {
       title: 'Client Permission',
       dataIndex: 'clientPermission',
       key: 'clientPermission',
-      width: 100,
+      width: 130,
       render: (isChecked: boolean) =>
-        isChecked ? <CheckCircleOutlined /> : <CloseCircleOutlined />,
+        isChecked ? (
+          <Tag
+            className={styles.tag}
+            icon={<CheckCircleOutlined />}
+            color={'success'}
+          >
+            checked
+          </Tag>
+        ) : (
+          <Tag
+            className={styles.tag}
+            icon={<CloseCircleOutlined />}
+            color={'warning'}
+          >
+            unchecked
+          </Tag>
+        ),
     },
     {
       title: 'Order Permission',
       dataIndex: 'orderPermission',
       key: 'orderPermission',
-      width: 100,
+      width: 130,
       render: (isChecked: boolean) =>
-        isChecked ? <CheckCircleOutlined /> : <CloseCircleOutlined />,
+        isChecked ? (
+          <Tag
+            className={styles.tag}
+            icon={<CheckCircleOutlined />}
+            color={'success'}
+          >
+            checked
+          </Tag>
+        ) : (
+          <Tag
+            className={styles.tag}
+            icon={<CloseCircleOutlined />}
+            color={'warning'}
+          >
+            unchecked
+          </Tag>
+        ),
     },
     {
       title: 'Email Permission',
       dataIndex: 'emailPermission',
       key: 'emailPermission',
-      width: 100,
+      width: 130,
       render: (isChecked: boolean) =>
-        isChecked ? <CheckCircleOutlined /> : <CloseCircleOutlined />,
+        isChecked ? (
+          <Tag
+            className={styles.tag}
+            icon={<CheckCircleOutlined />}
+            color={'success'}
+          >
+            checked
+          </Tag>
+        ) : (
+          <Tag
+            className={styles.tag}
+            icon={<CloseCircleOutlined />}
+            color={'warning'}
+          >
+            unchecked
+          </Tag>
+        ),
     },
     {
       title: 'Check Compliance',
       dataIndex: 'checkCompliance',
       key: 'checkCompliance',
-      width: 100,
+      width: 130,
       render: (isChecked: boolean) =>
-        isChecked ? <CheckCircleOutlined /> : <CloseCircleOutlined />,
+        isChecked ? (
+          <Tag
+            className={styles.tag}
+            icon={<CheckCircleOutlined />}
+            color={'success'}
+          >
+            checked
+          </Tag>
+        ) : (
+          <Tag
+            className={styles.tag}
+            icon={<CloseCircleOutlined />}
+            color={'warning'}
+          >
+            unchecked
+          </Tag>
+        ),
     },
     {
       title: 'Check FundNotified',
       dataIndex: 'checkFundNotified',
       key: 'checkFundNotified',
-      width: 100,
+      width: 130,
       render: (isChecked: boolean) =>
-        isChecked ? <CheckCircleOutlined /> : <CloseCircleOutlined />,
+        isChecked ? (
+          <Tag
+            className={styles.tag}
+            icon={<CheckCircleOutlined />}
+            color={'success'}
+          >
+            checked
+          </Tag>
+        ) : (
+          <Tag
+            className={styles.tag}
+            icon={<CloseCircleOutlined />}
+            color={'warning'}
+          >
+            unchecked
+          </Tag>
+        ),
     },
     {
       title: 'Check FundReceived',
       dataIndex: 'checkFundReceived',
       key: 'checkFundReceived',
-      width: 100,
+      width: 130,
       render: (isChecked: boolean) =>
-        isChecked ? <CheckCircleOutlined /> : <CloseCircleOutlined />,
+        isChecked ? (
+          <Tag
+            className={styles.tag}
+            icon={<CheckCircleOutlined />}
+            color={'success'}
+          >
+            checked
+          </Tag>
+        ) : (
+          <Tag
+            className={styles.tag}
+            icon={<CloseCircleOutlined />}
+            color={'warning'}
+          >
+            unchecked
+          </Tag>
+        ),
     },
     {
       title: 'Check ClientComfirmed',
       dataIndex: 'checkClientComfirmed',
       key: 'checkClientComfirmed',
-      width: 100,
+      width: 130,
       render: (isChecked: boolean) =>
-        isChecked ? <CheckCircleOutlined /> : <CloseCircleOutlined />,
+        isChecked ? (
+          <Tag
+            className={styles.tag}
+            icon={<CheckCircleOutlined />}
+            color={'success'}
+          >
+            checked
+          </Tag>
+        ) : (
+          <Tag
+            className={styles.tag}
+            icon={<CloseCircleOutlined />}
+            color={'warning'}
+          >
+            unchecked
+          </Tag>
+        ),
     },
     {
       title: 'Check FundPaid',
       dataIndex: 'checkFundPaid',
       key: 'checkFundPaid',
-      width: 100,
+      width: 130,
       render: (isChecked: boolean) =>
-        isChecked ? <CheckCircleOutlined /> : <CloseCircleOutlined />,
+        isChecked ? (
+          <Tag
+            className={styles.tag}
+            icon={<CheckCircleOutlined />}
+            color={'success'}
+          >
+            checked
+          </Tag>
+        ) : (
+          <Tag
+            className={styles.tag}
+            icon={<CloseCircleOutlined />}
+            color={'warning'}
+          >
+            unchecked
+          </Tag>
+        ),
     },
     {
       title: 'Create Date',
@@ -192,7 +379,7 @@ const Users = ({ users, total, loading }: PropsType) => {
         payload: { current: urlState.current, pageSize: urlState.pageSize },
       });
     } else {
-      message.error(res.errorMessage);
+      message.warning(res.errorMessage);
     }
     setActionLoading(false);
   };
@@ -231,7 +418,7 @@ const Users = ({ users, total, loading }: PropsType) => {
             total={total}
           />
         </Row>
-        {/* <Create newVisible={visible} setNewVisible={setVisible} /> */}
+        <Create newVisible={visible} setNewVisible={setVisible} />
       </Card>
     </div>
   );

@@ -29,7 +29,7 @@ export default function PrimaryLayout({ children }: PropsType) {
           <Bread />
           {children}
         </Content>
-        <Footer className={styles.footer}>Global Pay Admin ©2021 Aaron</Footer>
+        <Footer className={styles.footer}>Global Pay Admin ©2021</Footer>
       </Layout>
     </Layout>
   );

@@ -20,6 +20,7 @@ interface PropsType {
   limitMB?: number;
   value?: string | File;
   onChange?: (value: File) => void;
+  [props: string]: any
 }
 
 export default function UploadAvatar({
@@ -27,6 +28,7 @@ export default function UploadAvatar({
   limitMB = 5,
   value,
   onChange,
+  ...res
 }: PropsType) {
   const extension = typeof value === 'string' ? value.split('.').pop() : '';
   const initialextension = extension ? `image/${extension ?? 'jpeg'}` : '';
@@ -75,6 +77,7 @@ export default function UploadAvatar({
   return (
     <ImgCrop shape="round">
       <Upload
+        {...res}
         accept={acceptableTypes.join(', ')}
         maxCount={1}
         listType="text"

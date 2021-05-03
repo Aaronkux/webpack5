@@ -49,7 +49,7 @@ export function getUsers() {
 }
 
 export function getUserDetail(id: string) {
-  return request<UserDetailResponse>(`/api/users${id}`, {
+  return request<UserDetailResponse>(`/api/users/${id}`, {
     method: 'get',
   });
 }

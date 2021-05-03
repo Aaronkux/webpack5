@@ -509,6 +509,6 @@ const Detail = ({ orderDetail, loading }: PropsType) => {
 export default connect(
   ({ orders, loading }: { orders: OrderModelState; loading: Loading }) => ({
     orderDetail: orders.detail,
-    loading: loading.models.orders,
+    loading: loading.effects['orders/getOrderDetail']!,
   }),
 )(React.memo(Detail));

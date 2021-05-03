@@ -63,6 +63,12 @@ export const routes: IBestAFSRoute[] = [
         component: '@/pages/users',
       },
       {
+        path: '/users/:id',
+        component: '@/pages/users/Detail',
+        name: 'User Detail',
+        hideInMenu: true,
+      },
+      {
         path: '/login',
         component: '@/pages/login',
         name: 'Login',
