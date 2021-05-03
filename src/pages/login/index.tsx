@@ -4,7 +4,7 @@ import { useRequest } from 'umi';
 import { Form, Input, Button } from 'antd';
 import store from 'store';
 
-import { login } from '@/services/user';
+import { login } from '@/services/users';
 import logo from '@/assets/gplogo.png';
 import styles from './index.less';
 

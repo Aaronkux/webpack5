@@ -6,7 +6,7 @@ import store from 'store';
 import styles from './HeaderRight.less';
 
 export default function HeaderRight() {
-  const { photo } = store.get('user');
+  const user = store.get('user');
   const history = useHistory();
   const menu = (
     <Menu className={styles.menu}>
@@ -22,9 +22,11 @@ export default function HeaderRight() {
   );
   return (
     <div className={styles.container}>
-      <Dropdown placement="bottomCenter" overlay={menu}>
-        <Avatar src={photo} />
-      </Dropdown>
+      {user && (
+        <Dropdown placement="bottomCenter" overlay={menu}>
+          <Avatar src={user.photo} />
+        </Dropdown>
+      )}
     </div>
   );
 }

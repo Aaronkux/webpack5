@@ -2,7 +2,7 @@ const { pathToRegexp } = require('path-to-regexp');
 import { LayoutConfig } from '@/utils/config';
 import { Pathname } from 'history';
 import { IBestAFSRoute } from '@umijs/plugin-layout';
-import { UserType } from '@/services/user';
+import { UserType } from '@/services/users';
 import { IRoute } from '@umijs/core/lib/Route/types';
 
 // query layout

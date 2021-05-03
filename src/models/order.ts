@@ -21,7 +21,7 @@ export interface OrderModelState {
   total: number;
 }
 
-export interface SalesModelType {
+export interface OrderModelType {
   namespace: 'orders';
   state: OrderModelState;
   effects: {
@@ -35,7 +35,7 @@ export interface SalesModelType {
   };
 }
 
-const SalesModel: SalesModelType = {
+const OrderModel: OrderModelType = {
   namespace: 'orders',
   state: { orders: [], total: 0 },
   effects: {
@@ -82,4 +82,4 @@ const SalesModel: SalesModelType = {
   },
 };
 
-export default SalesModel;
+export default OrderModel;
