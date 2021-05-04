@@ -387,4 +387,9 @@ export default {
     data: null,
     success: true,
   },
+
+  'POST /api/rate': {
+    data: null,
+    success: true,
+  },
 };

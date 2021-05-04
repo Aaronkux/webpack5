@@ -69,6 +69,12 @@ export const routes: IBestAFSRoute[] = [
         hideInMenu: true,
       },
       {
+        path: '/setting',
+        icon: 'SettingOutlined',
+        component: '@/pages/setting',
+        name: 'Setting',
+      },
+      {
         path: '/login',
         component: '@/pages/login',
         name: 'Login',
