@@ -145,7 +145,7 @@ const Order = ({ orders, total, loading }: PropsType) => {
       dataIndex: 'id',
       key: 'id',
       fixed: 'left' as 'left',
-      width: 50,
+      width: 60,
       render: (stage: any, record: any, index: number) => index + 1,
     },
     {

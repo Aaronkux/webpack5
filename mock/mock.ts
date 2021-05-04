@@ -100,7 +100,7 @@ export default {
   }),
   'GET /api/individualclient': Mock.mock({
     data: {
-      'clients|10': [
+      'clients|5': [
         {
           id: '@id',
           name: '@name',

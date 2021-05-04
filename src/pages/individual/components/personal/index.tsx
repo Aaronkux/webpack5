@@ -233,7 +233,7 @@ const Personal = ({
                 label="unsubscribe"
                 name="Unsubscribe"
                 valuePropName="checked"
-                initialValue={individualClientDetail?.unsubscribeue}
+                initialValue={individualClientDetail?.unsubscribe}
               >
                 <Switch disabled={!editing} />
               </Form.Item>
@@ -355,7 +355,7 @@ const Personal = ({
                 label="Expire Date"
                 name="id1expiredate"
                 initialValue={moment(
-                  individualClientDetail?.id1ExpireDatereDate,
+                  individualClientDetail?.id1ExpireDate,
                 )}
               >
                 <DatePicker disabled={!editing} style={{ width: '100%' }} />

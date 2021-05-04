@@ -25,8 +25,8 @@ export interface IndividualClientInfo {
   faceTest: string;
   purpose: string;
   compliance: string;
-  unsubscribeue: boolean;
-  id1ExpireDatereDate: string;
+  unsubscribe: boolean;
+  id1ExpireDate: string;
   other?: string;
   signature: string;
 }
