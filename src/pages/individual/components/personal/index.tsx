@@ -144,9 +144,16 @@ const Personal = ({
               <Form.Item
                 label="Salesman"
                 name="salesman"
-                initialValue={individualClientDetail?.salesname}
+                initialValue={individualClientDetail?.salesman?.name}
               >
-                {editing ? <Input /> : <NormalText />}
+                {editing ? (
+                  <Select>
+                    <Option value={'individual'}>Individual</Option>
+                    <Option value={'company'}>Company</Option>
+                  </Select>
+                ) : (
+                  <NormalText />
+                )}
               </Form.Item>
             </Col>
             <Col xs={24} sm={24} md={24} lg={12} xl={12}>
@@ -354,9 +361,7 @@ const Personal = ({
               <Form.Item
                 label="Expire Date"
                 name="id1expiredate"
-                initialValue={moment(
-                  individualClientDetail?.id1ExpireDate,
-                )}
+                initialValue={moment(individualClientDetail?.id1ExpireDate)}
               >
                 <DatePicker disabled={!editing} style={{ width: '100%' }} />
               </Form.Item>

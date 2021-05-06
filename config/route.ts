@@ -13,6 +13,12 @@ export const routes: IBestAFSRoute[] = [
         component: '@/pages/dashboard',
       },
       {
+        path: '/sales',
+        component: '@/pages/sales',
+        name: 'Sales',
+        icon: 'UserOutlined',
+      },
+      {
         path: '/order',
         name: 'Order',
         icon: 'SnippetsOutlined',
@@ -24,13 +30,6 @@ export const routes: IBestAFSRoute[] = [
         component: '@/pages/order/Detail',
         hideInMenu: true,
       },
-      {
-        path: '/sales',
-        component: '@/pages/sales',
-        name: 'Sales',
-        icon: 'UserOutlined',
-      },
-
       {
         path: '/clients',
         name: 'Clients',

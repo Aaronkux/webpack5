@@ -1,10 +1,9 @@
 import React, { useEffect } from 'react';
 import { useDispatch, useRouteMatch } from 'umi';
-import useURLParams from '@/hooks/useURLParams';
 import type { BeneficiaryInfo } from '@/services/clients';
 import { Menu, Tag, Skeleton, Divider } from 'antd';
 import styles from './NavBar.less';
-import { search2Param, param2Search, ParamsObjType } from '@/utils';
+import type { ParamsObjType } from '@/utils';
 
 interface PropsType {
   data: BeneficiaryInfo[];
@@ -22,7 +21,7 @@ const NavBar = ({ data, loading, urlState, setURL }: PropsType) => {
   useEffect(() => {
     if (id) {
       dispatch({
-        type: 'clients/getBeneficiaries',
+        type: 'clients/getIndividualBeneficiaries',
         payload: { id },
       });
     }
@@ -54,7 +53,7 @@ const NavBar = ({ data, loading, urlState, setURL }: PropsType) => {
                   className={styles.address}
                 >{`${item.address}, ${item.suburb}`}</p>
                 <p className={styles.contact}>{`${item.name} ${item.phone}`}</p>
-                {item.type === 0 ? (
+                {item.receiverType ? (
                   <Tag className={styles.selfTag} color="#f50">
                     Self
                   </Tag>

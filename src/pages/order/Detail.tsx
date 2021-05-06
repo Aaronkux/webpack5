@@ -41,6 +41,7 @@ const Detail = ({ orderDetail, loading }: PropsType) => {
   const dispatch = useDispatch();
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [downloadOrSend, setDownloadOrSend] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
   const { id } = match.params;
   useEffect(() => {
@@ -148,8 +149,9 @@ const Detail = ({ orderDetail, loading }: PropsType) => {
               >
                 {editing ? (
                   <Select>
-                    <Option value={'individual'}>Individual</Option>
-                    <Option value={'company'}>Company</Option>
+                    <Option value={'1'}>Aaron Wo</Option>
+                    <Option value={'2'}>Vincent Tang</Option>
+                    <Option value={'3'}>Lion Ma</Option>
                   </Select>
                 ) : (
                   <NormalText />
@@ -168,8 +170,9 @@ const Detail = ({ orderDetail, loading }: PropsType) => {
               >
                 {editing ? (
                   <Select>
-                    <Option value={'individual'}>Individual</Option>
-                    <Option value={'company'}>Company</Option>
+                    <Option value={'1'}>Aaron Wo</Option>
+                    <Option value={'2'}>Vincent Tang</Option>
+                    <Option value={'3'}>Lion Ma</Option>
                   </Select>
                 ) : (
                   <NormalText />
@@ -189,8 +192,9 @@ const Detail = ({ orderDetail, loading }: PropsType) => {
               >
                 {editing ? (
                   <Select>
-                    <Option value={'individual'}>Individual</Option>
-                    <Option value={'company'}>Company</Option>
+                    <Option value={'1'}>Aaron Wo</Option>
+                    <Option value={'2'}>Vincent Tang</Option>
+                    <Option value={'3'}>Lion Ma</Option>
                   </Select>
                 ) : (
                   <NormalText />
@@ -419,9 +423,12 @@ const Detail = ({ orderDetail, loading }: PropsType) => {
                     <Button
                       type="primary"
                       disabled={!orderDetail?.confirmationSent}
+                      loading={downloadOrSend}
                       onClick={async () => {
                         if (!orderDetail) return;
+                        setDownloadOrSend(true);
                         await generatePDF(orderDetail, 'Tina', 'download');
+                        setDownloadOrSend(false);
                       }}
                     >
                       Download Confirm Letter
@@ -430,6 +437,32 @@ const Detail = ({ orderDetail, loading }: PropsType) => {
                   <Col>
                     <Button
                       type="primary"
+                      disabled={!orderDetail?.confirmationSent}
+                      loading={downloadOrSend}
+                      onClick={async () => {
+                        if (!orderDetail) return;
+                        setDownloadOrSend(true);
+                        console.log(
+                          await generatePDF(orderDetail, 'Tina', 'blob'),
+                        );
+                        const res = await request('/api/order/letter', {
+                          method: 'post',
+                          data: 'test',
+                        });
+                        if (res.success)
+                          message.success(
+                            'Successfully send to client and salesman!',
+                          );
+                        setDownloadOrSend(false);
+                      }}
+                    >
+                      Send Confirm Letter
+                    </Button>
+                  </Col>
+                  <Col>
+                    <Button
+                      type="primary"
+                      danger
                       onClick={() =>
                         Modal.confirm({
                           title: 'Are you sure back to previous stage?',
@@ -437,6 +470,7 @@ const Detail = ({ orderDetail, loading }: PropsType) => {
                           okText: 'Yes',
                           okType: 'danger',
                           cancelText: 'No',
+                          centered: true,
                           onOk() {
                             console.log('OK');
                           },

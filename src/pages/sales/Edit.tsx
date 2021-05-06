@@ -1,6 +1,6 @@
-import React from 'react';
-import { Modal, Form, Input, Switch, Skeleton } from 'antd';
-import { useRequest } from 'umi';
+import React, { useState } from 'react';
+import { Modal, Form, Input, Switch, Skeleton, message } from 'antd';
+import { useRequest, request } from 'umi';
 import { CloseCircleOutlined } from '@ant-design/icons';
 import { querySale } from '@/services/sales';
 import Avatar from '@/components/Avatar';
@@ -18,7 +18,15 @@ const layout = {
 
 export default function Edit({ saleId, onCancelHandler }: PropsType) {
   const [form] = Form.useForm();
+  const [saving, setSaving] = useState(false);
   const { data, error, loading, run } = useRequest(() => querySale(saleId));
+  const onFinishHandler = async (values: any) => {
+    setSaving(true);
+    const res = await request('/api/sales', { method: 'post', data: values });
+    if (res.success) message.success('Saving Successfully!');
+    setSaving(false);
+    onCancelHandler();
+  };
   return (
     <Modal
       centered
@@ -31,7 +39,7 @@ export default function Edit({ saleId, onCancelHandler }: PropsType) {
       maskClosable={true}
       className={styles.container}
       width={520}
-      // confirmLoading={true}
+      confirmLoading={saving}
     >
       {loading ? (
         <Skeleton loading={loading} active avatar />
@@ -40,7 +48,7 @@ export default function Edit({ saleId, onCancelHandler }: PropsType) {
           {...layout}
           className={styles.form}
           form={form}
-          onFinish={(values) => console.log(values)}
+          onFinish={onFinishHandler}
         >
           <Form.Item label="Photo" name="photo" initialValue={data?.photo}>
             <Avatar />

@@ -1,5 +1,6 @@
-import React from 'react';
-import { Modal, Form, Input, Switch } from 'antd';
+import React, { useState } from 'react';
+import { request } from 'umi';
+import { Modal, Form, Input, Switch, message } from 'antd';
 import { CloseCircleOutlined } from '@ant-design/icons';
 import Avatar from '@/components/Avatar';
 import styles from './Create.less';
@@ -16,6 +17,14 @@ const layout = {
 
 export default function Create({ visible, onCancelHandler }: PropsType) {
   const [form] = Form.useForm();
+  const [adding, setAdding] = useState(false);
+
+  const onFinishHandler = async (values: any) => {
+    setAdding(true);
+    const res = await request('/api/sales', { method: 'post', data: values });
+    if (res.success) message.success('Adding Successfully!');
+    setAdding(false);
+  };
   return (
     <Modal
       centered
@@ -28,24 +37,24 @@ export default function Create({ visible, onCancelHandler }: PropsType) {
       cancelText="Cancel"
       className={styles.container}
       width={520}
-      confirmLoading={true}
+      confirmLoading={adding}
     >
       <Form
         {...layout}
         className={styles.form}
         form={form}
-        onFinish={(values) => console.log(values)}
+        onFinish={onFinishHandler}
       >
         <Form.Item label="Photo" name="photo">
           <Avatar />
         </Form.Item>
-        <Form.Item label="Name" name="name">
+        <Form.Item label="Name" name="name" rules={[{ required: true, message: 'Please enter your name!' }]}>
           <Input />
         </Form.Item>
-        <Form.Item label="E-mail" name="email">
+        <Form.Item label="E-mail" name="email" rules={[{ required: true, type: "email", message: 'Please enter a valid email!' }]}>
           <Input />
         </Form.Item>
-        <Form.Item label="Active " name="status" valuePropName="checked">
+        <Form.Item label="Active " name="status" valuePropName="checked" initialValue={true}>
           <Switch checkedChildren="active" unCheckedChildren="inactive" />
         </Form.Item>
       </Form>

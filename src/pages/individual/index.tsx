@@ -39,7 +39,11 @@ interface PropsType {
   loading: boolean;
 }
 
-const Clients = ({ individualClients, total, loading }: PropsType) => {
+const IndividualClients = ({
+  individualClients,
+  total,
+  loading,
+}: PropsType) => {
   const [urlState, setURL] = useURLParams();
   const dispatch = useDispatch();
   const [actionLoading, setActionLoading] = useState(false);
@@ -192,7 +196,7 @@ const Clients = ({ individualClients, total, loading }: PropsType) => {
     fixed: 'right' as 'right',
     render: (text: string, record: any) => {
       return (
-        <div  className={styles.action}>
+        <div className={styles.action}>
           <Link to={`/clients/individual/${record.id}`}>
             <Popover content={'edit'}>
               <img src={edit} alt="logo" />
@@ -245,7 +249,7 @@ const Clients = ({ individualClients, total, loading }: PropsType) => {
         <Table
           className={styles.table}
           bordered
-          loading={loading}
+          loading={loading || actionLoading}
           columns={dynamicColumns}
           dataSource={individualClients}
           rowKey={'id'}
@@ -273,4 +277,4 @@ export default connect(
     total: clients.individualClients.total,
     loading: loading.models.clients,
   }),
-)(React.memo(Clients));
+)(React.memo(IndividualClients));

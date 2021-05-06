@@ -32,3 +32,4 @@ export function querySale(id: number) {
     method: 'get',
   });
 }
+

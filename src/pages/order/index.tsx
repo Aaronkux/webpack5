@@ -348,14 +348,14 @@ const Order = ({ orders, total, loading }: PropsType) => {
               </Link>
             </Popover>
             <Popover key={'next'} content={'next'}>
-              <img
-                onClick={() =>
+              <Popconfirm
+                title="Are you sure push it to next stage?"
+                onConfirm={() =>
                   nextHandler(record.id, orderedStage[currentStage])
                 }
-                className={styles.logo}
-                src={next}
-                alt="logo"
-              />
+              >
+                <img className={styles.logo} src={next} alt="logo" />
+              </Popconfirm>
             </Popover>
 
             <Popover key={'del'} content={'delete'}>

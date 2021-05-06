@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
+import { Link } from 'umi';
 import { Card, Avatar, Skeleton, Popover, Tag } from 'antd';
 import { EditOutlined, AccountBookOutlined } from '@ant-design/icons';
 import styles from './SalesCard.less';
@@ -29,12 +30,9 @@ export default function SalesCard({
       }}
       actions={[
         <Popover content="orders">
-          <AccountBookOutlined
-            onClick={(e) => {
-              console.log('click orders');
-            }}
-            key="setting"
-          />
+          <Link to={`/order?salesmanId=${salesInfo.id}`}>
+            <AccountBookOutlined key="order" />
+          </Link>
         </Popover>,
         <Popover content="edit">
           <EditOutlined onClick={onCardClick} key="edit" />
