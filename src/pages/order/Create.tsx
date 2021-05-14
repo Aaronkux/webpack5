@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { request } from 'umi';
+import { useDispatch, connect } from 'umi';
+import type { Loading } from 'umi';
 import {
   Modal,
   Form,
@@ -8,7 +9,6 @@ import {
   Col,
   Select,
   InputNumber,
-  message,
   Divider,
 } from 'antd';
 import { CloseCircleOutlined } from '@ant-design/icons';
@@ -19,6 +19,7 @@ const { TextArea } = Input;
 
 interface PropsType {
   newVisible: boolean;
+  addLoading: boolean;
   setNewVisible: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
@@ -27,11 +28,26 @@ const layout = {
   wrapperCol: { span: 16 },
 };
 
-export default function Create({ newVisible, setNewVisible }: PropsType) {
+const currencies = [
+  'AUD',
+  'CNY',
+  'HKD',
+  'USD',
+  'MYR',
+  'NZD',
+  'GBP',
+  'EUR',
+  'JPY',
+];
+
+const Create = ({ newVisible, setNewVisible, addLoading }: PropsType) => {
   const [form] = Form.useForm();
-  const [adding, setAdding] = useState(false);
+  const dispatch = useDispatch();
+  const [formState, setFromState] = useState<{
+    [prop: string]: any;
+  }>({});
   const finishHandler = async (values: any) => {
-    const { clientType, client, receiver } = values;
+    const { clientType, client, ...rest } = values;
     let clientInfo: any = {};
     switch (clientType) {
       case 'individual':
@@ -41,17 +57,45 @@ export default function Create({ newVisible, setNewVisible }: PropsType) {
         clientInfo['companyClient'] = client;
         break;
     }
-
-    setAdding(true);
-    const res = await request('/api/order', {
-      method: 'post',
-      data: values,
+    const res = await dispatch({
+      type: 'orders/addOrder',
+      payload: { ...rest, ...clientInfo },
     });
-    if (res.success) message.success('Add Successfully');
-    setAdding(false);
-    form.resetFields();
-    setNewVisible(false);
+    console.log({ ...rest, ...clientInfo });
+    console.log(res);
+
+    // setAdding(true);
+    // const res = await request('/api/order', {
+    //   method: 'post',
+    //   data: values,
+    // });
+    // if (res.success) message.success('Add Successfully');
+    // setAdding(false);
+    // form.resetFields();
+    // setNewVisible(false);
   };
+
+  const onFromAmountBlur = () => {
+    const fromAmount = parseFloat(form.getFieldValue('fromAmount'));
+    const value = fromAmount ? fromAmount : 0;
+    setFromState({ ...formState, ...{ fromAmount: value.toFixed(2) } });
+  };
+  const onToAmountBlur = () => {
+    const toAmount = parseFloat(form.getFieldValue('toAmount'));
+    const value = toAmount ? toAmount : 0;
+    setFromState({ ...formState, ...{ toAmount: value.toFixed(2) } });
+  };
+  const onExchangeRateBlur = () => {
+    const exchangeRate = parseFloat(form.getFieldValue('exchangeRate'));
+    const value = exchangeRate ? exchangeRate : 0;
+    setFromState({ ...formState, ...{ exchangeRate: value.toFixed(2) } });
+  };
+  const onFeeAmountBlur = () => {
+    const feeAmount = parseFloat(form.getFieldValue('feeAmount'));
+    const value = feeAmount ? feeAmount : 0;
+    setFromState({ ...formState, ...{ feeAmount: value.toFixed(2) } });
+  }; 
+
   return (
     <Modal
       visible={newVisible}
@@ -69,7 +113,7 @@ export default function Create({ newVisible, setNewVisible }: PropsType) {
       className={styles.container}
       okText={'Add'}
       cancelText="Cancel"
-      confirmLoading={adding}
+      confirmLoading={addLoading}
     >
       <Form
         {...layout}
@@ -102,7 +146,12 @@ export default function Create({ newVisible, setNewVisible }: PropsType) {
               rules={[{ required: true, message: 'Please select client!' }]}
               required
             >
-              <Select>
+              <Select
+                onSearch={(val) => console.log(val)}
+                showSearch
+                optionFilterProp="children"
+                // loading={true}
+              >
                 <Option value={'113213'}>Aaron</Option>
                 <Option value={'212321412'}>Loorn</Option>
               </Select>
@@ -122,6 +171,200 @@ export default function Create({ newVisible, setNewVisible }: PropsType) {
             </Form.Item>
           </Col>
           <Col xs={24} sm={24} md={24} lg={12} xl={12}>
+            <Form.Item
+              label="Exchange Rate"
+              name="exchangeRate"
+              rules={[
+                { required: true, message: 'Please input exchangeRate!' },
+              ]}
+              required
+            >
+              <InputNumber
+                value={formState.exchangeRate}
+                onBlur={onExchangeRateBlur}
+                style={{ width: '100%' }}
+                precision={2}
+                step="1"
+              />
+            </Form.Item>
+          </Col>
+          <Col xs={24} sm={24} md={24} lg={12} xl={12}>
+            <Form.Item
+              label="From Currency"
+              name="fromCurrency"
+              rules={[
+                { required: true, message: 'Please choose currency!' },
+                ({ getFieldValue }) => ({
+                  validator(_, value) {
+                    if (!value || getFieldValue('toCurrency') !== value) {
+                      return Promise.resolve();
+                    }
+                    return Promise.reject(
+                      new Error(`From currency can't be same as to currency!`),
+                    );
+                  },
+                }),
+              ]}
+              required
+            >
+              <Select
+                onChange={(value: string) =>
+                  setFromState({ ...formState, ...{ from: value } })
+                }
+                value={formState.from}
+              >
+                {currencies
+                  .filter((cur) => !Object.values(formState).includes(cur))
+                  .map((cur) => (
+                    <Option key={cur} value={cur}>
+                      {cur}
+                    </Option>
+                  ))}
+              </Select>
+            </Form.Item>
+          </Col>
+          <Col xs={24} sm={24} md={24} lg={12} xl={12}>
+            <Form.Item
+              label="From Amount"
+              name="fromAmount"
+              rules={[{ required: true, message: 'Please input amount!' }]}
+              required
+            >
+              <InputNumber
+                value={formState.fromAmount}
+                onBlur={onFromAmountBlur}
+                style={{ width: '100%' }}
+                parser={(value: any) => value.replace(/\$\s?|(,*)/g, '')}
+                precision={2}
+                step="1"
+                stringMode
+              />
+            </Form.Item>
+          </Col>
+          <Col xs={24} sm={24} md={24} lg={12} xl={12}>
+            <Form.Item
+              label="To Currency"
+              name="toCurrency"
+              rules={[
+                { required: true, message: 'Please choose currency!' },
+                ({ getFieldValue }) => ({
+                  validator(_, value) {
+                    if (!value || getFieldValue('fromCurrency') !== value) {
+                      return Promise.resolve();
+                    }
+                    return Promise.reject(
+                      new Error(`To currency can't be same as from currency!`),
+                    );
+                  },
+                }),
+              ]}
+              required
+            >
+              <Select
+                onChange={(value: string) =>
+                  setFromState({ ...formState, ...{ to: value } })
+                }
+                value={formState.to}
+              >
+                {currencies
+                  .filter((cur) => !Object.values(formState).includes(cur))
+                  .map((cur) => (
+                    <Option key={cur} value={cur}>
+                      {cur}
+                    </Option>
+                  ))}
+              </Select>
+            </Form.Item>
+          </Col>
+          <Col xs={24} sm={24} md={24} lg={12} xl={12}>
+            <Form.Item
+              label="To Amount"
+              name="toAmount"
+              rules={[{ required: true, message: 'Please input amount!' }]}
+              required
+            >
+              <InputNumber
+                value={formState.toAmount}
+                onBlur={onToAmountBlur}
+                style={{ width: '100%' }}
+                parser={(value: any) => value.replace(/\$\s?|(,*)/g, '')}
+                precision={2}
+                step="1"
+                stringMode
+              />
+            </Form.Item>
+          </Col>
+          <Col xs={24} sm={24} md={24} lg={12} xl={12}>
+            <Form.Item
+              label="Fee Currency"
+              name="feeCurrency"
+              rules={[
+                ({ getFieldValue }) => ({
+                  validator(_, value) {
+                    if (
+                      !value ||
+                      getFieldValue('fromCurrency') === value ||
+                      getFieldValue('toCurrency') === value
+                    ) {
+                      return Promise.resolve();
+                    }
+                    return Promise.reject(
+                      new Error(
+                        `Fee currency must be to currency or from currency!`,
+                      ),
+                    );
+                  },
+                }),
+              ]}
+            >
+              <Select
+                onChange={(value: string) =>
+                  setFromState({ ...formState, ...{ fee: value } })
+                }
+                value={formState.fee}
+              >
+                {[formState.to, formState.from]
+                  .filter((value) => value)
+                  .map((currency) => (
+                    <Option key={currency} value={currency}>
+                      {currency}
+                    </Option>
+                  ))}
+              </Select>
+            </Form.Item>
+          </Col>
+          <Col xs={24} sm={24} md={24} lg={12} xl={12}>
+            <Form.Item
+              label="Fee Amount"
+              name="feeAmount"
+              rules={[
+                ({ getFieldValue }) => ({
+                  validator(_, value) {
+                    if (!parseFloat(value) || getFieldValue('feeCurrency')) {
+                      return Promise.resolve();
+                    }
+                    return Promise.reject(
+                      new Error(`Fee currency must be selected!`),
+                    );
+                  },
+                }),
+              ]}
+            >
+              <InputNumber
+                value={formState.feeAmount}
+                onBlur={onFeeAmountBlur}
+                style={{ width: '100%' }}
+                formatter={(value) =>
+                  `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')
+                }
+                parser={(value: any) => value.replace(/\$\s?|(,*)/g, '')}
+                precision={2}
+                step="1"
+                stringMode
+              />
+            </Form.Item>
+          </Col>
+          <Col xs={24} sm={24} md={24} lg={12} xl={12}>
             <Form.Item label="Salesman" name="salesman">
               <Select>
                 <Option value={'113213'}>Aaron</Option>
@@ -136,121 +379,6 @@ export default function Create({ newVisible, setNewVisible }: PropsType) {
           </Col>
           <Col xs={24} sm={24} md={24} lg={12} xl={12}>
             <Form.Item label="Department" name="department">
-              <Input />
-            </Form.Item>
-          </Col>
-          <Col xs={24} sm={24} md={24} lg={12} xl={12}>
-            <Form.Item
-              label="From Currency"
-              name="fromCurrency"
-              rules={[{ required: true, message: 'Please choose currency!' }]}
-              required
-            >
-              <Select>
-                <Option value={'AUD'}>AUD</Option>
-                <Option value={'CNY'}>CNY</Option>
-                <Option value={'HKD'}>HKD</Option>
-                <Option value={'USD'}>USD</Option>
-                <Option value={'MYR'}>MYR</Option>
-                <Option value={'NZD'}>NZD</Option>
-                <Option value={'GBP'}>GBP</Option>
-                <Option value={'EUR'}>EUR</Option>
-                <Option value={'JPY'}>JPY</Option>
-              </Select>
-            </Form.Item>
-          </Col>
-          <Col xs={24} sm={24} md={24} lg={12} xl={12}>
-            <Form.Item
-              label="From Amount"
-              name="fromAmount"
-              rules={[{ required: true, message: 'Please input amount!' }]}
-              initialValue={0}
-              required
-            >
-              <InputNumber
-                style={{ width: '100%' }}
-                formatter={(value) =>
-                  `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')
-                }
-                parser={(value: any) => value.replace(/\$\s?|(,*)/g, '')}
-                precision={2}
-                step="1"
-                stringMode
-              />
-            </Form.Item>
-          </Col>
-          <Col xs={24} sm={24} md={24} lg={12} xl={12}>
-            <Form.Item
-              label="To Currency"
-              name="toCurrency"
-              rules={[{ required: true, message: 'Please choose currency!' }]}
-              required
-            >
-              <Select>
-                <Option value={'AUD'}>AUD</Option>
-                <Option value={'CNY'}>CNY</Option>
-                <Option value={'HKD'}>HKD</Option>
-                <Option value={'USD'}>USD</Option>
-                <Option value={'MYR'}>MYR</Option>
-                <Option value={'NZD'}>NZD</Option>
-                <Option value={'GBP'}>GBP</Option>
-                <Option value={'EUR'}>EUR</Option>
-                <Option value={'JPY'}>JPY</Option>
-              </Select>
-            </Form.Item>
-          </Col>
-          <Col xs={24} sm={24} md={24} lg={12} xl={12}>
-            <Form.Item label="To Amount" name="toAmount" initialValue={0}>
-              <InputNumber
-                style={{ width: '100%' }}
-                formatter={(value) =>
-                  `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')
-                }
-                parser={(value: any) => value.replace(/\$\s?|(,*)/g, '')}
-                precision={2}
-                step="1"
-                stringMode
-              />
-            </Form.Item>
-          </Col>
-          <Col xs={24} sm={24} md={24} lg={12} xl={12}>
-            <Form.Item label="Fee Currency" name="feeCurrency">
-              <Select>
-                <Option value={'AUD'}>AUD</Option>
-                <Option value={'CNY'}>CNY</Option>
-                <Option value={'HKD'}>HKD</Option>
-                <Option value={'USD'}>USD</Option>
-                <Option value={'MYR'}>MYR</Option>
-                <Option value={'NZD'}>NZD</Option>
-                <Option value={'GBP'}>GBP</Option>
-                <Option value={'EUR'}>EUR</Option>
-                <Option value={'JPY'}>JPY</Option>
-              </Select>
-            </Form.Item>
-          </Col>
-          <Col xs={24} sm={24} md={24} lg={12} xl={12}>
-            <Form.Item label="Fee Amount" name="feeAmount" initialValue={0}>
-              <InputNumber
-                style={{ width: '100%' }}
-                formatter={(value) =>
-                  `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')
-                }
-                parser={(value: any) => value.replace(/\$\s?|(,*)/g, '')}
-                precision={2}
-                step="1"
-                stringMode
-              />
-            </Form.Item>
-          </Col>
-          <Col xs={24} sm={24} md={24} lg={12} xl={12}>
-            <Form.Item
-              label="Exchange Rate"
-              name="exchangeRate"
-              rules={[
-                { required: true, message: 'Please input exchangeRate!' },
-              ]}
-              required
-            >
               <Input />
             </Form.Item>
           </Col>
@@ -276,4 +404,8 @@ export default function Create({ newVisible, setNewVisible }: PropsType) {
       </Form>
     </Modal>
   );
-}
+};
+
+export default connect(({ loading }: { loading: Loading }) => ({
+  addLoading: loading.effects['orders/addOrder']!,
+}))(React.memo(Create));

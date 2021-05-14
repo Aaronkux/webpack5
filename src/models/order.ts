@@ -2,6 +2,7 @@ import { Effect, ImmerReducer } from 'umi';
 import {
   getOrderDetail,
   getOrders,
+  addOrder,
   updateOrder,
   deleteOrder,
 } from '@/services/order';
@@ -9,6 +10,7 @@ import type {
   OrderDetailResponse,
   OrderInfo,
   OrdersResponse,
+  OrderAddResponse,
   OrderUpdateResponse,
   OrderDeleteResponse,
 } from '@/services/order';
@@ -27,6 +29,7 @@ export interface OrderModelType {
   effects: {
     getOrders: Effect;
     getOrderDetail: Effect;
+    addOrder: Effect;
     updateOrder: Effect;
     deleteOrder: Effect;
   };
@@ -53,6 +56,16 @@ const OrderModel: OrderModelType = {
         yield put({ type: 'save', payload: { detail: res.data } });
       } else {
         message.warning('Updated Failed');
+      }
+    },
+    *addOrder({ payload }, { call }) {
+      const res: OrderAddResponse = yield call(addOrder, payload);
+      if (res.success) {
+        message.success('Record Updated');
+        return true;
+      } else {
+        message.warning('Updated Failed');
+        return false;
       }
     },
     *updateOrder({ payload }, { call, put }) {

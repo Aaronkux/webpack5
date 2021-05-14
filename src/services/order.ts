@@ -3,34 +3,25 @@ import type { ResponseType } from './index';
 
 export interface OrderInfo {
   id: string;
-  orderNumber: string;
+  createdDate?: string;
   referral?: string;
+  orderNumber: string;
   salesman?: {
     id: string;
     name: string;
     photo: string;
   };
-  clientInfo: {
+  individualClient?: {
     id: string;
-    type: 'individual' | 'company';
-    name?: string;
-    abnOrAcn?: string;
-    address?: string;
+    name: string;
+    address: string;
   };
-  fromCurrency?: string;
-  fromAmount?: number;
-  toCurrency?: string;
-  toAmount?: number;
-  feeCurrency?: string;
-  feeAmount?: number;
-  exchangeRate?: number;
-  baseRate?: number;
-  comment?: string;
-  department?: string;
-  specialConsideration?: string;
-  dispensingBank?: string;
-  createdDate?: string;
-
+  companyClient?: {
+    id: string;
+    name: string;
+    abnOrAcn: string;
+    address: string;
+  };
   receiver: {
     id: string;
     name: string;
@@ -38,6 +29,18 @@ export interface OrderInfo {
     accountNumber: string;
     bsb: string;
   };
+  fromCurrency: string;
+  fromAmount: number;
+  toCurrency: string;
+  toAmount?: number;
+  feeCurrency?: string;
+  feeAmount?: number;
+  exchangeRate: number;
+  baseRate?: number;
+  comment?: string;
+  department?: string;
+  specialConsideration?: string;
+  dispensingBank?: string;
   compliance?: {
     id: string;
     name: string;
@@ -104,7 +107,7 @@ export function updateOrder(id: string, fields: Partial<OrderInfo>) {
 }
 export function addOrder(fields: Partial<OrderInfo>) {
   return request<OrderAddResponse>(`/api/order`, {
-    method: 'put',
+    method: 'post',
     data: fields,
   });
 }

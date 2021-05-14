@@ -125,7 +125,9 @@ const Detail = ({ orderDetail, loading }: PropsType) => {
               <Form.Item
                 label="ClientType"
                 name="clientType"
-                initialValue={orderDetail?.clientInfo.type}
+                initialValue={
+                  orderDetail?.individualClient ? 'individual' : 'company'
+                }
               >
                 {editing ? (
                   <Select>
@@ -143,8 +145,12 @@ const Detail = ({ orderDetail, loading }: PropsType) => {
                 name="client"
                 initialValue={
                   editing
-                    ? orderDetail?.clientInfo.id
-                    : orderDetail?.clientInfo.name
+                    ? orderDetail?.individualClient
+                      ? orderDetail?.individualClient.id
+                      : orderDetail?.companyClient?.id
+                    : orderDetail?.individualClient
+                    ? orderDetail?.individualClient.name
+                    : orderDetail?.companyClient?.name
                 }
               >
                 {editing ? (

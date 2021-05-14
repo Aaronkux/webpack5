@@ -11,21 +11,6 @@ export default function Filter() {
             <Input />
           </Form.Item>
         </Col>
-        <Col xs={24} sm={12} lg={12} xl={6}>
-          <Form.Item label="Name" name="name">
-            <Input />
-          </Form.Item>
-        </Col>
-        <Col xs={24} sm={12} lg={12} xl={6}>
-          <Form.Item label="Name" name="name">
-            <Input />
-          </Form.Item>
-        </Col>
-        <Col xs={24} sm={12} lg={12} xl={6}>
-          <Form.Item label="Name" name="name">
-            <Input />
-          </Form.Item>
-        </Col>
       </Row>
       <Row gutter={[8, 0]} justify="end">
         <Col>

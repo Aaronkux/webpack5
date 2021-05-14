@@ -154,7 +154,10 @@ const Order = ({ orders, total, loading }: PropsType) => {
       key: 'name',
       fixed: 'left' as 'left',
       width: 150,
-      render: (_: any, record: OrderInfo) => record.clientInfo.name,
+      render: (_: any, record: OrderInfo) =>
+        record.individualClient
+          ? record.individualClient.name
+          : record.companyClient?.name,
     },
     { title: 'Referral', dataIndex: 'referral', key: 'referral', width: 100 },
     {

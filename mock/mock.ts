@@ -358,13 +358,12 @@ export default {
         photo: '@IMG',
       },
       createdDate: '2021-04-29T02:12:02.909344Z',
-      clientInfo: {
-        id: Random.integer(1, 10000).toString(),
+      individualClient: {
+        id: '@id',
         name: '@name',
-        type: Random.boolean(1, 1, true) ? 'individual' : 'company',
-        abnOrAcn: Random.integer(1, 10000).toString(),
-        address: '301-28 Qianjin North Road, Zhuhai District, Guangzhou, China',
+        address: 'test address'
       },
+      companyClient: null,
       fromCurrency: 'AUD',
       fromAmount: Random.float(1, 5000),
       toCurrency: 'RMB',
@@ -424,14 +423,12 @@ export default {
           id: '@id',
           orderNumber: '@id',
           referral: '@csentence(3, 5)',
-          clientInfo: {
-            id: Random.integer(1, 10000).toString(),
+          individualClient: {
+            id: '@id',
             name: '@name',
-            type: Random.boolean(1, 1, true) ? 'individual' : 'company',
-            abnOrAcn: Random.integer(1, 10000).toString(),
-            address:
-              '301-28 Qianjin North Road, Zhuhai District, Guangzhou, China',
+            address: 'test address'
           },
+          companyClient: null,
           salesman: {
             id: '@id',
             name: '@name',
