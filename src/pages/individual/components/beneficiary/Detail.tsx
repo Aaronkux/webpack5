@@ -95,15 +95,19 @@ const Detail = ({ data, savingLoading }: PropsType) => {
           <div className={styles.titleAndButton}>
             <h1 className={styles.title}>Beneficiary Information</h1>
             <Row gutter={[16, 0]} justify="end">
-              <Col>
-                <Button
-                  type="primary"
-                  htmlType="reset"
-                  onClick={() => form.resetFields()}
-                >
-                  Reset
-                </Button>
-              </Col>
+              {editing && (
+                <Col>
+                  <Form.Item>
+                    <Button
+                      loading={savingLoading}
+                      type="primary"
+                      htmlType="submit"
+                    >
+                      Save
+                    </Button>
+                  </Form.Item>
+                </Col>
+              )}
               <Col>
                 {editing ? (
                   <Button type="primary" onClick={() => setModalVisible(true)}>
@@ -114,17 +118,6 @@ const Detail = ({ data, savingLoading }: PropsType) => {
                     Edit
                   </Button>
                 )}
-              </Col>
-              <Col>
-                <Form.Item>
-                  <Button
-                    loading={savingLoading}
-                    type="primary"
-                    htmlType="submit"
-                  >
-                    Save
-                  </Button>
-                </Form.Item>
               </Col>
             </Row>
           </div>
@@ -477,15 +470,19 @@ const Detail = ({ data, savingLoading }: PropsType) => {
             )}
           </Row>
           <Row gutter={[16, 0]} justify="end">
-            <Col>
-              <Button
-                type="primary"
-                htmlType="reset"
-                onClick={() => form.resetFields()}
-              >
-                Reset
-              </Button>
-            </Col>
+            {editing && (
+              <Col>
+                <Form.Item>
+                  <Button
+                    loading={savingLoading}
+                    type="primary"
+                    htmlType="submit"
+                  >
+                    Save
+                  </Button>
+                </Form.Item>
+              </Col>
+            )}
             <Col>
               {editing ? (
                 <Button type="primary" onClick={() => setModalVisible(true)}>
@@ -496,13 +493,6 @@ const Detail = ({ data, savingLoading }: PropsType) => {
                   Edit
                 </Button>
               )}
-            </Col>
-            <Col>
-              <Form.Item>
-                <Button type="primary" htmlType="submit">
-                  Save
-                </Button>
-              </Form.Item>
             </Col>
           </Row>
         </Form>

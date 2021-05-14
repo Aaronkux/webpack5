@@ -1,7 +1,9 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useDispatch, useRouteMatch } from 'umi';
 import type { BeneficiaryInfo } from '@/services/clients';
-import { Menu, Tag, Skeleton, Divider } from 'antd';
+import { Menu, Tag, Skeleton, Card } from 'antd';
+import { PlusOutlined } from '@ant-design/icons';
+import Create from './Create';
 import styles from './NavBar.less';
 import type { ParamsObjType } from '@/utils';
 
@@ -18,6 +20,8 @@ const NavBar = ({ data, loading, urlState, setURL }: PropsType) => {
   const selectedParam = urlState.q
     ? urlState.q
     : data[0]?.id?.toString() ?? null;
+
+  const [newVisible, setNewVisible] = useState(false);
   useEffect(() => {
     if (id) {
       dispatch({
@@ -38,14 +42,23 @@ const NavBar = ({ data, loading, urlState, setURL }: PropsType) => {
     <>
       {loading ? (
         <Menu defaultSelectedKeys={[selectedParam]} className={styles.subNav}>
+          <PlusOutlined
+            onClick={() => setNewVisible(true)}
+            className={styles.plus}
+          />
           {data.map((item) => (
             <Menu.Item
               onClick={() => {
                 setURL({ q: item.id });
               }}
               key={item.id}
+              className={styles.menuItemContainer}
             >
-              <div className={styles.navCard}>
+              <Card
+                bodyStyle={{ padding: '0' }}
+                hoverable
+                className={styles.navCard}
+              >
                 <p
                   className={styles.navCountry}
                 >{`${item.country}, ${item.state}`}</p>
@@ -53,15 +66,12 @@ const NavBar = ({ data, loading, urlState, setURL }: PropsType) => {
                   className={styles.address}
                 >{`${item.address}, ${item.suburb}`}</p>
                 <p className={styles.contact}>{`${item.name} ${item.phone}`}</p>
-                {item.receiverType ? (
+                {item.receiverType && (
                   <Tag className={styles.selfTag} color="#f50">
                     Self
                   </Tag>
-                ) : (
-                  ''
                 )}
-              </div>
-              <Divider />
+              </Card>
             </Menu.Item>
           ))}
         </Menu>
@@ -73,6 +83,10 @@ const NavBar = ({ data, loading, urlState, setURL }: PropsType) => {
           <Skeleton key={4} />
         </div>
       )}
+      <Create
+        visible={newVisible}
+        onCancelHandler={() => setNewVisible(false)}
+      />
     </>
   );
 };

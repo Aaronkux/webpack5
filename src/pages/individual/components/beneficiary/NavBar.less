@@ -4,8 +4,21 @@
       height: auto;
       line-height: 25px;
     }
+
+    .ant-menu-item-active {
+      background-color: #fff !important;
+    }
+
+    .ant-menu-item-selected {
+      background-color: #fff !important;
+
+      & > div {
+        background-color: #f4f0ff;
+      }
+    }
   }
-  height: ~'calc(100vh - 307px)';
+  min-height: 544px;
+  height: calc(100vh - 285px);
   overflow-y: scroll;
   overflow-x: hidden;
   flex-basis: 200px;
@@ -26,29 +39,54 @@
     background-color: inherit;
     border-radius: 10px;
   }
-  .navCard {
-    position: relative;
-    .navCountry {
-      color: #aaaaaa;
-      word-break: break-word;
-      white-space: normal;
+
+  .plus {
+    border: 2px dotted #f0f0f0;
+    color: #ccc;
+    cursor: pointer;
+    margin: 5px;
+    width: 185px;
+    height: 50px;
+    font-size: 30px;
+    line-height: 60px;
+    transition: all 0.2s linear;
+    &:hover {
+      color: #b79dff;
+      border-color: #b79dff;
     }
-    .address {
-      font-weight: 900;
-      font-size: 18px;
-      word-break: break-word;
-      white-space: normal;
-    }
-    .contact {
-      color: #aaaaaa;
-      word-break: break-word;
-      white-space: normal;
-    }
-    .selfTag {
-      position: absolute;
-      top: 5px;
-      right: -19px;
-      z-index: 999;
+  }
+
+  .menuItemContainer {
+    padding: 5px;
+
+    .navCard {
+      position: relative;
+      border-radius: 5px;
+      padding: 10px;
+
+      .navCountry {
+        color: #aaaaaa;
+        word-break: break-word;
+        white-space: normal;
+      }
+      .address {
+        font-weight: 900;
+        font-size: 18px;
+        word-break: break-word;
+        white-space: normal;
+      }
+      .contact {
+        color: #aaaaaa;
+        word-break: break-word;
+        white-space: normal;
+      }
+      .selfTag {
+        position: absolute;
+        top: 0;
+        right: -8px;
+        border-radius: 5px;
+        z-index: 999;
+      }
     }
   }
 }
