@@ -1,5 +1,6 @@
 import { Effect, ImmerReducer } from 'umi';
 import { message } from 'antd';
+import type { NoDataResponse } from '@/services';
 import {
   getIndividualClients,
   getIndividualClientsDetail,
@@ -9,6 +10,7 @@ import {
   getCompanyBeneficiaries,
   getBeneficiaryDetail,
   updateBeneficiaryDetail,
+  updateIndividualClientsDetail,
 } from '@/services/clients';
 import type {
   IndividualClientInfo,
@@ -48,6 +50,7 @@ export interface ClientsModelType {
     getCompanyBeneficiaries: Effect;
     getBeneficiaryDetail: Effect;
     updateBeneficiaryDetail: Effect;
+    updateIndividualClientsDetail: Effect;
   };
   reducers: {
     save: ImmerReducer<ClientsModelState>;
@@ -157,11 +160,7 @@ const ClientsModel: ClientsModelType = {
     },
     *updateBeneficiaryDetail({ payload }, { call, put }) {
       const { id, data } = payload;
-      const res: BeneficiaryDetailResponse = yield call(
-        updateBeneficiaryDetail,
-        id,
-        data,
-      );
+      const res: NoDataResponse = yield call(updateBeneficiaryDetail, id, data);
       if (res.success) {
         message.success('Update Success!');
         yield put({
@@ -170,6 +169,20 @@ const ClientsModel: ClientsModelType = {
             id,
           },
         });
+      }
+    },
+    *updateIndividualClientsDetail({ payload }, { call, put }) {
+      const { id, data } = payload;
+      const res: NoDataResponse = yield call(
+        updateIndividualClientsDetail,
+        id,
+        data,
+      );
+      if (res.success) {
+        message.success('Update Success!');
+        return true
+      } else {
+        return false
       }
     },
   },

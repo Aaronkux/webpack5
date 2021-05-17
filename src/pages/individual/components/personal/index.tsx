@@ -13,13 +13,16 @@ import {
   Button,
   Divider,
   Modal,
+  message,
 } from 'antd';
 import { connect, useDispatch, useRouteMatch } from 'umi';
 import type { ClientsModelState, Loading } from 'umi';
 import moment from 'moment';
+import type { Moment } from 'moment';
 import NormalText from '@/components/NormalText';
 import UploadPicture from '@/components/UploadPicture';
 import type { IndividualClientInfo } from '@/services/clients';
+import { isBlob } from '@/utils';
 import styles from './index.less';
 
 const { Option } = Select;
@@ -34,13 +37,36 @@ interface PropsType {
   setShowOther: React.Dispatch<React.SetStateAction<boolean>>;
   individualClientDetail?: IndividualClientInfo;
   loading: boolean;
+  savingLoading: boolean;
 }
+
+type Merge<M, N> = Omit<M, Extract<keyof M, keyof N>> & N;
+
+type FormClientInfo = Merge<
+  Omit<Partial<IndividualClientInfo>, 'salesman' | 'gender'>,
+  {
+    DOB: Moment;
+    id1expiredate: Moment;
+    gender: 0 | 1;
+  }
+>;
+
+const imageFileProcesser = (file: any) => {
+  if (isBlob(file)) {
+    return file;
+  } else if (file?.status === 'removed') {
+    return null;
+  } else {
+    return undefined;
+  }
+};
 
 const Personal = ({
   showOther,
   setShowOther,
   individualClientDetail,
   loading,
+  savingLoading,
 }: PropsType) => {
   const [form] = Form.useForm();
   const match = useRouteMatch<{ id?: string }>();
@@ -56,6 +82,64 @@ const Personal = ({
       });
     }
   }, [id]);
+
+  const onFinishHandler = async (values: FormClientInfo) => {
+    if (!id) {
+      message.error(`Can't Find Id Of The Receiver`);
+    }
+    const {
+      DOB,
+      id1expiredate,
+      id1front,
+      id1back,
+      id2front,
+      id2back,
+      faceImage,
+      faceTest,
+      signature,
+      gender,
+    } = values;
+    const formatDOB = DOB?.format('YYYY-MM-DD');
+    const formatId1expiredate = id1expiredate?.format('YYYY-MM-DD');
+    const tempData = {
+      id,
+      ...values,
+      ...{
+        DOB: formatDOB,
+        gender: gender === 1 ? true : false,
+        id1expiredate: formatId1expiredate,
+        id1front: imageFileProcesser(id1front),
+        id1back: imageFileProcesser(id1back),
+        id2front: imageFileProcesser(id2front),
+        id2back: imageFileProcesser(id2back),
+        faceImage: imageFileProcesser(faceImage),
+        faceTest: imageFileProcesser(faceTest),
+        signature: imageFileProcesser(signature),
+      },
+    };
+    let formdata = new FormData();
+    for (let [key, value] of Object.entries(tempData)) {
+      if (value === undefined) continue;
+      if (typeof value === 'number' || typeof value === 'boolean') {
+        formdata.append(key, value.toString());
+        continue;
+      }
+      formdata.append(key, value);
+    }
+    const res = await dispatch({
+      type: 'clients/updateIndividualClientsDetail',
+      payload: { id, data: formdata },
+    });
+    if (res) {
+      setEditing(false);
+      await dispatch({
+        type: 'clients/getIndividualClientsDetail',
+        payload: { id },
+      });
+      form.resetFields();
+    }
+  };
+
   return (
     <>
       {!loading ? (
@@ -63,20 +147,24 @@ const Personal = ({
           {...layout}
           className={styles.form}
           form={form}
-          onFinish={(values) => console.log(values)}
+          onFinish={onFinishHandler}
         >
           <div className={styles.titleAndButton}>
             <h1 className={styles.title}>Basic</h1>
             <Row gutter={[16, 0]} justify="end">
-              <Col>
-                <Button
-                  type="primary"
-                  htmlType="reset"
-                  onClick={() => form.resetFields()}
-                >
-                  Reset
-                </Button>
-              </Col>
+              {editing && (
+                <Col>
+                  <Form.Item>
+                    <Button
+                      loading={savingLoading}
+                      type="primary"
+                      htmlType="submit"
+                    >
+                      Save
+                    </Button>
+                  </Form.Item>
+                </Col>
+              )}
               <Col>
                 {editing ? (
                   <Button type="primary" onClick={() => setModalVisible(true)}>
@@ -88,13 +176,6 @@ const Personal = ({
                   </Button>
                 )}
               </Col>
-              <Col>
-                <Form.Item>
-                  <Button type="primary" htmlType="submit">
-                    Save
-                  </Button>
-                </Form.Item>
-              </Col>
             </Row>
           </div>
           <Divider />
@@ -104,12 +185,19 @@ const Personal = ({
                 label="Name"
                 name="name"
                 initialValue={individualClientDetail?.name}
+                required
+                rules={[{ required: true, message: 'Please Enter Your Name!' }]}
               >
                 {editing ? <Input /> : <NormalText />}
               </Form.Item>
             </Col>
             <Col xs={24} sm={24} md={24} lg={12} xl={12}>
-              <Form.Item label="Gender" name="gender" initialValue={0}>
+              <Form.Item
+                label="Gender"
+                name="gender"
+                initialValue={individualClientDetail?.gender ? 0 : 1}
+                required
+              >
                 {editing ? (
                   <Radio.Group>
                     <Radio.Button value={0}>Male</Radio.Button>
@@ -124,8 +212,25 @@ const Personal = ({
             </Col>
             <Col xs={24} sm={24} md={24} lg={12} xl={12}>
               <Form.Item
+                label="E-mail"
+                name="email"
+                initialValue={individualClientDetail?.email}
+                required
+                rules={[
+                  {
+                    required: true,
+                    type: 'email',
+                    message: 'Please Enter Correct Email!',
+                  },
+                ]}
+              >
+                {editing ? <Input /> : <NormalText />}
+              </Form.Item>
+            </Col>
+            <Col xs={24} sm={24} md={24} lg={12} xl={12}>
+              <Form.Item
                 label="DOB"
-                name="dob"
+                name="DOB"
                 initialValue={moment(individualClientDetail?.DOB)}
               >
                 <DatePicker disabled={!editing} style={{ width: '100%' }} />
@@ -133,23 +238,14 @@ const Personal = ({
             </Col>
             <Col xs={24} sm={24} md={24} lg={12} xl={12}>
               <Form.Item
-                label="E-mail"
-                name="email"
-                initialValue="sadad@awadaw.com"
-              >
-                {editing ? <Input /> : <NormalText />}
-              </Form.Item>
-            </Col>
-            <Col xs={24} sm={24} md={24} lg={12} xl={12}>
-              <Form.Item
                 label="Salesman"
                 name="salesman"
-                initialValue={individualClientDetail?.salesman?.name}
+                initialValue={individualClientDetail?.salesman?.id}
               >
                 {editing ? (
                   <Select>
-                    <Option value={'individual'}>Individual</Option>
-                    <Option value={'company'}>Company</Option>
+                    <Option value={'123321'}>James</Option>
+                    <Option value={'132213'}>Lebron</Option>
                   </Select>
                 ) : (
                   <NormalText />
@@ -178,7 +274,7 @@ const Personal = ({
               <Form.Item
                 label="AnnualIncome"
                 name="annualIncome"
-                initialValue={individualClientDetail?.annualIncome}
+                initialValue={individualClientDetail?.annualIncome?.toFixed(2)}
               >
                 {editing ? (
                   <InputNumber
@@ -314,7 +410,7 @@ const Personal = ({
           <Row>
             <Col xs={24} sm={24} md={24} lg={12} xl={12}>
               <Form.Item
-                label="Front"
+                label="ID1 Front"
                 name="id1front"
                 initialValue={individualClientDetail?.id1front}
               >
@@ -323,7 +419,7 @@ const Personal = ({
             </Col>
             <Col xs={24} sm={24} md={24} lg={12} xl={12}>
               <Form.Item
-                label="Back"
+                label="ID1 Back"
                 name="id1back"
                 initialValue={individualClientDetail?.id1back}
               >
@@ -332,8 +428,26 @@ const Personal = ({
             </Col>
             <Col xs={24} sm={24} md={24} lg={12} xl={12}>
               <Form.Item
+                label="ID2 Front"
+                name="id2front"
+                initialValue={individualClientDetail?.id2front}
+              >
+                <UploadPicture disabled={!editing} />
+              </Form.Item>
+            </Col>
+            <Col xs={24} sm={24} md={24} lg={12} xl={12}>
+              <Form.Item
+                label="ID2 Back"
+                name="id2back"
+                initialValue={individualClientDetail?.id2back}
+              >
+                <UploadPicture disabled={!editing} />
+              </Form.Item>
+            </Col>
+            <Col xs={24} sm={24} md={24} lg={12} xl={12}>
+              <Form.Item
                 label="Face"
-                name="faceimage"
+                name="faceImage"
                 initialValue={individualClientDetail?.faceImage}
               >
                 <UploadPicture disabled={!editing} />
@@ -342,7 +456,7 @@ const Personal = ({
             <Col xs={24} sm={24} md={24} lg={12} xl={12}>
               <Form.Item
                 label="FaceTest"
-                name="facetest"
+                name="faceTest"
                 initialValue={individualClientDetail?.faceTest}
               >
                 <UploadPicture disabled={!editing} />
@@ -360,7 +474,7 @@ const Personal = ({
             <Col xs={24} sm={24} md={24} lg={12} xl={12}>
               <Form.Item
                 label="Expire Date"
-                name="id1expiredate"
+                name="id1ExpireDate"
                 initialValue={moment(individualClientDetail?.id1ExpireDate)}
               >
                 <DatePicker disabled={!editing} style={{ width: '100%' }} />
@@ -368,15 +482,19 @@ const Personal = ({
             </Col>
           </Row>
           <Row gutter={[16, 0]} justify="end">
-            <Col>
-              <Button
-                type="primary"
-                htmlType="reset"
-                onClick={() => form.resetFields()}
-              >
-                Reset
-              </Button>
-            </Col>
+            {editing && (
+              <Col>
+                <Form.Item>
+                  <Button
+                    loading={savingLoading}
+                    type="primary"
+                    htmlType="submit"
+                  >
+                    Save
+                  </Button>
+                </Form.Item>
+              </Col>
+            )}
             <Col>
               {editing ? (
                 <Button type="primary" onClick={() => setModalVisible(true)}>
@@ -387,13 +505,6 @@ const Personal = ({
                   Edit
                 </Button>
               )}
-            </Col>
-            <Col>
-              <Form.Item>
-                <Button type="primary" htmlType="submit">
-                  Save
-                </Button>
-              </Form.Item>
             </Col>
           </Row>
         </Form>
@@ -425,6 +536,7 @@ const Personal = ({
 export default connect(
   ({ clients, loading }: { clients: ClientsModelState; loading: Loading }) => ({
     individualClientDetail: clients.individualClientDetail,
-    loading: loading.models.clients,
+    loading: loading.effects['clients/getIndividualClientsDetail']!,
+    savingLoading: loading.effects['clients/updateIndividualClientsDetail']!,
   }),
 )(React.memo(Personal));

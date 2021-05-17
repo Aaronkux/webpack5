@@ -6,3 +6,5 @@ export interface ResponseType<T> {
   errorMessage?: string;
   showType?: ErrorShowType;
 }
+
+export type NoDataResponse = ResponseType<{}>

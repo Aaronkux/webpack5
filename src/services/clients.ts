@@ -1,5 +1,5 @@
 import { request } from 'umi';
-import type { ResponseType } from './index';
+import type { ResponseType, NoDataResponse } from './index';
 
 export interface IndividualClientInfo {
   id: string;
@@ -128,6 +128,13 @@ export function getIndividualClientsDetail(id: string) {
   );
 }
 
+export function updateIndividualClientsDetail(id: string, data: FormData) {
+  return request<NoDataResponse>(`/api/individualclient/${id}`, {
+    method: 'post',
+    body: data,
+  });
+}
+
 export function getCompanyClients(current: number, pageSize: number) {
   return request<CompanyClientsResponse>('/api/companyclient', {
     method: 'get',
@@ -161,7 +168,7 @@ export function getBeneficiaryDetail(id: string) {
   });
 }
 export function updateBeneficiaryDetail(id: string, data: FormData) {
-  return request<BeneficiaryDetailResponse>(`/api/receiver/${id}`, {
+  return request<NoDataResponse>(`/api/receiver/${id}`, {
     method: 'post',
     body: data,
   });

@@ -187,3 +187,8 @@ export const param2Search = (params: ParamsObjType): string => {
   }
   return window.location.pathname + res;
 };
+
+export function isBlob(file: any) {
+  return file instanceof Blob
+}
+

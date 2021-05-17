@@ -515,4 +515,8 @@ export default {
     data: null,
     success: true,
   },
+  'POST /api/individualclient/:id': {
+    data: null,
+    success: true,
+  },
 };

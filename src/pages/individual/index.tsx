@@ -61,8 +61,8 @@ const IndividualClients = ({
       title: 'Gender',
       dataIndex: 'gender',
       key: 'gender',
-      render: (gender: 0 | 1, record: any) => {
-        return <>{gender === 1 ? 'male' : 'female'}</>;
+      render: (gender: boolean, record: any) => {
+        return <>{gender ? 'male' : 'female'}</>;
       },
     },
     DOB: {
