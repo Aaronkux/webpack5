@@ -515,6 +515,10 @@ export default {
     data: null,
     success: true,
   },
+  'DELETE /api/receiver/:id': {
+    data: null,
+    success: true,
+  },
   'POST /api/individualclient/:id': {
     data: null,
     success: true,

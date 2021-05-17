@@ -17,11 +17,15 @@ const NavBar = ({ data, loading, urlState, setURL }: PropsType) => {
   const dispatch = useDispatch();
   const match = useRouteMatch<{ id?: string }>();
   const { id } = match.params;
-  const selectedParam = urlState.q
-    ? urlState.q
-    : data[0]?.id?.toString() ?? null;
-
+  const selectedParam = urlState.q;
   const [newVisible, setNewVisible] = useState(false);
+
+  useEffect(() => {
+    if (!urlState?.q && data[0]?.id) {
+      setURL({ q: data[0]?.id?.toString() });
+    }
+  }, [urlState, data]);
+
   useEffect(() => {
     if (id) {
       dispatch({
@@ -41,11 +45,10 @@ const NavBar = ({ data, loading, urlState, setURL }: PropsType) => {
   return (
     <>
       {loading ? (
-        <Menu defaultSelectedKeys={[selectedParam]} className={styles.subNav}>
-          <PlusOutlined
-            onClick={() => setNewVisible(true)}
-            className={styles.plus}
-          />
+        <Menu selectedKeys={[selectedParam]} className={styles.subNav}>
+          <div onClick={() => setNewVisible(true)} className={styles.plus}>
+            <PlusOutlined />
+          </div>
           {data.map((item) => (
             <Menu.Item
               onClick={() => {
@@ -76,7 +79,7 @@ const NavBar = ({ data, loading, urlState, setURL }: PropsType) => {
           ))}
         </Menu>
       ) : (
-        <div style={{ width: '275px' }}>
+        <div style={{ width: '240px' }}>
           <Skeleton key={1} />
           <Skeleton key={2} />
           <Skeleton key={3} />
@@ -84,8 +87,9 @@ const NavBar = ({ data, loading, urlState, setURL }: PropsType) => {
         </div>
       )}
       <Create
+        setURL={setURL}
         visible={newVisible}
-        onCancelHandler={() => setNewVisible(false)}
+        setNewVisible={setNewVisible}
       />
     </>
   );

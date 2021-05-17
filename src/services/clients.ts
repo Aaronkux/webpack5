@@ -173,3 +173,9 @@ export function updateBeneficiaryDetail(id: string, data: FormData) {
     body: data,
   });
 }
+export function addBeneficiary(data: FormData) {
+  return request<NoDataResponse>(`/api/receiver`, {
+    method: 'post',
+    body: data,
+  });
+}

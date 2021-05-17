@@ -49,7 +49,6 @@ export interface ClientsModelType {
     getIndividualBeneficiaries: Effect;
     getCompanyBeneficiaries: Effect;
     getBeneficiaryDetail: Effect;
-    updateBeneficiaryDetail: Effect;
     updateIndividualClientsDetail: Effect;
   };
   reducers: {
@@ -155,19 +154,6 @@ const ClientsModel: ClientsModelType = {
         yield put({
           type: 'save',
           payload: { beneficiaryDetail: res.data },
-        });
-      }
-    },
-    *updateBeneficiaryDetail({ payload }, { call, put }) {
-      const { id, data } = payload;
-      const res: NoDataResponse = yield call(updateBeneficiaryDetail, id, data);
-      if (res.success) {
-        message.success('Update Success!');
-        yield put({
-          type: 'getBeneficiaryDetail',
-          payload: {
-            id,
-          },
         });
       }
     },

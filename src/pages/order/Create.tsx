@@ -110,7 +110,6 @@ const Create = ({ newVisible, setNewVisible, addLoading }: PropsType) => {
       closeIcon={<CloseCircleOutlined />}
       maskClosable={false}
       centered
-      className={styles.container}
       okText={'Add'}
       cancelText="Cancel"
       confirmLoading={addLoading}
@@ -121,7 +120,7 @@ const Create = ({ newVisible, setNewVisible, addLoading }: PropsType) => {
         form={form}
         onFinish={finishHandler}
       >
-        <h1 className={styles.title}>Order Information</h1>
+        <h1 className={styles.title}>Create Order</h1>
         <Divider />
         <Row>
           <Col xs={24} sm={24} md={24} lg={12} xl={12}>

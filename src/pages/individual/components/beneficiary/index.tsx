@@ -37,7 +37,7 @@ const Beneficiary = ({
       {beneficiary.length > 0 &&
       !beneficiaryDetailLoading &&
       beneficiaryDetail !== undefined ? (
-        <Detail data={beneficiaryDetail!} />
+        <Detail setURL={setURL} data={beneficiaryDetail!} />
       ) : (
         <Skeleton paragraph={{ rows: 10 }} />
       )}
@@ -50,8 +50,6 @@ export default connect(
     beneficiary: clients.beneficiary,
     beneficiaryDetail: clients.beneficiaryDetail,
     beneficiaryLoading: loading.effects['clients/getIndividualBeneficiaries']!,
-    beneficiaryDetailLoading: loading.effects[
-      'clients/getBeneficiaryDetail'
-    ]!,
+    beneficiaryDetailLoading: loading.effects['clients/getBeneficiaryDetail']!,
   }),
 )(React.memo(Beneficiary));

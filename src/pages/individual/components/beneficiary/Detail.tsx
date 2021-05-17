@@ -10,16 +10,19 @@ import {
   Button,
   Modal,
   InputNumber,
+  Popconfirm,
   message,
 } from 'antd';
-import { useDispatch, useRouteMatch, connect } from 'umi';
+import { useDispatch, useRouteMatch, connect, request } from 'umi';
 import type { Loading, ClientsModelState } from 'umi';
 import NormalText from '@/components/NormalText';
 import UploadPicture from '@/components/UploadPicture';
 import type { BeneficiaryInfo } from '@/services/clients';
+import type { NoDataResponse } from '@/services';
 import moment from 'moment';
 import type { Moment } from 'moment';
 import styles from './Detail.less';
+import type { ParamsObjType } from '@/utils';
 
 const { Option } = Select;
 
@@ -29,7 +32,7 @@ const layout = {
 };
 interface PropsType {
   data: BeneficiaryInfo;
-  savingLoading: boolean;
+  setURL: React.Dispatch<React.SetStateAction<ParamsObjType>>;
 }
 
 type Merge<M, N> = Omit<M, Extract<keyof M, keyof N>> & N;
@@ -41,22 +44,27 @@ type FormBeneficiaryInfo = Merge<
   }
 >;
 
-const Detail = ({ data, savingLoading }: PropsType) => {
+const Detail = ({ data, setURL }: PropsType) => {
   const [form] = Form.useForm();
   const dispatch = useDispatch();
   const [editing, setEditing] = useState(false);
+  const [savingLoading, setSavingLoading] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
   const [remitType, setRemitType] = useState(data.receiverType);
   const [accountType, setAccountType] = useState(data.isTrustAccount ? 1 : 0);
-  const match = useRouteMatch<{ id?: string }>();
-  const { id } = match.params;
+  const id = data?.id;
 
-  const onFinishHandler = (values: FormBeneficiaryInfo) => {
+  const onFinishHandler = async (values: FormBeneficiaryInfo) => {
+    setSavingLoading(true);
     if (!id) {
       message.error(`Can't Find Id Of The Receiver`);
+      setSavingLoading(false);
+      setEditing(false);
+      return;
     }
     const { DOB, receiverType, isTrustAccount } = values;
-    const formatDOB = DOB.format('YYYY-MM-DD');
+    const formatDOB = DOB?.format('YYYY-MM-DD');
     const formatReceiverType = receiverType ? true : false;
     const formatIsTrustAccount = isTrustAccount ? true : false;
     const tempData = {
@@ -77,10 +85,45 @@ const Detail = ({ data, savingLoading }: PropsType) => {
       }
       formdata.append(key, value);
     }
-    dispatch({
-      type: 'clients/updateBeneficiaryDetail',
-      payload: { id, data: formdata },
+    const res = await request<NoDataResponse>(`/api/receiver/${id}`, {
+      method: 'post',
+      body: formdata,
     });
+    setSavingLoading(false);
+    setEditing(false);
+    if (res.success) {
+      message.success('Update Successfully!');
+      dispatch({
+        type: 'clients/getBeneficiaryDetail',
+        payload: {
+          id,
+        },
+      });
+    }
+  };
+
+  const onDeleteHandler = async () => {
+    setDeleteLoading(true);
+    if (!id) {
+      message.error(`Can't Find Id Of The Receiver`);
+      setDeleteLoading(false);
+      return;
+    }
+    const res = await request<NoDataResponse>(`/api/receiver/${id}`, {
+      method: 'delete',
+    });
+    setDeleteLoading(false);
+    if (res.success) {
+      message.success('Delete Successfully!');
+
+      if (id) {
+        await dispatch({
+          type: 'clients/getIndividualBeneficiaries',
+          payload: { id },
+        });
+        setURL({ q: undefined });
+      }
+    }
   };
 
   return (
@@ -95,6 +138,20 @@ const Detail = ({ data, savingLoading }: PropsType) => {
           <div className={styles.titleAndButton}>
             <h1 className={styles.title}>Beneficiary Information</h1>
             <Row gutter={[16, 0]} justify="end">
+              {!editing && (
+                <Col>
+                  <Form.Item>
+                    <Popconfirm
+                      title="Are you sure to delete this receiver?"
+                      onConfirm={onDeleteHandler}
+                    >
+                      <Button loading={deleteLoading} danger>
+                        Delete
+                      </Button>
+                    </Popconfirm>
+                  </Form.Item>
+                </Col>
+              )}
               {editing && (
                 <Col>
                   <Form.Item>
@@ -156,9 +213,7 @@ const Detail = ({ data, savingLoading }: PropsType) => {
                 name="bankName"
                 initialValue={data.bankName}
                 required
-                rules={[
-                  { required: true, message: 'Please Select Receiver Type' },
-                ]}
+                rules={[{ required: true, message: 'Please Enter Bank Name!' }]}
               >
                 {editing ? <Input /> : <NormalText />}
               </Form.Item>
@@ -385,10 +440,6 @@ const Detail = ({ data, savingLoading }: PropsType) => {
                     {editing ? <Input /> : <NormalText />}
                   </Form.Item>
                 </Col>
-              </>
-            )}
-            {remitType && (
-              <>
                 <Col xs={24} sm={24} md={24} lg={24} xl={12}>
                   <Form.Item
                     label="Account Type"
@@ -470,6 +521,20 @@ const Detail = ({ data, savingLoading }: PropsType) => {
             )}
           </Row>
           <Row gutter={[16, 0]} justify="end">
+            {!editing && (
+              <Col>
+                <Form.Item>
+                  <Popconfirm
+                    title="Are you sure to delete this receiver?"
+                    onConfirm={onDeleteHandler}
+                  >
+                    <Button loading={deleteLoading} danger>
+                      Delete
+                    </Button>
+                  </Popconfirm>
+                </Form.Item>
+              </Col>
+            )}
             {editing && (
               <Col>
                 <Form.Item>
@@ -518,7 +583,11 @@ const Detail = ({ data, savingLoading }: PropsType) => {
 // export default React.memo(Detail);
 
 export default connect(
-  ({ clients, loading }: { clients: ClientsModelState; loading: Loading }) => ({
-    savingLoading: loading.effects['clients/updateBeneficiaryDetail']!,
-  }),
+  ({
+    clients,
+    loading,
+  }: {
+    clients: ClientsModelState;
+    loading: Loading;
+  }) => ({}),
 )(React.memo(Detail));
