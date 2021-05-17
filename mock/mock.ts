@@ -128,6 +128,7 @@ export default {
           faceTest: '@IMG',
           purpose: '@csentence(3, 5)',
           // compliance: '@integer(100, 200)',
+          signature: '@IMG',
           unsubscribe: '@boolean(1, 1, true)',
           id1ExpireDate: '@date',
           id2ExpireDate: '@date',

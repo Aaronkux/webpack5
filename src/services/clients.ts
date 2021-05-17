@@ -31,6 +31,7 @@ export interface IndividualClientInfo {
   // compliance: string;
   unsubscribe?: boolean;
   id1ExpireDate?: string;
+  id2ExpireDate?: string;
   other?: string;
   signature?: string;
 }

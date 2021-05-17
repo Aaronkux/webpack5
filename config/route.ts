@@ -50,7 +50,7 @@ export const routes: IBestAFSRoute[] = [
       },
       {
         path: '/clients/company',
-        component: '@/pages/individual',
+        component: '@/pages/company',
         name: 'Company Client',
         icon: 'HomeOutlined',
         parentPath: '/clients',
