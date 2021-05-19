@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useRouteMatch } from 'umi';
 import type { BeneficiaryInfo } from '@/services/clients';
-import { Menu, Tag, Skeleton, Card } from 'antd';
+import { Menu, Skeleton, Card } from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
 import Create from './Create';
 import styles from './NavBar.less';
@@ -29,7 +29,7 @@ const NavBar = ({ data, loading, urlState, setURL }: PropsType) => {
   useEffect(() => {
     if (id) {
       dispatch({
-        type: 'clients/getIndividualBeneficiaries',
+        type: 'clients/getCompanyBeneficiaries',
         payload: { id },
       });
     }
@@ -69,11 +69,6 @@ const NavBar = ({ data, loading, urlState, setURL }: PropsType) => {
                   className={styles.address}
                 >{`${item.address}, ${item.suburb}`}</p>
                 <p className={styles.contact}>{`${item.name} ${item.phone}`}</p>
-                {item.receiverType && (
-                  <Tag className={styles.selfTag} color="#f50">
-                    Self
-                  </Tag>
-                )}
               </Card>
             </Menu.Item>
           ))}

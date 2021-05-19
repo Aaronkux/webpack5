@@ -132,7 +132,6 @@ export default {
           unsubscribe: '@boolean(1, 1, true)',
           id1ExpireDate: '@date',
           id2ExpireDate: '@date',
-          other: '@csentence(5, 6)',
           createdDate: '@date',
         },
       ],
@@ -195,7 +194,7 @@ export default {
           legalPerson1back: '@IMG',
           legalPerson2front: '@IMG',
           legalPersion2back: '@IMG',
-          companyExtract: '@csentence(3, 5)',
+          companyExtract: '@IMG',
           accountHolderName: '@name',
           accountHolderPosition: '@csentence(3, 5)',
           accountHolderDOB: '@date',
@@ -232,7 +231,7 @@ export default {
       legalPerson1back: '@IMG',
       legalPerson2front: '@IMG',
       legalPersion2back: '@IMG',
-      companyExtract: '@csentence(3, 5)',
+      companyExtract: '@IMG',
       accountHolderName: '@name',
       accountHolderPosition: '@csentence(3, 5)',
       accountHolderDOB: '@date',
@@ -487,6 +486,14 @@ export default {
     },
     success: true,
   }),
+  'POST /api/users': {
+    data: null,
+    success: true,
+  },
+  'PUT /api/users/:id': {
+    data: null,
+    success: true,
+  },
   'POST /api/order': {
     data: null,
     success: true,
@@ -509,6 +516,10 @@ export default {
     success: true,
   },
   'POST /api/sales': {
+    data: null,
+    success: true,
+  },
+  'PUT /api/sales/:id': {
     data: null,
     success: true,
   },

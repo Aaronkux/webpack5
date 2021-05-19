@@ -418,7 +418,7 @@ const Users = ({ users, total, loading }: PropsType) => {
             total={total}
           />
         </Row>
-        <Create newVisible={visible} setNewVisible={setVisible} />
+        <Create urlState={urlState} newVisible={visible} setNewVisible={setVisible} />
       </Card>
     </div>
   );

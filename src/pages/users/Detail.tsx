@@ -18,13 +18,25 @@ import { CloseOutlined, CheckOutlined } from '@ant-design/icons';
 import BackButton from '@/components/BackButton';
 import NormalText from '@/components/NormalText';
 import Avatar from '@/components/Avatar';
-import { UserInfo } from '@/services/users';
+import type { UserInfo } from '@/services/users';
+import { updateUser } from '@/services/users';
+import { createFormData, isBlob } from '@/utils';
 import styles from './Detail.less';
 
 interface PropsType {
   userDetail?: UserInfo;
   loading: boolean;
 }
+
+const imageFileProcesser = (file: any) => {
+  if (isBlob(file)) {
+    return file;
+  } else {
+    return undefined;
+  }
+};
+
+type FormSaleInfo = Partial<UserInfo>;
 
 const layout = {
   labelCol: { span: 10 },
@@ -43,25 +55,34 @@ const Detail = ({ userDetail, loading }: PropsType) => {
   );
   const [modalVisible, setModalVisible] = useState(false);
 
-  const finishHandler = async (values: any) => {
+  const finishHandler = async (values: FormSaleInfo) => {
+    if (!id) {
+      message.error(`Can't Find Id Of The User!`);
+      return;
+    }
     setSaving(true);
-    const res = await request('/api/users', {
-      method: 'post',
-      data: values,
-    });
-    if (res.success) message.success('Save Successfully');
+    const { photo } = values;
+    const tempData = {
+      ...values,
+      ...{
+        photo: imageFileProcesser(photo),
+      },
+    };
+    const res = await updateUser(id, createFormData(tempData));
     setSaving(false);
-    dispatch({
-      type: 'users/getUserDetail',
-      payload: { id },
-    });
-    setEditing(false);
+    if (res.success) {
+      message.success('Update Successfully');
+      setEditing(false);
+      dispatch({
+        type: 'users/getUserDetail',
+        payload: { id },
+      });
+    }
   };
 
-  const valueChangedHandler = (changedValues: any, allValues: any) => {
+  const valueChangedHandler = (changedValues: any) => {
     const { isAdmin, orderPermission } = changedValues;
     if (isAdmin === true) {
-      console.log('triied');
       form.setFieldsValue({
         salesPermission: true,
         clientPermission: true,
@@ -94,7 +115,9 @@ const Detail = ({ userDetail, loading }: PropsType) => {
     }
   }, [id]);
   useEffect(() => {
-    form.resetFields();
+    if (!editing) {
+      form.resetFields();
+    }
   }, [editing]);
 
   return (
@@ -143,6 +166,8 @@ const Detail = ({ userDetail, loading }: PropsType) => {
                 label="Name"
                 name="name"
                 initialValue={userDetail?.name}
+                required
+                rules={[{ required: true, message: 'Please enter name!' }]}
               >
                 {editing ? <Input /> : <NormalText />}
               </Form.Item>
@@ -152,6 +177,8 @@ const Detail = ({ userDetail, loading }: PropsType) => {
                 label="Email"
                 name="email"
                 initialValue={userDetail?.email}
+                rules={[{ required: true, message: 'Please select email!' }]}
+                required
               >
                 {editing ? <Input /> : <NormalText />}
               </Form.Item>
@@ -327,6 +354,31 @@ const Detail = ({ userDetail, loading }: PropsType) => {
                   disabled={!editing || !orderChecked}
                 />
               </Form.Item>
+            </Col>
+          </Row>
+          <Row gutter={[16, 0]} justify="end">
+            {editing ? (
+              <Col>
+                <Form.Item>
+                  <Button loading={saving} type="primary" htmlType="submit">
+                    Save
+                  </Button>
+                </Form.Item>
+              </Col>
+            ) : (
+              ''
+            )}
+
+            <Col>
+              {editing ? (
+                <Button type="primary" onClick={() => setModalVisible(true)}>
+                  Cancel
+                </Button>
+              ) : (
+                <Button type="primary" onClick={() => setEditing(true)}>
+                  Edit
+                </Button>
+              )}
             </Col>
           </Row>
         </Form>

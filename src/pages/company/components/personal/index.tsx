@@ -5,14 +5,12 @@ import {
   Input,
   Row,
   Col,
-  Select,
-  Radio,
   DatePicker,
-  InputNumber,
-  Switch,
   Button,
   Divider,
   Modal,
+  Switch,
+  Select,
   message,
 } from 'antd';
 import { connect, useDispatch, useRouteMatch } from 'umi';
@@ -21,13 +19,12 @@ import moment from 'moment';
 import type { Moment } from 'moment';
 import NormalText from '@/components/NormalText';
 import UploadPicture from '@/components/UploadPicture';
-import type { IndividualClientInfo } from '@/services/clients';
+import type { CompanyClientInfo } from '@/services/clients';
 import { updateIndividualClientsDetail } from '@/services/clients';
 import { isBlob, createFormData } from '@/utils';
 import styles from './index.less';
 
 const { Option } = Select;
-
 const layout = {
   labelCol: { span: 8 },
   wrapperCol: { span: 19 },
@@ -44,14 +41,14 @@ const purposeOptions = [
 ];
 
 interface PropsType {
-  individualClientDetail?: IndividualClientInfo;
+  companyClientDetail?: CompanyClientInfo;
   loading: boolean;
 }
 
 type Merge<M, N> = Omit<M, Extract<keyof M, keyof N>> & N;
 
 type FormClientInfo = Merge<
-  Omit<Partial<IndividualClientInfo>, 'salesman' | 'gender'>,
+  Omit<Partial<CompanyClientInfo>, 'salesman' | 'gender'>,
   {
     DOB: Moment;
     id1expiredate: Moment;
@@ -69,7 +66,7 @@ const imageFileProcesser = (file: any) => {
   }
 };
 
-const Personal = ({ individualClientDetail, loading }: PropsType) => {
+const Personal = ({ companyClientDetail, loading }: PropsType) => {
   const [form] = Form.useForm();
   const match = useRouteMatch<{ id?: string }>();
   const dispatch = useDispatch();
@@ -81,37 +78,26 @@ const Personal = ({ individualClientDetail, loading }: PropsType) => {
   useEffect(() => {
     if (id) {
       dispatch({
-        type: 'clients/getIndividualClientsDetail',
+        type: 'clients/getCompanyClientsDetail',
         payload: { id },
       });
     }
   }, [id]);
-
   useEffect(() => {
-    if (individualClientDetail?.purpose) {
-      if (!purposeOptions.includes(individualClientDetail?.purpose)) {
+    if (companyClientDetail?.purpose) {
+      if (!purposeOptions.includes(companyClientDetail?.purpose)) {
         setShowOther(true);
       }
     }
-  }, [individualClientDetail]);
+  }, [companyClientDetail]);
+
   const onFinishHandler = async (values: FormClientInfo) => {
     if (!id) {
       message.error(`Can't Find Id Of The Receiver`);
       return;
     }
     setUpdating(true);
-    const {
-      DOB,
-      id1expiredate,
-      id1front,
-      id1back,
-      id2front,
-      id2back,
-      faceImage,
-      faceTest,
-      signature,
-      gender,
-    } = values;
+    const { DOB, id1expiredate, gender } = values;
     const formatDOB = DOB?.format('YYYY-MM-DD');
     const formatId1expiredate = id1expiredate?.format('YYYY-MM-DD');
     const tempData = {
@@ -120,23 +106,15 @@ const Personal = ({ individualClientDetail, loading }: PropsType) => {
         DOB: formatDOB,
         gender: gender === 1 ? true : false,
         id1expiredate: formatId1expiredate,
-        id1front: imageFileProcesser(id1front),
-        id1back: imageFileProcesser(id1back),
-        id2front: imageFileProcesser(id2front),
-        id2back: imageFileProcesser(id2back),
-        faceImage: imageFileProcesser(faceImage),
-        faceTest: imageFileProcesser(faceTest),
-        signature: imageFileProcesser(signature),
       },
     };
-
     const res = await updateIndividualClientsDetail(id, createFormData(tempData));
     setUpdating(false);
     if (res.success) {
-      setEditing(false);
       message.success('Update Successfully!');
+      setEditing(false);
       await dispatch({
-        type: 'clients/getIndividualClientsDetail',
+        type: 'clients/getCompanyClientsDetail',
         payload: { id },
       });
       form.resetFields();
@@ -153,7 +131,7 @@ const Personal = ({ individualClientDetail, loading }: PropsType) => {
           onFinish={onFinishHandler}
         >
           <div className={styles.titleAndButton}>
-            <h1 className={styles.title}>Basic</h1>
+            <h1 className={styles.title}>Company Details</h1>
             <Row gutter={[16, 0]} justify="end">
               {editing && (
                 <Col>
@@ -181,39 +159,58 @@ const Personal = ({ individualClientDetail, loading }: PropsType) => {
           <Row>
             <Col xs={24} sm={24} md={24} lg={12} xl={12}>
               <Form.Item
-                label="Name"
+                label="Entity Name"
                 name="name"
-                initialValue={individualClientDetail?.name}
+                initialValue={companyClientDetail?.name}
                 required
-                rules={[{ required: true, message: 'Please Enter Your Name!' }]}
+                rules={[
+                  { required: true, message: 'Please Enter Your Entity Name!' },
+                ]}
               >
                 {editing ? <Input /> : <NormalText />}
               </Form.Item>
             </Col>
             <Col xs={24} sm={24} md={24} lg={12} xl={12}>
               <Form.Item
-                label="Gender"
-                name="gender"
-                initialValue={individualClientDetail?.gender ? 0 : 1}
-                required
+                label="Entity Type"
+                name="companyType"
+                initialValue={companyClientDetail?.companyType}
               >
-                {editing ? (
-                  <Radio.Group>
-                    <Radio.Button value={0}>Male</Radio.Button>
-                    <Radio.Button value={1}>Female</Radio.Button>
-                  </Radio.Group>
-                ) : (
-                  <NormalText
-                    transform={(value) => (value === 0 ? 'Male' : 'Female')}
-                  />
-                )}
+                {editing ? <Input /> : <NormalText />}
+              </Form.Item>
+            </Col>
+            <Col xs={24} sm={24} md={24} lg={12} xl={12}>
+              <Form.Item
+                label="Registered Business Address"
+                name="registeredBusinessAddress"
+                initialValue={companyClientDetail?.registeredBusinessAddress}
+              >
+                {editing ? <Input /> : <NormalText />}
+              </Form.Item>
+            </Col>
+            <Col xs={24} sm={24} md={24} lg={12} xl={12}>
+              <Form.Item
+                label="Principle Business Address"
+                name="principleBusinessAddress"
+                initialValue={companyClientDetail?.principleBusinessAddress}
+              >
+                {editing ? <Input /> : <NormalText />}
+              </Form.Item>
+            </Col>
+            <Col xs={24} sm={24} md={24} lg={12} xl={12}>
+              <Form.Item
+                label="Company Contact Number"
+                name="companyContactNumber"
+                initialValue={companyClientDetail?.companyContactNumber}
+              >
+                {editing ? <Input /> : <NormalText />}
               </Form.Item>
             </Col>
             <Col xs={24} sm={24} md={24} lg={12} xl={12}>
               <Form.Item
                 label="E-mail"
                 name="email"
-                initialValue={individualClientDetail?.email}
+                initialValue={companyClientDetail?.email}
                 required
                 rules={[
                   {
@@ -228,76 +225,95 @@ const Personal = ({ individualClientDetail, loading }: PropsType) => {
             </Col>
             <Col xs={24} sm={24} md={24} lg={12} xl={12}>
               <Form.Item
-                label="DOB"
-                name="DOB"
-                initialValue={moment(individualClientDetail?.DOB)}
+                label="ABN_ACN_ARBN"
+                name="ABN_ACN_ARBN"
+                initialValue={companyClientDetail?.ABN_ACN_ARBN}
               >
-                <DatePicker disabled={!editing} style={{ width: '100%' }} />
+                {editing ? <Input /> : <NormalText />}
               </Form.Item>
             </Col>
             <Col xs={24} sm={24} md={24} lg={12} xl={12}>
               <Form.Item
                 label="Salesman"
                 name="salesman"
-                initialValue={individualClientDetail?.salesman?.id}
-              >
-                {editing ? (
-                  <Select>
-                    <Option value={'123321'}>James</Option>
-                    <Option value={'132213'}>Lebron</Option>
-                  </Select>
-                ) : (
-                  <NormalText />
-                )}
-              </Form.Item>
-            </Col>
-            <Col xs={24} sm={24} md={24} lg={12} xl={12}>
-              <Form.Item
-                label="Occupation"
-                name="occupation"
-                initialValue={individualClientDetail?.occupation}
+                initialValue={companyClientDetail?.salesman?.name}
               >
                 {editing ? <Input /> : <NormalText />}
               </Form.Item>
             </Col>
+
+           
             <Col xs={24} sm={24} md={24} lg={12} xl={12}>
               <Form.Item
-                label="EmployerName"
-                name="employerName"
-                initialValue={individualClientDetail?.employerName}
+                label="ID1 Expire Date"
+                name="person1ExpireDate"
+                initialValue={moment(companyClientDetail?.person1ExpireDate)}
               >
-                {editing ? <Input /> : <NormalText />}
+                <DatePicker disabled={!editing} style={{ width: '100%' }} />
               </Form.Item>
             </Col>
             <Col xs={24} sm={24} md={24} lg={12} xl={12}>
               <Form.Item
-                label="AnnualIncome"
-                name="annualIncome"
-                initialValue={individualClientDetail?.annualIncome?.toFixed(2)}
+                label="ID2 Expire Date"
+                name="person2ExpireDate"
+                initialValue={moment(companyClientDetail?.person2ExpireDate)}
               >
-                {editing ? (
-                  <InputNumber
-                    style={{ width: '100%' }}
-                    formatter={(value) =>
-                      `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')
-                    }
-                    parser={(value: any) => value.replace(/\$\s?|(,*)/g, '')}
-                    precision={2}
-                    step="1"
-                    stringMode
-                  />
-                ) : (
-                  <NormalText />
-                )}
+                <DatePicker disabled={!editing} style={{ width: '100%' }} />
               </Form.Item>
             </Col>
             <Col xs={24} sm={24} md={24} lg={12} xl={12}>
               <Form.Item
-                label="SourceOfIncome"
-                name="sourceOfIncome"
-                initialValue={individualClientDetail?.sourceOfIncome}
+                label="ID1 Front"
+                name="legalPerson1front"
+                initialValue={companyClientDetail?.legalPerson1front}
               >
-                {editing ? <Input /> : <NormalText />}
+                <UploadPicture disabled={!editing} />
+              </Form.Item>
+            </Col>
+            <Col xs={24} sm={24} md={24} lg={12} xl={12}>
+              <Form.Item
+                label="ID1 Back"
+                name="legalPerson1back"
+                initialValue={companyClientDetail?.legalPerson1back}
+              >
+                <UploadPicture disabled={!editing} />
+              </Form.Item>
+            </Col>
+            <Col xs={24} sm={24} md={24} lg={12} xl={12}>
+              <Form.Item
+                label="ID2 Front"
+                name="legalPerson2front"
+                initialValue={companyClientDetail?.legalPerson2front}
+              >
+                <UploadPicture disabled={!editing} />
+              </Form.Item>
+            </Col>
+            <Col xs={24} sm={24} md={24} lg={12} xl={12}>
+              <Form.Item
+                label="ID2 Back"
+                name="legalPersion2back"
+                initialValue={companyClientDetail?.legalPersion2back}
+              >
+                <UploadPicture disabled={!editing} />
+              </Form.Item>
+            </Col>
+
+            <Col xs={24} sm={24} md={24} lg={12} xl={12}>
+              <Form.Item
+                label="Company Extract"
+                name="companyExtract"
+                initialValue={companyClientDetail?.companyExtract}
+              >
+                <UploadPicture disabled={!editing} />
+              </Form.Item>
+            </Col>
+            <Col xs={24} sm={24} md={24} lg={12} xl={12}>
+              <Form.Item
+                label="Signature"
+                name="signature"
+                initialValue={companyClientDetail?.signature}
+              >
+                <UploadPicture disabled={!editing} />
               </Form.Item>
             </Col>
             <Col xs={24} sm={24} md={24} lg={12} xl={12}>
@@ -305,9 +321,9 @@ const Personal = ({ individualClientDetail, loading }: PropsType) => {
                 label="Purpose"
                 name="purpose"
                 initialValue={
-                  individualClientDetail?.purpose
-                    ? purposeOptions.includes(individualClientDetail?.purpose)
-                      ? individualClientDetail?.purpose
+                  companyClientDetail?.purpose
+                    ? purposeOptions.includes(companyClientDetail?.purpose)
+                      ? companyClientDetail?.purpose
                       : 'Other'
                     : undefined
                 }
@@ -341,7 +357,7 @@ const Personal = ({ individualClientDetail, loading }: PropsType) => {
                 label="unsubscribe"
                 name="Unsubscribe"
                 valuePropName="checked"
-                initialValue={individualClientDetail?.unsubscribe}
+                initialValue={companyClientDetail?.unsubscribe}
               >
                 <Switch disabled={!editing} />
               </Form.Item>
@@ -351,134 +367,69 @@ const Personal = ({ individualClientDetail, loading }: PropsType) => {
                 <Form.Item
                   label="Other"
                   name="other"
-                  initialValue={individualClientDetail?.purpose}
+                  initialValue={companyClientDetail?.purpose}
                 >
                   {editing ? <Input /> : <NormalText />}
                 </Form.Item>
               </Col>
             )}
           </Row>
+          <h1 className={styles.title}>Primary Account Holder</h1>
+          <Divider />
+          <Row>
+            <Col xs={24} sm={24} md={24} lg={12} xl={12}>
+              <Form.Item
+                label="Name"
+                name="accountHolderName"
+                initialValue={companyClientDetail?.accountHolderName}
+              >
+                {editing ? <Input /> : <NormalText />}
+              </Form.Item>
+            </Col>
+            <Col xs={24} sm={24} md={24} lg={12} xl={12}>
+              <Form.Item
+                label="Position"
+                name="accountHolderPosition"
+                initialValue={companyClientDetail?.accountHolderPosition}
+              >
+                {editing ? <Input /> : <NormalText />}
+              </Form.Item>
+            </Col>
 
-          <h1 className={styles.title}>Address</h1>
-          <Divider />
-          <Row>
             <Col xs={24} sm={24} md={24} lg={12} xl={12}>
               <Form.Item
-                label="Address"
-                name="address"
-                initialValue={individualClientDetail?.address}
+                label="Contact Number"
+                name="accountHolderContactNumber"
+                initialValue={companyClientDetail?.accountHolderContactNumber}
               >
                 {editing ? <Input /> : <NormalText />}
               </Form.Item>
             </Col>
             <Col xs={24} sm={24} md={24} lg={12} xl={12}>
               <Form.Item
-                label="Suburb"
-                name="suburb"
-                initialValue={individualClientDetail?.suburb}
+                label="Email"
+                name="accountHolderEmail"
+                initialValue={companyClientDetail?.accountHolderEmail}
               >
                 {editing ? <Input /> : <NormalText />}
               </Form.Item>
             </Col>
             <Col xs={24} sm={24} md={24} lg={12} xl={12}>
               <Form.Item
-                label="State"
-                name="state"
-                initialValue={individualClientDetail?.state}
+                label="Residential Address"
+                name="accountHolderResidentialAddress"
+                initialValue={
+                  companyClientDetail?.accountHolderResidentialAddress
+                }
               >
                 {editing ? <Input /> : <NormalText />}
               </Form.Item>
             </Col>
             <Col xs={24} sm={24} md={24} lg={12} xl={12}>
               <Form.Item
-                label="Country"
-                name="country"
-                initialValue={individualClientDetail?.country}
-              >
-                {editing ? <Input /> : <NormalText />}
-              </Form.Item>
-            </Col>
-            <Col xs={24} sm={24} md={24} lg={12} xl={12}>
-              <Form.Item
-                label="Postcode"
-                name="postcode"
-                initialValue={individualClientDetail?.postcode}
-              >
-                {editing ? <Input /> : <NormalText />}
-              </Form.Item>
-            </Col>
-          </Row>
-          <h1 className={styles.title}>Attachment File</h1>
-          <Divider />
-          <Row>
-            <Col xs={24} sm={24} md={24} lg={12} xl={12}>
-              <Form.Item
-                label="ID1 Front"
-                name="id1front"
-                initialValue={individualClientDetail?.id1front}
-              >
-                <UploadPicture disabled={!editing} />
-              </Form.Item>
-            </Col>
-            <Col xs={24} sm={24} md={24} lg={12} xl={12}>
-              <Form.Item
-                label="ID1 Back"
-                name="id1back"
-                initialValue={individualClientDetail?.id1back}
-              >
-                <UploadPicture disabled={!editing} />
-              </Form.Item>
-            </Col>
-            <Col xs={24} sm={24} md={24} lg={12} xl={12}>
-              <Form.Item
-                label="ID2 Front"
-                name="id2front"
-                initialValue={individualClientDetail?.id2front}
-              >
-                <UploadPicture disabled={!editing} />
-              </Form.Item>
-            </Col>
-            <Col xs={24} sm={24} md={24} lg={12} xl={12}>
-              <Form.Item
-                label="ID2 Back"
-                name="id2back"
-                initialValue={individualClientDetail?.id2back}
-              >
-                <UploadPicture disabled={!editing} />
-              </Form.Item>
-            </Col>
-            <Col xs={24} sm={24} md={24} lg={12} xl={12}>
-              <Form.Item
-                label="Face"
-                name="faceImage"
-                initialValue={individualClientDetail?.faceImage}
-              >
-                <UploadPicture disabled={!editing} />
-              </Form.Item>
-            </Col>
-            <Col xs={24} sm={24} md={24} lg={12} xl={12}>
-              <Form.Item
-                label="FaceTest"
-                name="faceTest"
-                initialValue={individualClientDetail?.faceTest}
-              >
-                <UploadPicture disabled={!editing} />
-              </Form.Item>
-            </Col>
-            <Col xs={24} sm={24} md={24} lg={12} xl={12}>
-              <Form.Item
-                label="Signature"
-                name="signature"
-                initialValue={individualClientDetail?.signature}
-              >
-                <UploadPicture disabled={!editing} />
-              </Form.Item>
-            </Col>
-            <Col xs={24} sm={24} md={24} lg={12} xl={12}>
-              <Form.Item
-                label="Expire Date"
-                name="id1ExpireDate"
-                initialValue={moment(individualClientDetail?.id1ExpireDate)}
+                label="DOB"
+                name="accountHolderDOB"
+                initialValue={moment(companyClientDetail?.accountHolderDOB)}
               >
                 <DatePicker disabled={!editing} style={{ width: '100%' }} />
               </Form.Item>
@@ -534,7 +485,7 @@ const Personal = ({ individualClientDetail, loading }: PropsType) => {
 };
 export default connect(
   ({ clients, loading }: { clients: ClientsModelState; loading: Loading }) => ({
-    individualClientDetail: clients.individualClientDetail,
-    loading: loading.effects['clients/getIndividualClientsDetail']!,
+    companyClientDetail: clients.companyClientDetail,
+    loading: loading.effects['clients/getCompanyClientsDetail']!,
   }),
 )(React.memo(Personal));

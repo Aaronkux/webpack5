@@ -257,7 +257,7 @@ const IndividualClients = ({ companyClients, total, loading }: PropsType) => {
     render: (text: string, record: any) => {
       return (
         <div className={styles.action}>
-          <Link to={`/clients/individual/${record.id}`}>
+          <Link to={`/clients/company/${record.id}`}>
             <Popover content={'edit'}>
               <img src={edit} alt="logo" />
             </Popover>

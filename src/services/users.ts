@@ -54,16 +54,16 @@ export function getUserDetail(id: string) {
   });
 }
 
-export function updateUser(id: string, fields: Partial<UserInfo>) {
+export function updateUser(id: string, data: FormData) {
   return request<UserUpdateResponse>(`/api/users/${id}`, {
     method: 'put',
-    data: fields,
+    body: data,
   });
 }
-export function addUser(fields: Partial<UserInfo>) {
+export function addUser(data: FormData) {
   return request<UserAddResponse>(`/api/users`, {
-    method: 'put',
-    data: fields,
+    method: 'post',
+    body: data,
   });
 }
 

@@ -1,8 +1,8 @@
 import { request } from 'umi';
-import type { ResponseType } from './index';
+import type { ResponseType, NoDataResponse } from './index';
 
 export interface SalesInfo {
-  id: number;
+  id: string;
   name: string;
   email: string;
   photo: string;
@@ -27,9 +27,22 @@ export function queryAllSales(current: number, pageSize: number) {
   });
 }
 
-export function querySale(id: number) {
-  return request<SingleSaleResponse>(`/api/sales/${id}`, {
+export async function querySale(id: string) {
+  return await request<SingleSaleResponse>(`/api/sales/${id}`, {
     method: 'get',
+  });
+}
+
+export function addSale(data: FormData) {
+  return request<NoDataResponse>(`/api/sales`, {
+    method: 'post',
+    body: data,
+  });
+}
+export function updateSale(id: string, data: FormData) {
+  return request<NoDataResponse>(`/api/sales/${id}`, {
+    method: 'put',
+    body: data,
   });
 }
 

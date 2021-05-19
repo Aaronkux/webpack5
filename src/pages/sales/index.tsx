@@ -20,20 +20,17 @@ const Sales = ({ sales, total, loading }: PropsType) => {
   const [visible, setVisible] = useState(false);
   const dispatch = useDispatch();
   const [urlState, setURL] = useURLParams();
-  const [saleId, setSaleId] = useState<number>();
+  const [saleId, setSaleId] = useState<string>();
+  const [editing, setEditing] = useState(false);
 
   const onChangeHandler: PaginationProps['onChange'] = (page, pageSize) => {
     setURL({ current: page.toString(), pageSize: pageSize?.toString() });
   };
 
-  const onCardClickHandler = (id: number) => {
+  const onCardClickHandler = (id: string) => {
     setSaleId(id);
+    setEditing(true)
   };
-
-  const onCancelHandler = () => {
-    setSaleId(undefined);
-  };
-
   useEffect(() => {
     dispatch({
       type: 'sales/queryAll',
@@ -63,14 +60,14 @@ const Sales = ({ sales, total, loading }: PropsType) => {
         <Pagination
           onChange={onChangeHandler}
           showSizeChanger
-          current={urlState.current ? parseInt(urlState.current) : 1}
+          current={urlState.current ? parseInt(urlState.current) : 1} 
           pageSize={urlState.pageSize ? parseInt(urlState.pageSize) : 8}
           pageSizeOptions={['4', '8', '16']}
           total={total}
         />
       </Row>
-      {saleId ? <Edit saleId={saleId} onCancelHandler={onCancelHandler} /> : ''}
-      <Create visible={visible} onCancelHandler={() => setVisible(false)} />
+      <Edit visible={editing} saleId={saleId} setSaleId={setSaleId} urlState={urlState} setEditing={setEditing} />
+      <Create visible={visible} setVisible={setVisible} urlState={urlState} />
     </div>
   );
 };

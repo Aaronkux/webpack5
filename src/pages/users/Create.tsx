@@ -1,47 +1,67 @@
 import React, { useState } from 'react';
-import { request } from 'umi';
-import {
-  Modal,
-  Form,
-  Input,
-  Row,
-  Col,
-  Select,
-  InputNumber,
-  message,
-  Switch,
-  Divider,
-} from 'antd';
+import { useDispatch } from 'umi';
+import { Modal, Form, Input, Row, Col, message, Switch, Divider } from 'antd';
 import { CloseCircleOutlined } from '@ant-design/icons';
+import { addUser } from '@/services/users';
+import type { UserInfo } from '@/services/users';
+import type { ParamsObjType } from '@/hooks/useURLParams';
+import { createFormData, isBlob } from '@/utils';
 import Avatar from '@/components/Avatar';
 import styles from './Create.less';
 import { CloseOutlined, CheckOutlined } from '@ant-design/icons';
 
-const { Option } = Select;
-const { TextArea } = Input;
-
 interface PropsType {
   newVisible: boolean;
   setNewVisible: React.Dispatch<React.SetStateAction<boolean>>;
+  urlState: ParamsObjType;
 }
+
+const imageFileProcesser = (file: any) => {
+  if (isBlob(file)) {
+    return file;
+  } else {
+    return undefined;
+  }
+};
+
+type FormSaleInfo = Partial<UserInfo>;
 
 const layout = {
   labelCol: { span: 6 },
   wrapperCol: { span: 16 },
 };
 
-export default function Create({ newVisible, setNewVisible }: PropsType) {
+export default function Create({
+  newVisible,
+  setNewVisible,
+  urlState,
+}: PropsType) {
   const [form] = Form.useForm();
+  const dispatch = useDispatch();
   const [adding, setAdding] = useState(false);
   const [orderChecked, setOrderChecked] = useState(false);
-  const finishHandler = async (values: any) => {
+  const finishHandler = async (values: FormSaleInfo) => {
     setAdding(true);
-    const res = await request('/api/users', {
-      method: 'post',
-      data: values,
-    });
-    if (res.success) message.success('Add Successfully');
+    const { photo } = values;
+    const tempData = {
+      ...values,
+      ...{
+        photo: imageFileProcesser(photo),
+      },
+    };
+    const res = await addUser(createFormData(tempData));
     setAdding(false);
+    if (res.success) {
+      message.success('Add Successfully');
+      dispatch({
+        type: 'users/getUsers',
+        payload: { current: urlState.current, pageSize: urlState.pageSize },
+      });
+      onCancelHandler();
+    }
+  };
+
+  const onCancelHandler = () => {
     form.resetFields();
     setNewVisible(false);
   };
@@ -76,10 +96,7 @@ export default function Create({ newVisible, setNewVisible }: PropsType) {
     <Modal
       visible={newVisible}
       width={1300}
-      onCancel={() => {
-        form.resetFields();
-        setNewVisible(false);
-      }}
+      onCancel={onCancelHandler}
       onOk={() => {
         form.submit();
       }}
@@ -122,11 +139,7 @@ export default function Create({ newVisible, setNewVisible }: PropsType) {
             </Form.Item>
           </Col>
           <Col xs={24} sm={24} md={24} lg={12} xl={12}>
-            <Form.Item
-              label="Is Active"
-              name="isActive"
-              initialValue={true}
-            >
+            <Form.Item label="Is Active" name="isActive" initialValue={true}>
               <Switch
                 checkedChildren={<CheckOutlined />}
                 unCheckedChildren={<CloseOutlined />}
@@ -210,75 +223,75 @@ export default function Create({ newVisible, setNewVisible }: PropsType) {
           </Col>
         </Row>
         <h1 className={styles.title}>Order Check</h1>
-          <Divider />
-          <Row>
-            <Col xs={24} sm={24} md={24} lg={12} xl={12}>
-              <Form.Item
-                label="Check Compliance"
-                name="checkCompliance"
-                valuePropName="checked"
-                initialValue={false}
-              >
-                <Switch
-                  checkedChildren={<CheckOutlined />}
-                  unCheckedChildren={<CloseOutlined />}
-                  disabled={!orderChecked}
-                />
-              </Form.Item>
-            </Col>
-            <Col xs={24} sm={24} md={24} lg={12} xl={12}>
-              <Form.Item
-                label="Check FundNotified"
-                name="checkFundNotified"
-                valuePropName="checked"
-              >
-                <Switch
-                  checkedChildren={<CheckOutlined />}
-                  unCheckedChildren={<CloseOutlined />}
-                  disabled={!orderChecked}
-                />
-              </Form.Item>
-            </Col>
-            <Col xs={24} sm={24} md={24} lg={12} xl={12}>
-              <Form.Item
-                label="Check FundReceived"
-                name="checkFundReceived"
-                valuePropName="checked"
-              >
-                <Switch
-                  checkedChildren={<CheckOutlined />}
-                  unCheckedChildren={<CloseOutlined />}
-                  disabled={!orderChecked}
-                />
-              </Form.Item>
-            </Col>
-            <Col xs={24} sm={24} md={24} lg={12} xl={12}>
-              <Form.Item
-                label="Check ClientComfirmed"
-                name="checkClientComfirmed"
-                valuePropName="checked"
-              >
-                <Switch
-                  checkedChildren={<CheckOutlined />}
-                  unCheckedChildren={<CloseOutlined />}
-                  disabled={!orderChecked}
-                />
-              </Form.Item>
-            </Col>
-            <Col xs={24} sm={24} md={24} lg={12} xl={12}>
-              <Form.Item
-                label="Check FundPaid"
-                name="checkFundPaid"
-                valuePropName="checked"
-              >
-                <Switch
-                  checkedChildren={<CheckOutlined />}
-                  unCheckedChildren={<CloseOutlined />}
-                  disabled={!orderChecked}
-                />
-              </Form.Item>
-            </Col>
-          </Row>
+        <Divider />
+        <Row>
+          <Col xs={24} sm={24} md={24} lg={12} xl={12}>
+            <Form.Item
+              label="Check Compliance"
+              name="checkCompliance"
+              valuePropName="checked"
+              initialValue={false}
+            >
+              <Switch
+                checkedChildren={<CheckOutlined />}
+                unCheckedChildren={<CloseOutlined />}
+                disabled={!orderChecked}
+              />
+            </Form.Item>
+          </Col>
+          <Col xs={24} sm={24} md={24} lg={12} xl={12}>
+            <Form.Item
+              label="Check FundNotified"
+              name="checkFundNotified"
+              valuePropName="checked"
+            >
+              <Switch
+                checkedChildren={<CheckOutlined />}
+                unCheckedChildren={<CloseOutlined />}
+                disabled={!orderChecked}
+              />
+            </Form.Item>
+          </Col>
+          <Col xs={24} sm={24} md={24} lg={12} xl={12}>
+            <Form.Item
+              label="Check FundReceived"
+              name="checkFundReceived"
+              valuePropName="checked"
+            >
+              <Switch
+                checkedChildren={<CheckOutlined />}
+                unCheckedChildren={<CloseOutlined />}
+                disabled={!orderChecked}
+              />
+            </Form.Item>
+          </Col>
+          <Col xs={24} sm={24} md={24} lg={12} xl={12}>
+            <Form.Item
+              label="Check ClientComfirmed"
+              name="checkClientComfirmed"
+              valuePropName="checked"
+            >
+              <Switch
+                checkedChildren={<CheckOutlined />}
+                unCheckedChildren={<CloseOutlined />}
+                disabled={!orderChecked}
+              />
+            </Form.Item>
+          </Col>
+          <Col xs={24} sm={24} md={24} lg={12} xl={12}>
+            <Form.Item
+              label="Check FundPaid"
+              name="checkFundPaid"
+              valuePropName="checked"
+            >
+              <Switch
+                checkedChildren={<CheckOutlined />}
+                unCheckedChildren={<CloseOutlined />}
+                disabled={!orderChecked}
+              />
+            </Form.Item>
+          </Col>
+        </Row>
       </Form>
     </Modal>
   );

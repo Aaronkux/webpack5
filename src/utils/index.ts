@@ -189,6 +189,20 @@ export const param2Search = (params: ParamsObjType): string => {
 };
 
 export function isBlob(file: any) {
-  return file instanceof Blob
+  return file instanceof Blob;
 }
 
+export function createFormData(data: {
+  [props: string]: string | boolean | number | File;
+}) {
+  let formdata = new FormData();
+  for (let [key, value] of Object.entries(data)) {
+    if (value === undefined) continue;
+    if (typeof value === 'number' || typeof value === 'boolean') {
+      formdata.append(key, value.toString());
+      continue;
+    }
+    formdata.append(key, value);
+  }
+  return formdata;
+}

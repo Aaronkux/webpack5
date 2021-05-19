@@ -13,16 +13,16 @@ import {
   Popconfirm,
   message,
 } from 'antd';
-import { useDispatch, request } from 'umi';
+import { useDispatch } from 'umi';
 import NormalText from '@/components/NormalText';
 import UploadPicture from '@/components/UploadPicture';
+import { deleteBeneficiary, updateBeneficiaryDetail } from '@/services/clients';
 import type { BeneficiaryInfo } from '@/services/clients';
-import type { NoDataResponse } from '@/services';
 import moment from 'moment';
 import type { Moment } from 'moment';
 import styles from './Detail.less';
 import type { ParamsObjType } from '@/hooks/useURLParams';
-import { createFormData } from '@/utils';
+import {createFormData} from '@/utils'
 
 const { Option } = Select;
 
@@ -75,10 +75,7 @@ const Detail = ({ data, setURL }: PropsType) => {
         isTrustAccount: formatIsTrustAccount,
       },
     };
-    const res = await request<NoDataResponse>(`/api/receiver/${id}`, {
-      method: 'post',
-      body: createFormData(tempData),
-    });
+    const res = await updateBeneficiaryDetail(id, createFormData(tempData));
     setSavingLoading(false);
     setEditing(false);
     if (res.success) {
@@ -99,16 +96,14 @@ const Detail = ({ data, setURL }: PropsType) => {
       setDeleteLoading(false);
       return;
     }
-    const res = await request<NoDataResponse>(`/api/receiver/${id}`, {
-      method: 'delete',
-    });
+    const res = await deleteBeneficiary(id);
     setDeleteLoading(false);
     if (res.success) {
       message.success('Delete Successfully!');
 
       if (id) {
         await dispatch({
-          type: 'clients/getIndividualBeneficiaries',
+          type: 'clients/getCompanyBeneficiaries',
           payload: { id },
         });
         setURL({ q: undefined });

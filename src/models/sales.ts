@@ -29,7 +29,7 @@ const SalesModel: SalesModelType = {
   state: { sales: [], total: 0 },
   effects: {
     *queryAll({ payload }, { call, put }) {
-      const { current, pageSize } = payload;
+      const { current = 1, pageSize = 8 } = payload;
       const res: SalesResponse = yield call(queryAllSales, current, pageSize);
       if (res.success && res.data) {
         yield put({ type: 'save', payload: res.data });

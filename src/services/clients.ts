@@ -32,7 +32,6 @@ export interface IndividualClientInfo {
   unsubscribe?: boolean;
   id1ExpireDate?: string;
   id2ExpireDate?: string;
-  other?: string;
   signature?: string;
 }
 export type IndividualClientsResponse = ResponseType<{
@@ -44,16 +43,19 @@ export type IndividualClientsDetailResponse = ResponseType<IndividualClientInfo>
 export interface CompanyClientInfo {
   id: string;
   name: string;
+  email: string;
   ABN_ACN_ARBN: string;
   companyType?: string;
+  registeredBusinessAddress?: string;
+  principleBusinessAddress?: string;
+  companyContactNumber?: string;
+  unsubscribe?: boolean;
   salesman?: {
     id: string;
     name: string;
   };
-  registeredBusinessAddress?: string;
-  principleBusinessAddress?: string;
-  companyContactNumber?: string;
-  email: string;
+  purpose?: string;
+  signature?: string;
   legalPerson1front?: string;
   legalPerson1back?: string;
   legalPerson2front?: string;
@@ -65,9 +67,6 @@ export interface CompanyClientInfo {
   accountHolderContactNumber?: string;
   accountHolderEmail?: string;
   accountHolderResidentialAddress?: string;
-  purpose?: string;
-  signature?: string;
-  unsubscribe?: boolean;
   person1ExpireDate?: string;
   person2ExpireDate?: string;
   createdDate?: string;
@@ -129,8 +128,8 @@ export function getIndividualClientsDetail(id: string) {
   );
 }
 
-export function updateIndividualClientsDetail(id: string, data: FormData) {
-  return request<NoDataResponse>(`/api/individualclient/${id}`, {
+export async function updateIndividualClientsDetail(id: string, data: FormData) {
+  return await request<NoDataResponse>(`/api/individualclient/${id}`, {
     method: 'post',
     body: data,
   });
@@ -168,8 +167,8 @@ export function getBeneficiaryDetail(id: string) {
     method: 'get',
   });
 }
-export function updateBeneficiaryDetail(id: string, data: FormData) {
-  return request<NoDataResponse>(`/api/receiver/${id}`, {
+export async function updateBeneficiaryDetail(id: string, data: FormData) {
+  return await request<NoDataResponse>(`/api/receiver/${id}`, {
     method: 'post',
     body: data,
   });
@@ -178,5 +177,10 @@ export function addBeneficiary(data: FormData) {
   return request<NoDataResponse>(`/api/receiver`, {
     method: 'post',
     body: data,
+  });
+}
+export async function deleteBeneficiary(id: string) {
+  return await request<NoDataResponse>(`/api/receiver/${id}`, {
+    method: 'delete',
   });
 }
