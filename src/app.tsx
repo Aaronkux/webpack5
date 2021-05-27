@@ -1,12 +1,22 @@
-import { useCallback } from 'react';
-import { RequestConfig, useModel, request as umiRequest } from 'umi';
-import { UserInfo } from '@/services/users'
-
+import { RequestConfig } from 'umi';
+import store from 'store';
+// admin@test.com
 export const request: RequestConfig = {
   timeout: 10000,
-  // errorConfig: {},
   middlewares: [],
-  requestInterceptors: [],
+  requestInterceptors: [
+    (url, options) => {
+      return {
+        url,
+        options: {
+          ...options,
+          headers: {
+            Authorization: 'Token ' + store.get('token'),
+          },
+        },
+      };
+    },
+  ],
   responseInterceptors: [],
 };
 

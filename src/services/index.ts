@@ -7,4 +7,4 @@ export interface ResponseType<T> {
   showType?: ErrorShowType;
 }
 
-export type NoDataResponse = ResponseType<{}>
+export type NoDataResponse = {}

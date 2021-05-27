@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { connect, useDispatch, useRouteMatch, request } from 'umi';
-import type { UsersModelState, Loading } from 'umi';
+import { useRouteMatch, useRequest } from 'umi';
 import {
   Form,
   Card,
@@ -14,19 +13,15 @@ import {
   Switch,
   Input,
 } from 'antd';
+import AuthImg from '@/components/AuthImg';
 import { CloseOutlined, CheckOutlined } from '@ant-design/icons';
 import BackButton from '@/components/BackButton';
 import NormalText from '@/components/NormalText';
 import Avatar from '@/components/Avatar';
 import type { UserInfo } from '@/services/users';
-import { updateUser } from '@/services/users';
+import { updateUser, getUserDetail } from '@/services/users';
 import { createFormData, isBlob } from '@/utils';
 import styles from './Detail.less';
-
-interface PropsType {
-  userDetail?: UserInfo;
-  loading: boolean;
-}
 
 const imageFileProcesser = (file: any) => {
   if (isBlob(file)) {
@@ -43,15 +38,41 @@ const layout = {
   wrapperCol: { span: 19 },
 };
 
-const Detail = ({ userDetail, loading }: PropsType) => {
-  const dispatch = useDispatch();
+const Detail = () => {
   const match = useRouteMatch<{ id?: string }>();
   const { id } = match.params;
+  // need reset Fields after fetch request, but this will cause double render if we put reset in onSuccess, so I made a custom loading here
+  const [loading, setLoading] = useState(false);
   const [form] = Form.useForm();
+  const { data, run: runGetUserDetail } = useRequest(getUserDetail, {
+    manual: true,
+    onSuccess: (data) => {
+      form.resetFields();
+      if (data?.orderPermission) {
+        setOrderChecked(data?.orderPermission);
+      }
+      setLoading(false);
+    },
+  });
+
+  const getUserDetailRequest = () => {
+    if (id) {
+      setLoading(true);
+      runGetUserDetail(id);
+    }
+  };
+
+  const { loading: saving, run: runUpdateUserDetail } = useRequest(updateUser, {
+    manual: true,
+    onSuccess: () => {
+      message.success('Update Successfully!');
+      setEditing(false);
+      getUserDetailRequest();
+    },
+  });
   const [editing, setEditing] = useState(false);
-  const [saving, setSaving] = useState(false);
   const [orderChecked, setOrderChecked] = useState(
-    userDetail?.orderPermission ?? false,
+    data?.orderPermission ?? false,
   );
   const [modalVisible, setModalVisible] = useState(false);
 
@@ -60,7 +81,6 @@ const Detail = ({ userDetail, loading }: PropsType) => {
       message.error(`Can't Find Id Of The User!`);
       return;
     }
-    setSaving(true);
     const { photo } = values;
     const tempData = {
       ...values,
@@ -68,16 +88,7 @@ const Detail = ({ userDetail, loading }: PropsType) => {
         photo: imageFileProcesser(photo),
       },
     };
-    const res = await updateUser(id, createFormData(tempData));
-    setSaving(false);
-    if (res.success) {
-      message.success('Update Successfully');
-      setEditing(false);
-      dispatch({
-        type: 'users/getUserDetail',
-        payload: { id },
-      });
-    }
+    runUpdateUserDetail(id, createFormData(tempData));
   };
 
   const valueChangedHandler = (changedValues: any) => {
@@ -94,6 +105,7 @@ const Detail = ({ userDetail, loading }: PropsType) => {
         checkClientComfirmed: true,
         checkFundPaid: true,
       });
+      setOrderChecked(true);
     }
     if (orderPermission === false) {
       form.setFieldsValue({
@@ -108,18 +120,9 @@ const Detail = ({ userDetail, loading }: PropsType) => {
 
   useEffect(() => {
     if (id) {
-      dispatch({
-        type: 'users/getUserDetail',
-        payload: { id },
-      });
+      getUserDetailRequest();
     }
   }, [id]);
-  useEffect(() => {
-    if (!editing) {
-      form.resetFields();
-    }
-  }, [editing]);
-
   return (
     <Card>
       <BackButton />
@@ -165,9 +168,9 @@ const Detail = ({ userDetail, loading }: PropsType) => {
               <Form.Item
                 label="Name"
                 name="name"
-                initialValue={userDetail?.name}
+                initialValue={data?.name}
                 required
-                rules={[{ required: true, message: 'Please enter name!' }]}
+                rules={[{ required: true, message: 'Please enter your name!' }]}
               >
                 {editing ? <Input /> : <NormalText />}
               </Form.Item>
@@ -175,9 +178,11 @@ const Detail = ({ userDetail, loading }: PropsType) => {
             <Col xs={24} sm={24} md={24} lg={12} xl={12}>
               <Form.Item
                 label="Email"
-                name="email"
-                initialValue={userDetail?.email}
-                rules={[{ required: true, message: 'Please select email!' }]}
+                name="username"
+                initialValue={data?.username}
+                rules={[
+                  { required: true, message: 'Please enter your email!' },
+                ]}
                 required
               >
                 {editing ? <Input /> : <NormalText />}
@@ -188,7 +193,7 @@ const Detail = ({ userDetail, loading }: PropsType) => {
                 label="IsActive"
                 name="isActive"
                 valuePropName="checked"
-                initialValue={userDetail?.isActive}
+                initialValue={data?.isActive}
               >
                 <Switch
                   checkedChildren={<CheckOutlined />}
@@ -198,11 +203,7 @@ const Detail = ({ userDetail, loading }: PropsType) => {
               </Form.Item>
             </Col>
             <Col xs={24} sm={24} md={24} lg={12} xl={12}>
-              <Form.Item
-                label="Photo"
-                name="photo"
-                initialValue={userDetail?.photo}
-              >
+              <Form.Item label="Photo" name="photo" initialValue={data?.photo}>
                 <Avatar disabled={!editing} />
               </Form.Item>
             </Col>
@@ -215,7 +216,7 @@ const Detail = ({ userDetail, loading }: PropsType) => {
                 label="Is Admin"
                 name="isAdmin"
                 valuePropName="checked"
-                initialValue={userDetail?.isAdmin}
+                initialValue={data?.isAdmin}
               >
                 <Switch
                   checkedChildren={<CheckOutlined />}
@@ -229,7 +230,7 @@ const Detail = ({ userDetail, loading }: PropsType) => {
                 label="Sales Permission"
                 name="salesPermission"
                 valuePropName="checked"
-                initialValue={userDetail?.salesPermission}
+                initialValue={data?.salesPermission}
               >
                 <Switch
                   checkedChildren={<CheckOutlined />}
@@ -243,7 +244,7 @@ const Detail = ({ userDetail, loading }: PropsType) => {
                 label="Client Permission"
                 name="clientPermission"
                 valuePropName="checked"
-                initialValue={userDetail?.clientPermission}
+                initialValue={data?.clientPermission}
               >
                 <Switch
                   checkedChildren={<CheckOutlined />}
@@ -257,7 +258,7 @@ const Detail = ({ userDetail, loading }: PropsType) => {
                 label="Email Permission"
                 name="emailPermission"
                 valuePropName="checked"
-                initialValue={userDetail?.emailPermission}
+                initialValue={data?.emailPermission}
               >
                 <Switch
                   checkedChildren={<CheckOutlined />}
@@ -271,7 +272,7 @@ const Detail = ({ userDetail, loading }: PropsType) => {
                 label="Order Permission"
                 name="orderPermission"
                 valuePropName="checked"
-                initialValue={userDetail?.orderPermission}
+                initialValue={data?.orderPermission}
               >
                 <Switch
                   onChange={(checked: boolean) => setOrderChecked(checked)}
@@ -290,7 +291,7 @@ const Detail = ({ userDetail, loading }: PropsType) => {
                 label="Check Compliance"
                 name="checkCompliance"
                 valuePropName="checked"
-                initialValue={userDetail?.checkCompliance}
+                initialValue={data?.checkCompliance}
               >
                 <Switch
                   checkedChildren={<CheckOutlined />}
@@ -304,7 +305,7 @@ const Detail = ({ userDetail, loading }: PropsType) => {
                 label="Check FundNotified"
                 name="checkFundNotified"
                 valuePropName="checked"
-                initialValue={userDetail?.checkFundNotified}
+                initialValue={data?.checkFundNotified}
               >
                 <Switch
                   checkedChildren={<CheckOutlined />}
@@ -318,7 +319,7 @@ const Detail = ({ userDetail, loading }: PropsType) => {
                 label="Check FundReceived"
                 name="checkFundReceived"
                 valuePropName="checked"
-                initialValue={userDetail?.checkFundReceived}
+                initialValue={data?.checkFundReceived}
               >
                 <Switch
                   checkedChildren={<CheckOutlined />}
@@ -332,7 +333,7 @@ const Detail = ({ userDetail, loading }: PropsType) => {
                 label="Check ClientComfirmed"
                 name="checkClientComfirmed"
                 valuePropName="checked"
-                initialValue={userDetail?.checkClientComfirmed}
+                initialValue={data?.checkClientComfirmed}
               >
                 <Switch
                   checkedChildren={<CheckOutlined />}
@@ -346,7 +347,7 @@ const Detail = ({ userDetail, loading }: PropsType) => {
                 label="Check FundPaid"
                 name="checkFundPaid"
                 valuePropName="checked"
-                initialValue={userDetail?.checkFundPaid}
+                initialValue={data?.checkFundPaid}
               >
                 <Switch
                   checkedChildren={<CheckOutlined />}
@@ -408,9 +409,4 @@ const Detail = ({ userDetail, loading }: PropsType) => {
   );
 };
 
-export default connect(
-  ({ users, loading }: { users: UsersModelState; loading: Loading }) => ({
-    userDetail: users.detail,
-    loading: loading.effects['users/getUserDetail']!,
-  }),
-)(React.memo(Detail));
+export default React.memo(Detail);

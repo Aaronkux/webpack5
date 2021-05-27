@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
-import { useDispatch } from 'umi';
+import { useRequest } from 'umi';
 import { Modal, Form, Input, Row, Col, message, Switch, Divider } from 'antd';
+import { EyeInvisibleOutlined, EyeTwoTone } from '@ant-design/icons';
 import { CloseCircleOutlined } from '@ant-design/icons';
 import { addUser } from '@/services/users';
 import type { UserInfo } from '@/services/users';
-import type { ParamsObjType } from '@/hooks/useURLParams';
 import { createFormData, isBlob } from '@/utils';
 import Avatar from '@/components/Avatar';
 import styles from './Create.less';
@@ -13,7 +13,7 @@ import { CloseOutlined, CheckOutlined } from '@ant-design/icons';
 interface PropsType {
   newVisible: boolean;
   setNewVisible: React.Dispatch<React.SetStateAction<boolean>>;
-  urlState: ParamsObjType;
+  fetchUsers: () => void;
 }
 
 const imageFileProcesser = (file: any) => {
@@ -34,14 +34,19 @@ const layout = {
 export default function Create({
   newVisible,
   setNewVisible,
-  urlState,
+  fetchUsers,
 }: PropsType) {
   const [form] = Form.useForm();
-  const dispatch = useDispatch();
-  const [adding, setAdding] = useState(false);
   const [orderChecked, setOrderChecked] = useState(false);
+  const { loading: adding, run } = useRequest(addUser, {
+    manual: true,
+    onSuccess: () => {
+      message.success('Add Successfully');
+      fetchUsers();
+      onCancelHandler();
+    },
+  });
   const finishHandler = async (values: FormSaleInfo) => {
-    setAdding(true);
     const { photo } = values;
     const tempData = {
       ...values,
@@ -49,16 +54,8 @@ export default function Create({
         photo: imageFileProcesser(photo),
       },
     };
-    const res = await addUser(createFormData(tempData));
-    setAdding(false);
-    if (res.success) {
-      message.success('Add Successfully');
-      dispatch({
-        type: 'users/getUsers',
-        payload: { current: urlState.current, pageSize: urlState.pageSize },
-      });
-      onCancelHandler();
-    }
+
+    run(createFormData(tempData));
   };
 
   const onCancelHandler = () => {
@@ -69,7 +66,6 @@ export default function Create({
   const valueChangedHandler = (changedValues: any, allValues: any) => {
     const { isAdmin, orderPermission } = changedValues;
     if (isAdmin === true) {
-      console.log('triied');
       form.setFieldsValue({
         salesPermission: true,
         clientPermission: true,
@@ -122,7 +118,7 @@ export default function Create({
             <Form.Item
               label="Name"
               name="name"
-              rules={[{ required: true, message: 'Please enter name!' }]}
+              rules={[{ required: true, message: 'Please enter your name!' }]}
               required
             >
               <Input />
@@ -131,15 +127,42 @@ export default function Create({
           <Col xs={24} sm={24} md={24} lg={12} xl={12}>
             <Form.Item
               label="Email"
-              name="email"
-              rules={[{ required: true, message: 'Please select email!' }]}
+              name="username"
+              rules={[
+                {
+                  required: true,
+                  type: 'email',
+                  message: 'Please enter your email!',
+                },
+              ]}
               required
             >
               <Input />
             </Form.Item>
           </Col>
           <Col xs={24} sm={24} md={24} lg={12} xl={12}>
-            <Form.Item label="Is Active" name="isActive" initialValue={true}>
+            <Form.Item
+              label="Password"
+              name="password"
+              rules={[
+                { required: true, message: 'Please enter your password!' },
+              ]}
+              required
+            >
+              <Input.Password
+                iconRender={(visible) =>
+                  visible ? <EyeTwoTone /> : <EyeInvisibleOutlined />
+                }
+              />
+            </Form.Item>
+          </Col>
+          <Col xs={24} sm={24} md={24} lg={12} xl={12}>
+            <Form.Item
+              label="Is Active"
+              name="isActive"
+              valuePropName="checked"
+              initialValue={true}
+            >
               <Switch
                 checkedChildren={<CheckOutlined />}
                 unCheckedChildren={<CloseOutlined />}
@@ -244,6 +267,7 @@ export default function Create({
               label="Check FundNotified"
               name="checkFundNotified"
               valuePropName="checked"
+              initialValue={false}
             >
               <Switch
                 checkedChildren={<CheckOutlined />}
@@ -257,6 +281,7 @@ export default function Create({
               label="Check FundReceived"
               name="checkFundReceived"
               valuePropName="checked"
+              initialValue={false}
             >
               <Switch
                 checkedChildren={<CheckOutlined />}
@@ -270,6 +295,7 @@ export default function Create({
               label="Check ClientComfirmed"
               name="checkClientComfirmed"
               valuePropName="checked"
+              initialValue={false}
             >
               <Switch
                 checkedChildren={<CheckOutlined />}
@@ -283,6 +309,7 @@ export default function Create({
               label="Check FundPaid"
               name="checkFundPaid"
               valuePropName="checked"
+              initialValue={false}
             >
               <Switch
                 checkedChildren={<CheckOutlined />}

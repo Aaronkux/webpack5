@@ -1,8 +1,10 @@
-import React, { useRef, useState } from 'react';
-import { Upload, Slider, message, Avatar } from 'antd';
-import { UserOutlined } from '@ant-design/icons';
-import type { UploadFile, RcFile } from 'antd/lib/upload/interface';
+import React, { useRef } from 'react';
+import { Upload, message } from 'antd';
+import type { RcFile } from 'antd/lib/upload/interface';
 import ImgCrop from 'antd-img-crop';
+import 'antd/es/modal/style';
+import 'antd/es/slider/style';
+import AuthImg from '@/components/AuthImg';
 import styles from './index.less';
 
 const isUnderLimit = (size: number, limitMB: number) => {
@@ -20,7 +22,9 @@ interface PropsType {
   limitMB?: number;
   value?: string | File;
   onChange?: (value: File) => void;
-  [props: string]: any
+  size?: number;
+  disabled?: boolean;
+  [props: string]: any;
 }
 
 export default function UploadAvatar({
@@ -28,36 +32,20 @@ export default function UploadAvatar({
   limitMB = 5,
   value,
   onChange,
+  size = 48,
+  disabled = false,
   ...res
 }: PropsType) {
-  const extension = typeof value === 'string' ? value.split('.').pop() : '';
-  const initialextension = extension ? `image/${extension ?? 'jpeg'}` : '';
-  const initialImgName = extension ? `avatar.${extension ?? 'jpg'}` : '';
-  const initialImg: UploadFile = {
-    uid: '-1',
-    name: initialImgName,
-    status: 'done',
-    url: typeof value === 'string' ? value : '',
-    type: initialextension,
-    size: 1,
-  };
-
   const imgRef = useRef<HTMLImageElement>(null);
-  const [fileList, setFileList] = useState(() =>
-    typeof value === 'string' ? [initialImg] : [],
-  );
-  const onChangeHandler = async ({
-    file,
-    fileList: newFileList,
-  }: {
-    file: UploadFile;
-    fileList: UploadFile[];
-  }) => {
-    onChange?.(file.originFileObj as File);
-    setFileList(newFileList);
-  };
-
   const beforeUpload = (file: RcFile) => {
+    if (!isUnderLimit(file.size, limitMB)) {
+      message.error(`Upload File Size must under ${limitMB} MB!`);
+      return false;
+    }
+    if (!isAcceptImgType(file.type, acceptableTypes)) {
+      message.error(`Type ${file.type} is not acceptable!`);
+      return false;
+    }
     const reader = new FileReader();
     reader.readAsDataURL(file);
     reader.onload = () => {
@@ -65,46 +53,36 @@ export default function UploadAvatar({
         imgRef.current.src = reader.result as string;
       }
     };
-
-    if (!isUnderLimit(file.size, limitMB)) {
-      message.error(`Upload File Size must under ${limitMB} MB!`);
-    }
-    if (!isAcceptImgType(file.type, acceptableTypes)) {
-      message.error(`Type ${file.type} is not acceptable!`);
-    }
+    onChange?.(file);
     return false;
   };
   return (
     <ImgCrop shape="round">
       <Upload
+        disabled={disabled}
         {...res}
         accept={acceptableTypes.join(', ')}
         maxCount={1}
         listType="text"
-        fileList={fileList}
-        onChange={onChangeHandler}
         beforeUpload={beforeUpload}
         onPreview={() => false}
         className={styles.container}
       >
-        {fileList.length > 0 ? (
+        {typeof value === 'string' || !value ? (
+          <AuthImg size={size} path={value} />
+        ) : (
           <img
             ref={imgRef}
             style={{
-              width: '64px',
-              height: '64px',
+              width: `${size}px`,
+              height: `${size}px`,
               borderRadius: '50%',
               cursor: 'pointer',
-              display: fileList[0] ? 'initial' : 'none',
             }}
-            src={fileList[0].url}
             alt="avatar"
           />
-        ) : (
-          <Avatar size={64} icon={<UserOutlined />} />
         )}
       </Upload>
-      <Slider style={{ display: 'none' }} />
     </ImgCrop>
   );
 }

@@ -1,7 +1,7 @@
 import React from 'react';
 import { useHistory } from 'react-router-dom';
-import { useRequest } from 'umi';
 import { Form, Input, Button } from 'antd';
+import { EyeInvisibleOutlined, EyeTwoTone } from '@ant-design/icons';
 import store from 'store';
 import type { UserInfo } from '@/services/users';
 import { login } from '@/services/users';
@@ -10,41 +10,35 @@ import styles from './index.less';
 
 export default function Login() {
   const history = useHistory();
-  const { loading, run } = useRequest(login, {
-    manual: true,
-    onSuccess: (data) => {
-      let access: string[] = [];
-      const {
-        name,
-        email,
-        photo,
-        salesPermission,
-        clientPermission,
-        orderPermission,
-        emailPermission,
-      } = data as UserInfo;
-      if (salesPermission) {
-        access.push('salesPermission');
-      }
-      if (clientPermission) {
-        access.push('clientPermission');
-      }
-      if (orderPermission) {
-        access.push('orderPermission');
-      }
-      if (emailPermission) {
-        access.push('emailPermission');
-      }
-      store.set('user', { name, email, access, photo });
-      history.replace('/');
-    },
-    onError: (error) => {
-      console.log(error);
-    },
-  });
 
-  const onFinishHandler = (values: any) => {
-    run(values.username, values.password);
+  const onFinishHandler = async (values: any) => {
+    const res = await login(values.username, values.password);
+    let access: string[] = [];
+    const {
+      name,
+      username,
+      photo,
+      token,
+      salesPermission,
+      clientPermission,
+      orderPermission,
+      emailPermission,
+    } = res.data as UserInfo;
+    if (salesPermission) {
+      access.push('salesPermission');
+    }
+    if (clientPermission) {
+      access.push('clientPermission');
+    }
+    if (orderPermission) {
+      access.push('orderPermission');
+    }
+    if (emailPermission) {
+      access.push('emailPermission');
+    }
+    store.set('user', { name, username, access, photo });
+    store.set('token', token);
+    history.replace('/');
   };
   return (
     <div className={styles.container}>
@@ -61,16 +55,16 @@ export default function Login() {
         className={styles.form}
       >
         <Form.Item
-          // label="Username"
           name="username"
           rules={[
             {
               required: true,
-              message: 'Please input your username!',
+              message: 'Please input your email!',
+              type: 'email',
             },
           ]}
         >
-          <Input placeholder="Username" className={styles.input} />
+          <Input placeholder="Email" className={styles.input} />
         </Form.Item>
 
         <Form.Item
@@ -83,11 +77,7 @@ export default function Login() {
             },
           ]}
         >
-          <Input
-            placeholder="Password"
-            type="password"
-            className={styles.input}
-          />
+          <Input.Password placeholder="Password" className={styles.input} iconRender={visible => (visible ? <EyeTwoTone /> : <EyeInvisibleOutlined />)} />
         </Form.Item>
         <Form.Item>
           <Button className={styles.loginBtn} type="primary" htmlType="submit">

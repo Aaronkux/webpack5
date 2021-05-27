@@ -1,21 +1,24 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useDispatch, connect, request } from 'umi';
+import { Link, useRequest } from 'umi';
 import {
   Card,
   Table,
   Row,
   Pagination,
-  message,
-  Avatar,
   Popover,
   Popconfirm,
   Tag,
+  Avatar,
 } from 'antd';
 import type { PaginationProps } from 'antd';
-import type { UsersModelState, Loading } from 'umi';
 import moment from 'moment';
-import { CheckCircleOutlined, CloseCircleOutlined } from '@ant-design/icons';
-import type { UserInfo } from '@/services/users';
+import {
+  CheckCircleOutlined,
+  CloseCircleOutlined,
+  UserOutlined,
+} from '@ant-design/icons';
+import AuthImg from '@/components/AuthImg';
+import { deleteUser, getUsers } from '@/services/users';
 import useURLParams from '@/hooks/useURLParams';
 import Filter from './Filter';
 import Create from './Create';
@@ -23,19 +26,27 @@ import styles from './index.less';
 import edit from '@/assets/edit.svg';
 import del from '@/assets/del.svg';
 
-interface PropsType {
-  users: UserInfo[];
-  total: number;
-  loading: boolean;
-}
-const Users = ({ users, total, loading }: PropsType) => {
-  const dispatch = useDispatch();
+const Users = () => {
   const [urlState, setURL] = useURLParams();
   const [visible, setVisible] = useState(false);
-  const [actionLoading, setActionLoading] = useState(false);
   const onChangeHandler: PaginationProps['onChange'] = (page, pageSize) => {
     setURL({ current: page.toString(), pageSize: pageSize?.toString() });
   };
+  const { data, loading, run } = useRequest(getUsers, {
+    manual: true,
+  });
+
+  const fetchUsers = () => {
+    const { current = 1, pageSize = 5 } = urlState;
+    run(current, pageSize);
+  };
+
+  const { loading: deleteLoading, run: deleteRun } = useRequest(deleteUser, {
+    manual: true,
+    onSuccess: () => {
+      fetchUsers();
+    },
+  });
 
   const columns = [
     {
@@ -55,8 +66,8 @@ const Users = ({ users, total, loading }: PropsType) => {
     },
     {
       title: 'Email',
-      dataIndex: 'email',
-      key: 'email',
+      dataIndex: 'username',
+      key: 'username',
       width: 200,
     },
     {
@@ -64,7 +75,12 @@ const Users = ({ users, total, loading }: PropsType) => {
       dataIndex: 'photo',
       key: 'photo',
       width: 100,
-      render: (img: string) => <Avatar src={img} size={48} />,
+      render: (img: string) =>
+        img ? (
+          <AuthImg path={'/' + img} />
+        ) : (
+          <Avatar size={48} icon={<UserOutlined />} />
+        ),
     },
     {
       title: 'IsActive',
@@ -332,11 +348,11 @@ const Users = ({ users, total, loading }: PropsType) => {
     },
     {
       title: 'Create Date',
-      dataIndex: 'create_date',
-      key: 'create_date',
+      dataIndex: 'createdDate',
+      key: 'createdDate',
       width: 150,
       render: (date: string) =>
-        moment(date).zone(6).format('DD-MMM-YYYY h:mm:ss'),
+        date ? moment(date).zone(6).format('DD-MMM-YYYY h:mm:ss') : '',
     },
     {
       title: 'Action',
@@ -368,27 +384,11 @@ const Users = ({ users, total, loading }: PropsType) => {
   ];
 
   const deleteHandler = async (orderId: string) => {
-    setActionLoading(true);
-    const res = await request(`/api/users/${orderId}`, {
-      method: 'delete',
-    });
-    if (res.success) {
-      message.success('Success');
-      dispatch({
-        type: 'users/getUsers',
-        payload: { current: urlState.current, pageSize: urlState.pageSize },
-      });
-    } else {
-      message.warning(res.errorMessage);
-    }
-    setActionLoading(false);
+    deleteRun(orderId);
   };
 
   useEffect(() => {
-    dispatch({
-      type: 'users/getUsers',
-      payload: { current: urlState.current, pageSize: urlState.pageSize },
-    });
+    fetchUsers();
   }, [urlState]);
 
   return (
@@ -399,9 +399,9 @@ const Users = ({ users, total, loading }: PropsType) => {
       <Card>
         <Table
           bordered
-          loading={loading || actionLoading}
+          loading={loading || deleteLoading}
           columns={columns}
-          dataSource={users}
+          dataSource={data?.data}
           rowKey="id"
           pagination={false}
           scroll={{ x: 1500 }}
@@ -415,19 +415,17 @@ const Users = ({ users, total, loading }: PropsType) => {
             current={urlState.current ? parseInt(urlState.current) : 1}
             pageSize={urlState.pageSize ? parseInt(urlState.pageSize) : 5}
             pageSizeOptions={['5', '10', '15']}
-            total={total}
+            total={data?.total}
           />
         </Row>
-        <Create urlState={urlState} newVisible={visible} setNewVisible={setVisible} />
+        <Create
+          fetchUsers={fetchUsers}
+          newVisible={visible}
+          setNewVisible={setVisible}
+        />
       </Card>
     </div>
   );
 };
 
-export default connect(
-  ({ users, loading }: { users: UsersModelState; loading: Loading }) => ({
-    users: users.users,
-    loading: loading.models.users,
-    total: users.total,
-  }),
-)(React.memo(Users));
+export default React.memo(Users);

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useHistory } from 'umi';
 import { Avatar, Dropdown, Menu, Modal } from 'antd';
-import { CloseCircleOutlined } from '@ant-design/icons';
+import { CloseCircleOutlined, UserOutlined } from '@ant-design/icons';
 import store from 'store';
 import Setting from './Setting';
 import styles from './HeaderRight.less';
@@ -27,7 +27,11 @@ export default function HeaderRight() {
     <div className={styles.container}>
       {user && (
         <Dropdown placement="bottomCenter" overlay={menu}>
-          <Avatar src={user.photo} />
+          {user.photo ? (
+            <Avatar size={32} src={user.photo} />
+          ) : (
+            <Avatar size={32} icon={<UserOutlined />} />
+          )}
         </Dropdown>
       )}
       <Modal

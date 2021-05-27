@@ -1,14 +1,14 @@
 import { request } from 'umi';
-import type { ResponseType } from './index';
+import type { NoDataResponse, ResponseType } from './index';
 
 export interface UserInfo {
   id: string;
   name: string;
   photo: string;
-  email: string;
+  username: string;
   isActive: boolean;
   isAdmin: boolean;
-  create_date: string;
+  createdDate: string;
   token: string;
 
   salesPermission: boolean;
@@ -22,12 +22,8 @@ export interface UserInfo {
   checkFundPaid: boolean;
 }
 
-export type UsersResponse = ResponseType<{ users: UserInfo[]; total: number }>;
+export type UsersResponse = ResponseType<{data: UserInfo[], total: number}>;
 export type UserDetailResponse = ResponseType<UserInfo>;
-
-export type UserUpdateResponse = ResponseType<{}>;
-export type UserAddResponse = ResponseType<{}>;
-export type UserDeleteResponse = ResponseType<{}>;
 
 export interface UserType {
   name: string;
@@ -35,40 +31,47 @@ export interface UserType {
   access: string[];
 }
 
-export function login(username?: string, password?: string) {
-  return request<UserDetailResponse>('/api/login', {
+export function login(username: string, password: string) {
+  let formdata = new FormData();
+  formdata.append('username', username);
+  formdata.append('password', password);
+  return request<UserDetailResponse>('/api/auth-token', {
     method: 'post',
-    body: JSON.stringify({ username, password }),
+    body: formdata,
+    
   });
 }
 
-export function getUsers() {
-  return request<UsersResponse>('/api/users', {
-    method: 'get',
-  });
+export function getUsers(current: number, pageSize: number) {
+  return request<UsersResponse>(
+    `/api/users?limit=${pageSize}&offset=${(current - 1) * pageSize}`,
+    {
+      method: 'get',
+    },
+  );
 }
 
 export function getUserDetail(id: string) {
-  return request<UserDetailResponse>(`/api/users/${id}`, {
+  return request<UserDetailResponse>(`/api/user/${id}`, {
     method: 'get',
   });
 }
 
 export function updateUser(id: string, data: FormData) {
-  return request<UserUpdateResponse>(`/api/users/${id}`, {
+  return request<NoDataResponse>(`/api/user/${id}`, {
     method: 'put',
     body: data,
   });
 }
 export function addUser(data: FormData) {
-  return request<UserAddResponse>(`/api/users`, {
+  return request<NoDataResponse>(`/api/user`, {
     method: 'post',
     body: data,
   });
 }
 
 export function deleteUser(id: string) {
-  return request<UserDeleteResponse>(`/api/users/${id}`, {
+  return request<NoDataResponse>(`/api/user/${id}`, {
     method: 'delete',
   });
 }

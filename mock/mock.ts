@@ -2,7 +2,7 @@ import Mock, { Random } from 'mockjs';
 
 export default {
   // 支持值为 Object 和 Array
-  'POST /api/login': Mock.mock({
+  'POST /api/auth-token': Mock.mock({
     data: {
       id: '@id',
       name: '@name',
@@ -491,6 +491,10 @@ export default {
     success: true,
   },
   'PUT /api/users/:id': {
+    data: null,
+    success: true,
+  },
+  'DELETE /api/users/:id': {
     data: null,
     success: true,
   },
