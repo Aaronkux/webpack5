@@ -17,7 +17,7 @@ import AuthImg from '@/components/AuthImg';
 import { CloseOutlined, CheckOutlined } from '@ant-design/icons';
 import BackButton from '@/components/BackButton';
 import NormalText from '@/components/NormalText';
-import Avatar from '@/components/Avatar';
+import AuthAndEditAvatar from '@/components/AuthAndEditAvatar';
 import type { UserInfo } from '@/services/users';
 import { updateUser, getUserDetail } from '@/services/users';
 import { createFormData, isBlob } from '@/utils';
@@ -204,7 +204,7 @@ const Detail = () => {
             </Col>
             <Col xs={24} sm={24} md={24} lg={12} xl={12}>
               <Form.Item label="Photo" name="photo" initialValue={data?.photo}>
-                <Avatar disabled={!editing} />
+                <AuthAndEditAvatar disabled={!editing} />
               </Form.Item>
             </Col>
           </Row>

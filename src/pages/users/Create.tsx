@@ -6,7 +6,7 @@ import { CloseCircleOutlined } from '@ant-design/icons';
 import { addUser } from '@/services/users';
 import type { UserInfo } from '@/services/users';
 import { createFormData, isBlob } from '@/utils';
-import Avatar from '@/components/Avatar';
+import AuthAndEditAvatar from '@/components/AuthAndEditAvatar';
 import styles from './Create.less';
 import { CloseOutlined, CheckOutlined } from '@ant-design/icons';
 
@@ -171,7 +171,7 @@ export default function Create({
           </Col>
           <Col xs={24} sm={24} md={24} lg={12} xl={12}>
             <Form.Item label="Photo" name="photo">
-              <Avatar />
+              <AuthAndEditAvatar />
             </Form.Item>
           </Col>
         </Row>

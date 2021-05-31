@@ -10,7 +10,7 @@ export interface SalesInfo {
 }
 
 export interface SalesResType {
-  sales: SalesInfo[];
+  data: SalesInfo[];
   total: number;
 }
 
@@ -18,13 +18,12 @@ export type SalesResponse = ResponseType<SalesResType>;
 export type SingleSaleResponse = ResponseType<SalesInfo>;
 
 export function queryAllSales(current: number, pageSize: number) {
-  return request<SalesResponse>('/api/sales', {
-    method: 'get',
-    params: {
-      current,
-      pageSize,
+  return request<SalesResponse>(
+    `/api/saleslist?limit=${pageSize}&offset=${(current - 1) * pageSize}`,
+    {
+      method: 'get',
     },
-  });
+  );
 }
 
 export async function querySale(id: string) {
@@ -45,4 +44,3 @@ export function updateSale(id: string, data: FormData) {
     body: data,
   });
 }
-

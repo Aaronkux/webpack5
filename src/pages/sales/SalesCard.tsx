@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'umi';
-import { Card, Avatar, Skeleton, Popover, Tag } from 'antd';
+import { Card, Skeleton, Popover, Tag } from 'antd';
+import AuthImg from '@/components/AuthImg';
 import { EditOutlined, AccountBookOutlined } from '@ant-design/icons';
 import styles from './SalesCard.less';
 import { SalesInfo } from '@/services/sales';
@@ -40,7 +41,7 @@ export default function SalesCard({
       ]}
     >
       <Skeleton loading={loading} active avatar>
-        <Avatar className={styles.avatar} src={salesInfo.photo} />
+        <AuthImg path={salesInfo.photo} />
         <div className={styles.name}>{salesInfo.name}</div>
         <div className={styles.email}>{salesInfo.email}</div>
         <Tag color={tagColor}>{tagText}</Tag>

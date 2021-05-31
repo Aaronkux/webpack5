@@ -1,17 +1,16 @@
 import React, { useState } from 'react';
-import { useDispatch } from 'umi';
 import { Modal, Form, Input, Switch, message } from 'antd';
+import { useRequest } from 'umi';
 import { CloseCircleOutlined } from '@ant-design/icons';
 import { isBlob, createFormData } from '@/utils';
-import type { ParamsObjType } from '@/hooks/useURLParams';
 import { addSale } from '@/services/sales';
-import Avatar from '@/components/Avatar';
+import AuthAndEditAvatar from '@/components/AuthAndEditAvatar';
 import styles from './Create.less';
 
 interface PropsType {
   visible: boolean;
   setVisible: React.Dispatch<React.SetStateAction<boolean>>;
-  urlState: ParamsObjType
+  fetchSales: () => void;
 }
 
 const layout = {
@@ -27,13 +26,19 @@ const imageFileProcesser = (file: any) => {
   }
 };
 
-export default function Create({ visible, setVisible, urlState }: PropsType) {
+export default function Create({ visible, setVisible, fetchSales }: PropsType) {
   const [form] = Form.useForm();
-  const [adding, setAdding] = useState(false);
-  const dispatch = useDispatch()
+
+  const { loading: adding, run } = useRequest(addSale, {
+    manual: true,
+    onSuccess: () => {
+      message.success('Add Successfully');
+      fetchSales();
+      onCancelHandler();
+    },
+  });
 
   const onFinishHandler = async (values: any) => {
-    setAdding(true);
     const { photo } = values;
     const tempData = {
       ...values,
@@ -41,17 +46,7 @@ export default function Create({ visible, setVisible, urlState }: PropsType) {
         photo: imageFileProcesser(photo),
       },
     };
-    const res = await addSale(createFormData(tempData));
-    setAdding(false);
-    if (res.success) {
-      message.success('Add Successfully!');
-      dispatch({
-        type: 'sales/queryAll',
-        payload: { current: urlState.current, pageSize: urlState.pageSize },
-      });
-      onCancelHandler();
-    }
-    
+    run(createFormData(tempData));
   };
 
   const onCancelHandler = () => {
@@ -78,8 +73,13 @@ export default function Create({ visible, setVisible, urlState }: PropsType) {
         form={form}
         onFinish={onFinishHandler}
       >
-        <Form.Item label="Photo" name="photo" required rules={[{ required: true, message: 'Please upload your avatar!' }]}>
-          <Avatar />
+        <Form.Item
+          label="Photo"
+          name="photo"
+          required
+          rules={[{ required: true, message: 'Please upload your avatar!' }]}
+        >
+          <AuthAndEditAvatar />
         </Form.Item>
         <Form.Item
           label="Name"
