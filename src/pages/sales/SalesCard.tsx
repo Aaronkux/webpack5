@@ -41,7 +41,7 @@ export default function SalesCard({
       ]}
     >
       <Skeleton loading={loading} active avatar>
-        <AuthImg path={salesInfo.photo} />
+        <AuthImg isAvatar path={salesInfo.photo} />
         <div className={styles.name}>{salesInfo.name}</div>
         <div className={styles.email}>{salesInfo.email}</div>
         <Tag color={tagColor}>{tagText}</Tag>

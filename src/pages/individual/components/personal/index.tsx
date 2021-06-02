@@ -15,14 +15,16 @@ import {
   Modal,
   message,
 } from 'antd';
-import { connect, useDispatch, useRouteMatch } from 'umi';
-import type { ClientsModelState, Loading } from 'umi';
+import { useRouteMatch, useRequest } from 'umi';
 import moment from 'moment';
 import type { Moment } from 'moment';
 import NormalText from '@/components/NormalText';
 import UploadPicture from '@/components/UploadPicture';
 import type { IndividualClientInfo } from '@/services/clients';
-import { updateIndividualClientsDetail } from '@/services/clients';
+import {
+  updateIndividualClientsDetail,
+  getIndividualClientsDetail,
+} from '@/services/clients';
 import { isBlob, createFormData } from '@/utils';
 import styles from './index.less';
 
@@ -43,19 +45,17 @@ const purposeOptions = [
   'gift',
 ];
 
-interface PropsType {
-  individualClientDetail?: IndividualClientInfo;
-  loading: boolean;
-}
-
 type Merge<M, N> = Omit<M, Extract<keyof M, keyof N>> & N;
 
 type FormClientInfo = Merge<
   Omit<Partial<IndividualClientInfo>, 'salesman' | 'gender'>,
   {
     DOB: Moment;
-    id1expiredate: Moment;
-    gender: 0 | 1;
+    id1ExpireDate: Moment;
+    id2ExpireDate: Moment;
+    salesman: string;
+    purpose: string;
+    other: string;
   }
 >;
 
@@ -69,40 +69,61 @@ const imageFileProcesser = (file: any) => {
   }
 };
 
-const Personal = ({ individualClientDetail, loading }: PropsType) => {
+const Personal = () => {
   const [form] = Form.useForm();
   const match = useRouteMatch<{ id?: string }>();
-  const dispatch = useDispatch();
+  const { id } = match.params;
+
   const [showOther, setShowOther] = useState(false);
   const [editing, setEditing] = useState(false);
-  const [updating, setUpdating] = useState(false);
+  // should resetFields after fetch, manual setloading avoiding re-request & re-render of form and img.
+  const [loading, setLoading] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
-  const { id } = match.params;
-  useEffect(() => {
+
+  const { data, run } = useRequest(getIndividualClientsDetail, {
+    manual: true,
+    onSuccess: () => {
+      form.resetFields();
+      setLoading(false);
+    },
+  });
+
+  const queryIndividualClientsDetail = () => {
     if (id) {
-      dispatch({
-        type: 'clients/getIndividualClientsDetail',
-        payload: { id },
-      });
+      run(id);
     }
+  };
+
+  const { loading: updating, run: saveChange } = useRequest(
+    updateIndividualClientsDetail,
+    {
+      manual: true,
+      onSuccess: () => {
+        setEditing(false);
+        message.success('Update Successfully!');
+        setLoading(true)
+        queryIndividualClientsDetail();
+      },
+    },
+  );
+
+  useEffect(() => {
+    setLoading(true)
+    queryIndividualClientsDetail();
   }, [id]);
 
   useEffect(() => {
-    if (individualClientDetail?.purpose) {
-      if (!purposeOptions.includes(individualClientDetail?.purpose)) {
-        setShowOther(true);
-      }
+    if (data?.purpose && !purposeOptions.includes(data.purpose)) {
+      setShowOther(true);
     }
-  }, [individualClientDetail]);
+  }, [data]);
   const onFinishHandler = async (values: FormClientInfo) => {
     if (!id) {
       message.error(`Can't Find Id Of The Receiver`);
       return;
     }
-    setUpdating(true);
     const {
       DOB,
-      id1expiredate,
       id1front,
       id1back,
       id2front,
@@ -110,16 +131,17 @@ const Personal = ({ individualClientDetail, loading }: PropsType) => {
       faceImage,
       faceTest,
       signature,
-      gender,
+      id1ExpireDate,
+      id2ExpireDate,
+      purpose,
+      other,
     } = values;
-    const formatDOB = DOB?.format('YYYY-MM-DD');
-    const formatId1expiredate = id1expiredate?.format('YYYY-MM-DD');
     const tempData = {
       ...values,
       ...{
-        DOB: formatDOB,
-        gender: gender === 1 ? true : false,
-        id1expiredate: formatId1expiredate,
+        DOB: DOB?.format('YYYY-MM-DD'),
+        id1ExpireDate: id1ExpireDate?.format('YYYY-MM-DD'),
+        id2ExpireDate: id2ExpireDate?.format('YYYY-MM-DD'),
         id1front: imageFileProcesser(id1front),
         id1back: imageFileProcesser(id1back),
         id2front: imageFileProcesser(id2front),
@@ -127,20 +149,10 @@ const Personal = ({ individualClientDetail, loading }: PropsType) => {
         faceImage: imageFileProcesser(faceImage),
         faceTest: imageFileProcesser(faceTest),
         signature: imageFileProcesser(signature),
+        purpose: purpose === 'other' ? other : purpose,
       },
     };
-
-    const res = await updateIndividualClientsDetail(id, createFormData(tempData));
-    setUpdating(false);
-    if (res.success) {
-      setEditing(false);
-      message.success('Update Successfully!');
-      await dispatch({
-        type: 'clients/getIndividualClientsDetail',
-        payload: { id },
-      });
-      form.resetFields();
-    }
+    saveChange(id, createFormData(tempData));
   };
 
   return (
@@ -183,7 +195,7 @@ const Personal = ({ individualClientDetail, loading }: PropsType) => {
               <Form.Item
                 label="Name"
                 name="name"
-                initialValue={individualClientDetail?.name}
+                initialValue={data?.name}
                 required
                 rules={[{ required: true, message: 'Please Enter Your Name!' }]}
               >
@@ -194,7 +206,7 @@ const Personal = ({ individualClientDetail, loading }: PropsType) => {
               <Form.Item
                 label="Gender"
                 name="gender"
-                initialValue={individualClientDetail?.gender ? 0 : 1}
+                initialValue={data?.gender ? 0 : 1}
                 required
               >
                 {editing ? (
@@ -213,7 +225,7 @@ const Personal = ({ individualClientDetail, loading }: PropsType) => {
               <Form.Item
                 label="E-mail"
                 name="email"
-                initialValue={individualClientDetail?.email}
+                initialValue={data?.email}
                 required
                 rules={[
                   {
@@ -230,7 +242,7 @@ const Personal = ({ individualClientDetail, loading }: PropsType) => {
               <Form.Item
                 label="DOB"
                 name="DOB"
-                initialValue={moment(individualClientDetail?.DOB)}
+                initialValue={moment(data?.DOB)}
               >
                 <DatePicker disabled={!editing} style={{ width: '100%' }} />
               </Form.Item>
@@ -239,7 +251,7 @@ const Personal = ({ individualClientDetail, loading }: PropsType) => {
               <Form.Item
                 label="Salesman"
                 name="salesman"
-                initialValue={individualClientDetail?.salesman?.id}
+                initialValue={data?.salesman?.id}
               >
                 {editing ? (
                   <Select>
@@ -255,7 +267,7 @@ const Personal = ({ individualClientDetail, loading }: PropsType) => {
               <Form.Item
                 label="Occupation"
                 name="occupation"
-                initialValue={individualClientDetail?.occupation}
+                initialValue={data?.occupation}
               >
                 {editing ? <Input /> : <NormalText />}
               </Form.Item>
@@ -264,7 +276,7 @@ const Personal = ({ individualClientDetail, loading }: PropsType) => {
               <Form.Item
                 label="EmployerName"
                 name="employerName"
-                initialValue={individualClientDetail?.employerName}
+                initialValue={data?.employerName}
               >
                 {editing ? <Input /> : <NormalText />}
               </Form.Item>
@@ -273,7 +285,7 @@ const Personal = ({ individualClientDetail, loading }: PropsType) => {
               <Form.Item
                 label="AnnualIncome"
                 name="annualIncome"
-                initialValue={individualClientDetail?.annualIncome?.toFixed(2)}
+                initialValue={data?.annualIncome}
               >
                 {editing ? (
                   <InputNumber
@@ -295,7 +307,7 @@ const Personal = ({ individualClientDetail, loading }: PropsType) => {
               <Form.Item
                 label="SourceOfIncome"
                 name="sourceOfIncome"
-                initialValue={individualClientDetail?.sourceOfIncome}
+                initialValue={data?.sourceOfIncome}
               >
                 {editing ? <Input /> : <NormalText />}
               </Form.Item>
@@ -305,9 +317,9 @@ const Personal = ({ individualClientDetail, loading }: PropsType) => {
                 label="Purpose"
                 name="purpose"
                 initialValue={
-                  individualClientDetail?.purpose
-                    ? purposeOptions.includes(individualClientDetail?.purpose)
-                      ? individualClientDetail?.purpose
+                  data?.purpose
+                    ? purposeOptions.includes(data?.purpose)
+                      ? data?.purpose
                       : 'Other'
                     : undefined
                 }
@@ -338,10 +350,10 @@ const Personal = ({ individualClientDetail, loading }: PropsType) => {
             </Col>
             <Col xs={24} sm={24} md={24} lg={12} xl={12}>
               <Form.Item
-                label="unsubscribe"
-                name="Unsubscribe"
+                label="Unsubscribe"
+                name="unsubscribe"
                 valuePropName="checked"
-                initialValue={individualClientDetail?.unsubscribe}
+                initialValue={data?.unsubscribe}
               >
                 <Switch disabled={!editing} />
               </Form.Item>
@@ -351,7 +363,7 @@ const Personal = ({ individualClientDetail, loading }: PropsType) => {
                 <Form.Item
                   label="Other"
                   name="other"
-                  initialValue={individualClientDetail?.purpose}
+                  initialValue={data?.purpose}
                 >
                   {editing ? <Input /> : <NormalText />}
                 </Form.Item>
@@ -366,7 +378,7 @@ const Personal = ({ individualClientDetail, loading }: PropsType) => {
               <Form.Item
                 label="Address"
                 name="address"
-                initialValue={individualClientDetail?.address}
+                initialValue={data?.address}
               >
                 {editing ? <Input /> : <NormalText />}
               </Form.Item>
@@ -375,17 +387,13 @@ const Personal = ({ individualClientDetail, loading }: PropsType) => {
               <Form.Item
                 label="Suburb"
                 name="suburb"
-                initialValue={individualClientDetail?.suburb}
+                initialValue={data?.suburb}
               >
                 {editing ? <Input /> : <NormalText />}
               </Form.Item>
             </Col>
             <Col xs={24} sm={24} md={24} lg={12} xl={12}>
-              <Form.Item
-                label="State"
-                name="state"
-                initialValue={individualClientDetail?.state}
-              >
+              <Form.Item label="State" name="state" initialValue={data?.state}>
                 {editing ? <Input /> : <NormalText />}
               </Form.Item>
             </Col>
@@ -393,7 +401,7 @@ const Personal = ({ individualClientDetail, loading }: PropsType) => {
               <Form.Item
                 label="Country"
                 name="country"
-                initialValue={individualClientDetail?.country}
+                initialValue={data?.country}
               >
                 {editing ? <Input /> : <NormalText />}
               </Form.Item>
@@ -402,7 +410,7 @@ const Personal = ({ individualClientDetail, loading }: PropsType) => {
               <Form.Item
                 label="Postcode"
                 name="postcode"
-                initialValue={individualClientDetail?.postcode}
+                initialValue={data?.postcode}
               >
                 {editing ? <Input /> : <NormalText />}
               </Form.Item>
@@ -415,7 +423,7 @@ const Personal = ({ individualClientDetail, loading }: PropsType) => {
               <Form.Item
                 label="ID1 Front"
                 name="id1front"
-                initialValue={individualClientDetail?.id1front}
+                initialValue={data?.id1front}
               >
                 <UploadPicture disabled={!editing} />
               </Form.Item>
@@ -424,7 +432,7 @@ const Personal = ({ individualClientDetail, loading }: PropsType) => {
               <Form.Item
                 label="ID1 Back"
                 name="id1back"
-                initialValue={individualClientDetail?.id1back}
+                initialValue={data?.id1back}
               >
                 <UploadPicture disabled={!editing} />
               </Form.Item>
@@ -433,7 +441,7 @@ const Personal = ({ individualClientDetail, loading }: PropsType) => {
               <Form.Item
                 label="ID2 Front"
                 name="id2front"
-                initialValue={individualClientDetail?.id2front}
+                initialValue={data?.id2front}
               >
                 <UploadPicture disabled={!editing} />
               </Form.Item>
@@ -442,7 +450,7 @@ const Personal = ({ individualClientDetail, loading }: PropsType) => {
               <Form.Item
                 label="ID2 Back"
                 name="id2back"
-                initialValue={individualClientDetail?.id2back}
+                initialValue={data?.id2back}
               >
                 <UploadPicture disabled={!editing} />
               </Form.Item>
@@ -451,7 +459,7 @@ const Personal = ({ individualClientDetail, loading }: PropsType) => {
               <Form.Item
                 label="Face"
                 name="faceImage"
-                initialValue={individualClientDetail?.faceImage}
+                initialValue={data?.faceImage}
               >
                 <UploadPicture disabled={!editing} />
               </Form.Item>
@@ -460,7 +468,7 @@ const Personal = ({ individualClientDetail, loading }: PropsType) => {
               <Form.Item
                 label="FaceTest"
                 name="faceTest"
-                initialValue={individualClientDetail?.faceTest}
+                initialValue={data?.faceTest}
               >
                 <UploadPicture disabled={!editing} />
               </Form.Item>
@@ -469,7 +477,7 @@ const Personal = ({ individualClientDetail, loading }: PropsType) => {
               <Form.Item
                 label="Signature"
                 name="signature"
-                initialValue={individualClientDetail?.signature}
+                initialValue={data?.signature}
               >
                 <UploadPicture disabled={!editing} />
               </Form.Item>
@@ -478,7 +486,7 @@ const Personal = ({ individualClientDetail, loading }: PropsType) => {
               <Form.Item
                 label="Expire Date"
                 name="id1ExpireDate"
-                initialValue={moment(individualClientDetail?.id1ExpireDate)}
+                initialValue={moment(data?.id1ExpireDate)}
               >
                 <DatePicker disabled={!editing} style={{ width: '100%' }} />
               </Form.Item>
@@ -532,9 +540,4 @@ const Personal = ({ individualClientDetail, loading }: PropsType) => {
     </>
   );
 };
-export default connect(
-  ({ clients, loading }: { clients: ClientsModelState; loading: Loading }) => ({
-    individualClientDetail: clients.individualClientDetail,
-    loading: loading.effects['clients/getIndividualClientsDetail']!,
-  }),
-)(React.memo(Personal));
+export default React.memo(Personal);

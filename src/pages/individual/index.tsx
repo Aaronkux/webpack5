@@ -5,7 +5,6 @@ import {
   Popover,
   Pagination,
   Row,
-  Avatar,
   Popconfirm,
   Tag,
   Image,
@@ -13,12 +12,17 @@ import {
 } from 'antd';
 import { CheckCircleOutlined, CloseCircleOutlined } from '@ant-design/icons';
 import type { PaginationProps } from 'antd';
-import useURLParams from '@/hooks/useURLParams';
-import { connect, useDispatch, request } from 'umi';
-import type { ClientsModelState, Loading } from 'umi';
+import { useRequest } from 'umi';
 import moment from 'moment';
+import AuthImg from '@/components/AuthImg'
+import useURLParams from '@/hooks/useURLParams';
 import type { IndividualClientInfo } from '@/services/clients';
+import {
+  getIndividualClients,
+  deleteIndividualClient,
+} from '@/services/clients';
 import Filter from './components/Filter';
+import Create from './Create';
 import { Link } from 'react-router-dom';
 import styles from './index.less';
 import del from '@/assets/del.svg';
@@ -36,20 +40,30 @@ const clientlistcolumns = [
   'other',
 ];
 
-interface PropsType {
-  individualClients: IndividualClientInfo[];
-  total: number;
-  loading: boolean;
-}
-
-const IndividualClients = ({
-  individualClients,
-  total,
-  loading,
-}: PropsType) => {
+const IndividualClients = () => {
+  const [visible, setVisible] = useState(false);
   const [urlState, setURL] = useURLParams();
-  const dispatch = useDispatch();
-  const [actionLoading, setActionLoading] = useState(false);
+  const { data, loading, run } = useRequest(getIndividualClients, {
+    manual: true,
+  });
+  const { loading: deleteLoading, run: deleteClient } = useRequest(
+    deleteIndividualClient,
+    {
+      manual: true,
+      onSuccess: () => {
+        message.success('Delete Successfully!');
+        fetchIndividualClients();
+      },
+    },
+  );
+  const deleteHandler = (clientId: string) => {
+    deleteClient(clientId);
+  };
+
+  const fetchIndividualClients = () => {
+    const { current = 1, pageSize = 5 } = urlState;
+    run(current, pageSize);
+  };
   const onChangeHandler: PaginationProps['onChange'] = (page, pageSize) => {
     setURL({ current: page.toString(), pageSize: pageSize?.toString() });
   };
@@ -130,42 +144,48 @@ const IndividualClients = ({
       dataIndex: 'id1front',
       key: 'id1front',
       width: 150,
-      render: (img: string) => <Image src={img} width='64px' height='64px' />,
+      render: (img: string) =>
+        img && <AuthImg path={img} size={64} preview />,
     },
     id1back: {
       title: 'Id1 Back',
       dataIndex: 'id1back',
       key: 'id1back',
       width: 150,
-      render: (img: string) => <Image src={img} width='64px' height='64px' />,
+      render: (img: string) =>
+        img && <AuthImg path={img} size={64} preview />,
     },
     id2front: {
       title: 'Id2 Front',
       dataIndex: 'id2front',
       key: 'id2front',
       width: 150,
-      render: (img: string) => <Image src={img} width='64px' height='64px' />,
+      render: (img: string) =>
+        img && <AuthImg path={img} size={64} preview />,
     },
     id2back: {
       title: 'Id2 Back',
       dataIndex: 'id2back',
       key: 'id2back',
       width: 150,
-      render: (img: string) => <Image src={img} width='64px' height='64px' />,
+      render: (img: string) =>
+        img && <AuthImg path={img} size={64} preview />,
     },
     faceImage: {
       title: 'Face Image',
       dataIndex: 'faceImage',
       key: 'faceImage',
       width: 150,
-      render: (img: string) => <Image src={img} width='64px' height='64px' />,
+      render: (img: string) =>
+        img && <AuthImg path={img} size={64} preview />,
     },
     faceTest: {
       title: 'Face Test',
       dataIndex: 'faceTest',
       key: 'faceTest',
       width: 150,
-      render: (img: string) => <Image src={img} width='64px' height='64px' />,
+      render: (img: string) =>
+        img && <AuthImg path={img} size={64} preview />,
     },
     purpose: {
       title: 'Purpose',
@@ -216,8 +236,8 @@ const IndividualClients = ({
       title: 'Id1 Expire Date',
       dataIndex: 'id1ExpireDate',
       key: 'id1ExpireDate',
-      render: (dob: string) => {
-        return <>{moment(dob).zone(6).format('DD-MM-YYYY')}</>;
+      render: (date: string) => {
+        return date && moment(date).zone(6).format('DD-MM-YYYY');
       },
       width: 150,
     },
@@ -225,8 +245,8 @@ const IndividualClients = ({
       title: 'Id2 Expire Date',
       dataIndex: 'id2ExpireDate',
       key: 'id2ExpireDate',
-      render: (dob: string) => {
-        return <>{moment(dob).zone(6).format('DD-MM-YYYY')}</>;
+      render: (date: string) => {
+        return date && moment(date).zone(6).format('DD-MM-YYYY');
       },
       width: 150,
     },
@@ -235,7 +255,8 @@ const IndividualClients = ({
       dataIndex: 'signature',
       key: 'signature',
       width: 150,
-      render: (img: string) => <Image src={img} width='64px' height='64px' />,
+      render: (img: string) =>
+        img && <AuthImg path={img} size={64} preview />,
     },
   };
   // let dynamicColumns: any = clientlistcolumns.map((value) => allColumns[value]);
@@ -276,42 +297,23 @@ const IndividualClients = ({
   };
 
   dynamicColumns = [headColumns, ...dynamicColumns, operators];
-  const deleteHandler = async (clientId: string) => {
-    setActionLoading(true);
-    const res = await request(`/api/getIndividualClients/${clientId}`, {
-      method: 'delete',
-    });
-    if (res.success) {
-      message.success('Success');
-      dispatch({
-        type: 'orders/getOrders',
-        payload: { current: urlState.current, pageSize: urlState.pageSize },
-      });
-    } else {
-      message.error(res.errorMessage);
-    }
-    setActionLoading(false);
-  };
 
   useEffect(() => {
-    dispatch({
-      type: 'clients/getIndividualClients',
-      payload: { current: urlState.current, pageSize: urlState.pageSize },
-    });
+    fetchIndividualClients();
   }, [urlState]);
 
   return (
     <>
       <Card className={styles.filterContainer}>
-        <Filter />
+        <Filter setVisible={setVisible} />
       </Card>
       <Card>
         <Table
           className={styles.table}
           bordered
-          loading={loading || actionLoading}
+          loading={loading || deleteLoading}
           columns={dynamicColumns}
-          dataSource={individualClients}
+          dataSource={data?.data}
           rowKey={'id'}
           pagination={false}
           scroll={{ x: 1500 }}
@@ -324,18 +326,17 @@ const IndividualClients = ({
             current={urlState.current ? parseInt(urlState.current) : 1}
             pageSize={urlState.pageSize ? parseInt(urlState.pageSize) : 5}
             pageSizeOptions={['5', '10', '15']}
-            total={total}
+            total={data?.total}
           />
         </Row>
+        <Create
+          fetchIndividualClients={fetchIndividualClients}
+          newVisible={visible}
+          setNewVisible={setVisible}
+        />
       </Card>
     </>
   );
 };
 
-export default connect(
-  ({ clients, loading }: { clients: ClientsModelState; loading: Loading }) => ({
-    individualClients: clients.individualClients.clients,
-    total: clients.individualClients.total,
-    loading: loading.models.clients,
-  }),
-)(React.memo(IndividualClients));
+export default React.memo(IndividualClients);

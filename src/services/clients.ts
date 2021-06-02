@@ -6,7 +6,7 @@ export interface IndividualClientInfo {
   name: string;
   createdDate?: string;
   gender?: boolean;
-  DOB?: string;
+  DOB: string;
   email: string;
   salesman?: {
     id: string;
@@ -16,10 +16,10 @@ export interface IndividualClientInfo {
   suburb?: string;
   state?: string;
   country?: string;
-  postcode?: string;
+  postcode: string;
   occupation?: string;
   employerName?: string;
-  annualIncome?: number;
+  annualIncome?: string;
   sourceOfIncome?: string;
   id1front?: string;
   id1back?: string;
@@ -35,7 +35,7 @@ export interface IndividualClientInfo {
   signature?: string;
 }
 export type IndividualClientsResponse = ResponseType<{
-  clients: IndividualClientInfo[];
+  data: IndividualClientInfo[];
   total: number;
 }>;
 export type IndividualClientsDetailResponse = ResponseType<IndividualClientInfo>;
@@ -72,7 +72,7 @@ export interface CompanyClientInfo {
   createdDate?: string;
 }
 export type CompanyClientsResponse = ResponseType<{
-  clients: CompanyClientInfo[];
+  data: CompanyClientInfo[];
   total: number;
 }>;
 export type CompanyClientsDetailResponse = ResponseType<CompanyClientInfo>;
@@ -106,11 +106,14 @@ export interface BeneficiaryInfo {
   trustAccountCompanyAddress?: string;
   trustAccountCompanyABN?: number;
 }
-export type BeneficiaryResponse = ResponseType<BeneficiaryInfo[]>;
+export type BeneficiaryResponse = ResponseType<{
+  data: BeneficiaryInfo[];
+  total: number;
+}>;
 export type BeneficiaryDetailResponse = ResponseType<BeneficiaryInfo>;
 
 export function getIndividualClients(current: number, pageSize: number) {
-  return request<IndividualClientsResponse>('/api/individualclient', {
+  return request<IndividualClientsResponse>('/api/individualclients', {
     method: 'get',
     params: {
       current,
@@ -127,10 +130,21 @@ export function getIndividualClientsDetail(id: string) {
     },
   );
 }
-
-export async function updateIndividualClientsDetail(id: string, data: FormData) {
-  return await request<NoDataResponse>(`/api/individualclient/${id}`, {
+export function addIndividualClient(data: FormData) {
+  return request<NoDataResponse>(`/api/individualclient`, {
     method: 'post',
+    body: data,
+  });
+}
+export function deleteIndividualClient(id: string) {
+  return request<NoDataResponse>(`/api/individualclient/${id}`, {
+    method: 'delete',
+  });
+}
+
+export function updateIndividualClientsDetail(id: string, data: FormData) {
+  return request<NoDataResponse>(`/api/individualclient/${id}`, {
+    method: 'put',
     body: data,
   });
 }
@@ -152,12 +166,15 @@ export function getCompanyClientsDetail(id: string) {
 }
 
 export function getIndividualBeneficiaries(id: string) {
-  return request<BeneficiaryResponse>(`/api/individualclient/${id}/receiver`, {
-    method: 'get',
-  });
+  return request<BeneficiaryResponse>(
+    `/api/individualclient/${id}/receivers?limit=5&offset=0`,
+    {
+      method: 'get',
+    },
+  );
 }
 export function getCompanyBeneficiaries(id: string) {
-  return request<BeneficiaryResponse>(`/api/companyclient/${id}/receiver`, {
+  return request<BeneficiaryResponse>(`/api/companyclient/${id}/receivers`, {
     method: 'get',
   });
 }
@@ -167,8 +184,8 @@ export function getBeneficiaryDetail(id: string) {
     method: 'get',
   });
 }
-export async function updateBeneficiaryDetail(id: string, data: FormData) {
-  return await request<NoDataResponse>(`/api/receiver/${id}`, {
+export function updateBeneficiaryDetail(id: string, data: FormData) {
+  return request<NoDataResponse>(`/api/receiver/${id}`, {
     method: 'post',
     body: data,
   });
@@ -179,8 +196,8 @@ export function addBeneficiary(data: FormData) {
     body: data,
   });
 }
-export async function deleteBeneficiary(id: string) {
-  return await request<NoDataResponse>(`/api/receiver/${id}`, {
+export function deleteBeneficiary(id: string) {
+  return request<NoDataResponse>(`/api/receiver/${id}`, {
     method: 'delete',
   });
 }

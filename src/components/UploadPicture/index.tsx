@@ -1,4 +1,5 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
+import { getImg } from '@/services/global';
 import { Modal, Upload, message } from 'antd';
 import type { UploadFile, RcFile } from 'antd/lib/upload/interface';
 
@@ -26,7 +27,7 @@ interface PropsType {
   limitMB?: number;
   value?: string | File;
   onChange?: (value: File) => void;
-  disabled?: boolean
+  disabled?: boolean;
 }
 
 export default function UploadPicture({
@@ -34,26 +35,12 @@ export default function UploadPicture({
   limitMB = 5,
   value,
   onChange,
-  disabled
+  disabled,
 }: PropsType) {
   const [visible, setVisible] = useState(false);
   const [previewImage, setPreviewImage] = useState<string>();
-  const extension = typeof value === 'string' ? value.split('.').pop() : '';
-  const initialextension = extension ? `image/${extension ?? 'jpeg'}` : '';
-  const initialImgName = extension ? `avatar.${extension ?? 'jpg'}` : '';
-  const initialImg: UploadFile = {
-    uid: '-1',
-    name: initialImgName,
-    status: 'done',
-    url: typeof value === 'string' ? value : '',
-    type: initialextension,
-    size: 1,
-  };
-
   const imgRef = useRef<HTMLImageElement>(null);
-  const [fileList, setFileList] = useState(() =>
-    typeof value === 'string' ? [initialImg] : [],
-  );
+  const [fileList, setFileList] = useState<UploadFile[]>([]);
 
   const onChangeHandler = async ({
     file,
@@ -91,6 +78,36 @@ export default function UploadPicture({
     }
     return false;
   };
+
+  useEffect(() => {
+    const test = async (path: string) => {
+      const res = await getImg(path);
+      const reader = new FileReader();
+      reader.onload = function (e) {
+        const extension =
+          typeof value === 'string' ? value.split('.').pop() : '';
+        const initialextension = extension
+          ? `image/${extension ?? 'jpeg'}`
+          : '';
+        const initialImgName = extension ? `avatar.${extension ?? 'jpg'}` : '';
+        const initialImg: UploadFile = {
+          uid: '-1',
+          name: initialImgName,
+          status: 'done',
+          url: e.target?.result as string,
+          type: initialextension,
+          size: 1,
+        };
+        setFileList([initialImg]);
+        // setImgSrc(e.target?.result as string);
+      };
+      reader.readAsDataURL(res);
+    };
+    if (typeof value === 'string' && value) {
+      test(value);
+    }
+  }, []);
+
   return (
     <div>
       <Upload
@@ -105,7 +122,12 @@ export default function UploadPicture({
       >
         {fileList.length < 1 && '+ Upload'}
       </Upload>
-      <Modal centered visible={visible} footer={null} onCancel={() => setVisible(false)}>
+      <Modal
+        centered
+        visible={visible}
+        footer={null}
+        onCancel={() => setVisible(false)}
+      >
         <img alt="example" style={{ width: '100%' }} src={previewImage} />
       </Modal>
     </div>

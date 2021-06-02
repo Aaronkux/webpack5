@@ -354,8 +354,8 @@ const Personal = ({ companyClientDetail, loading }: PropsType) => {
             </Col>
             <Col xs={24} sm={24} md={24} lg={12} xl={12}>
               <Form.Item
-                label="unsubscribe"
-                name="Unsubscribe"
+                label="Unsubscribe"
+                name="unsubscribe"
                 valuePropName="checked"
                 initialValue={companyClientDetail?.unsubscribe}
               >

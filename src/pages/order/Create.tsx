@@ -40,12 +40,34 @@ const currencies = [
   'JPY',
 ];
 
+const mockClients = [
+  { id: '1', name: 'test1', amount: 0 },
+  { id: '2', name: 'test2', amount: 0 },
+];
+
+let objMockClients: any = {};
+for (let i of mockClients) {
+  objMockClients[i.id] = i;
+}
+
 const Create = ({ newVisible, setNewVisible, addLoading }: PropsType) => {
   const [form] = Form.useForm();
-  const dispatch = useDispatch();
-  const [formState, setFromState] = useState<{
-    [prop: string]: any;
+  const [clients, setClients] = useState<{
+    [prop: string]: {
+      id: string;
+      name: string;
+      amount: number;
+    };
   }>({});
+  const [receivers, setReceivers] = useState<{
+    [prop: string]: {
+      id: string;
+      name: string;
+      amount: number;
+    };
+  }>({});
+  const dispatch = useDispatch();
+
   const finishHandler = async (values: any) => {
     const { clientType, client, ...rest } = values;
     let clientInfo: any = {};
@@ -61,40 +83,27 @@ const Create = ({ newVisible, setNewVisible, addLoading }: PropsType) => {
       type: 'orders/addOrder',
       payload: { ...rest, ...clientInfo },
     });
-    console.log({ ...rest, ...clientInfo });
-    console.log(res);
-
-    // setAdding(true);
-    // const res = await request('/api/order', {
-    //   method: 'post',
-    //   data: values,
-    // });
-    // if (res.success) message.success('Add Successfully');
-    // setAdding(false);
-    // form.resetFields();
-    // setNewVisible(false);
   };
 
-  const onFromAmountBlur = () => {
-    const fromAmount = parseFloat(form.getFieldValue('fromAmount'));
-    const value = fromAmount ? fromAmount : 0;
-    setFromState({ ...formState, ...{ fromAmount: value.toFixed(2) } });
+  const onSelectHandler = (id: string) => {
+    if (!clients[id]) {
+      setClients({ ...clients, ...{ [id]: objMockClients[id] } });
+    }
   };
-  const onToAmountBlur = () => {
-    const toAmount = parseFloat(form.getFieldValue('toAmount'));
-    const value = toAmount ? toAmount : 0;
-    setFromState({ ...formState, ...{ toAmount: value.toFixed(2) } });
+
+  const onDeselectHandler = (id: string) => {
+    const { [id]: omitItem, ...rest } = clients;
+    setClients(rest);
   };
-  const onExchangeRateBlur = () => {
-    const exchangeRate = parseFloat(form.getFieldValue('exchangeRate'));
-    const value = exchangeRate ? exchangeRate : 0;
-    setFromState({ ...formState, ...{ exchangeRate: value.toFixed(2) } });
+
+  const onInputChangeHandler = (amount: number, id: string) => {
+    setClients({
+      ...clients,
+      ...{ [id]: { id, name: clients[id].name, amount } },
+    });
   };
-  const onFeeAmountBlur = () => {
-    const feeAmount = parseFloat(form.getFieldValue('feeAmount'));
-    const value = feeAmount ? feeAmount : 0;
-    setFromState({ ...formState, ...{ feeAmount: value.toFixed(2) } });
-  }; 
+
+  console.log(clients)
 
   return (
     <Modal
@@ -138,6 +147,7 @@ const Create = ({ newVisible, setNewVisible, addLoading }: PropsType) => {
               </Select>
             </Form.Item>
           </Col>
+          <Col xs={24} sm={24} md={24} lg={12} xl={12}></Col>
           <Col xs={24} sm={24} md={24} lg={12} xl={12}>
             <Form.Item
               label="Client"
@@ -148,14 +158,39 @@ const Create = ({ newVisible, setNewVisible, addLoading }: PropsType) => {
               <Select
                 onSearch={(val) => console.log(val)}
                 showSearch
+                mode="multiple"
                 optionFilterProp="children"
-                // loading={true}
+                onSelect={onSelectHandler}
+                onDeselect={onDeselectHandler}
               >
-                <Option value={'113213'}>Aaron</Option>
-                <Option value={'212321412'}>Loorn</Option>
+                {mockClients.map((v) => (
+                  <Option value={v.id}>{v.name}</Option>
+                ))}
               </Select>
             </Form.Item>
           </Col>
+          <Col xs={24} sm={24} md={24} lg={12} xl={12}></Col>
+          {Object.values(clients).map((item) => (
+            <Col
+              xs={16}
+              sm={16}
+              md={16}
+              lg={12}
+              xl={12}
+              offset={6}
+              className={styles.test}
+            >
+              <div className={styles.testContainer}>
+                <div className={styles.name}>{item.name}: </div>
+                <InputNumber
+                  className={styles.input}
+                  value={item.amount}
+                  onChange={(value) => onInputChangeHandler(value, item.id)}
+                />
+              </div>
+            </Col>
+          ))}
+
           <Col xs={24} sm={24} md={24} lg={12} xl={12}>
             <Form.Item
               label="Receiver"
@@ -169,6 +204,7 @@ const Create = ({ newVisible, setNewVisible, addLoading }: PropsType) => {
               </Select>
             </Form.Item>
           </Col>
+          <Col xs={24} sm={24} md={24} lg={12} xl={12}></Col>
           <Col xs={24} sm={24} md={24} lg={12} xl={12}>
             <Form.Item
               label="Exchange Rate"
@@ -178,13 +214,7 @@ const Create = ({ newVisible, setNewVisible, addLoading }: PropsType) => {
               ]}
               required
             >
-              <InputNumber
-                value={formState.exchangeRate}
-                onBlur={onExchangeRateBlur}
-                style={{ width: '100%' }}
-                precision={2}
-                step="1"
-              />
+              <InputNumber style={{ width: '100%' }} precision={2} step="1" />
             </Form.Item>
           </Col>
           <Col xs={24} sm={24} md={24} lg={12} xl={12}>
@@ -206,19 +236,12 @@ const Create = ({ newVisible, setNewVisible, addLoading }: PropsType) => {
               ]}
               required
             >
-              <Select
-                onChange={(value: string) =>
-                  setFromState({ ...formState, ...{ from: value } })
-                }
-                value={formState.from}
-              >
-                {currencies
-                  .filter((cur) => !Object.values(formState).includes(cur))
-                  .map((cur) => (
-                    <Option key={cur} value={cur}>
-                      {cur}
-                    </Option>
-                  ))}
+              <Select allowClear>
+                {currencies.map((cur) => (
+                  <Option key={cur} value={cur}>
+                    {cur}
+                  </Option>
+                ))}
               </Select>
             </Form.Item>
           </Col>
@@ -230,8 +253,6 @@ const Create = ({ newVisible, setNewVisible, addLoading }: PropsType) => {
               required
             >
               <InputNumber
-                value={formState.fromAmount}
-                onBlur={onFromAmountBlur}
                 style={{ width: '100%' }}
                 parser={(value: any) => value.replace(/\$\s?|(,*)/g, '')}
                 precision={2}
@@ -259,19 +280,12 @@ const Create = ({ newVisible, setNewVisible, addLoading }: PropsType) => {
               ]}
               required
             >
-              <Select
-                onChange={(value: string) =>
-                  setFromState({ ...formState, ...{ to: value } })
-                }
-                value={formState.to}
-              >
-                {currencies
-                  .filter((cur) => !Object.values(formState).includes(cur))
-                  .map((cur) => (
-                    <Option key={cur} value={cur}>
-                      {cur}
-                    </Option>
-                  ))}
+              <Select allowClear>
+                {currencies.map((cur) => (
+                  <Option key={cur} value={cur}>
+                    {cur}
+                  </Option>
+                ))}
               </Select>
             </Form.Item>
           </Col>
@@ -283,8 +297,6 @@ const Create = ({ newVisible, setNewVisible, addLoading }: PropsType) => {
               required
             >
               <InputNumber
-                value={formState.toAmount}
-                onBlur={onToAmountBlur}
                 style={{ width: '100%' }}
                 parser={(value: any) => value.replace(/\$\s?|(,*)/g, '')}
                 precision={2}
@@ -316,19 +328,12 @@ const Create = ({ newVisible, setNewVisible, addLoading }: PropsType) => {
                 }),
               ]}
             >
-              <Select
-                onChange={(value: string) =>
-                  setFromState({ ...formState, ...{ fee: value } })
-                }
-                value={formState.fee}
-              >
-                {[formState.to, formState.from]
-                  .filter((value) => value)
-                  .map((currency) => (
-                    <Option key={currency} value={currency}>
-                      {currency}
-                    </Option>
-                  ))}
+              <Select allowClear>
+                {currencies.map((currency) => (
+                  <Option key={currency} value={currency}>
+                    {currency}
+                  </Option>
+                ))}
               </Select>
             </Form.Item>
           </Col>
@@ -350,8 +355,6 @@ const Create = ({ newVisible, setNewVisible, addLoading }: PropsType) => {
               ]}
             >
               <InputNumber
-                value={formState.feeAmount}
-                onBlur={onFeeAmountBlur}
                 style={{ width: '100%' }}
                 formatter={(value) =>
                   `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')

@@ -1,10 +1,9 @@
-import React, { useEffect, useState } from 'react';
-import { request, useDispatch, useRouteMatch } from 'umi';
+import React, { useState } from 'react';
+import { request, useDispatch, useRouteMatch, useRequest } from 'umi';
 import {
   Modal,
   Form,
   Input,
-  Switch,
   Select,
   Radio,
   Divider,
@@ -14,6 +13,9 @@ import {
   DatePicker,
   message,
 } from 'antd';
+import type {Moment} from 'moment'
+import {addBeneficiary} from '@/services/clients'
+import type {BeneficiaryInfo} from '@/services/clients'
 import { CloseCircleOutlined } from '@ant-design/icons';
 import UploadPicture from '@/components/UploadPicture';
 import type { ParamsObjType } from '@/hooks/useURLParams';
@@ -25,37 +27,60 @@ interface PropsType {
   visible: boolean;
   setNewVisible: React.Dispatch<React.SetStateAction<boolean>>;
   setURL: React.Dispatch<React.SetStateAction<ParamsObjType>>;
+  getBeneficiaries: () => void;
 }
+
+type Merge<M, N> = Omit<M, Extract<keyof M, keyof N>> & N;
+
+type FormIndividualReceiverInfo = Merge<
+  Partial<BeneficiaryInfo>,
+  {
+    DOB: Moment;
+    clientId: string
+  }
+>;
+
 
 const layout = {
   labelCol: { span: 6 },
   wrapperCol: { span: 16 },
 };
 
-export default function Create({ setURL, visible, setNewVisible }: PropsType) {
+export default function Create({ setURL, visible, setNewVisible, getBeneficiaries }: PropsType) {
   const dispatch = useDispatch();
   const [method, setMethod] = useState(0);
   const [remitType, setRemitType] = useState(0);
   const [accountType, setAccountType] = useState(0);
   const [form] = Form.useForm();
-  const [adding, setAdding] = useState(false);
   const match = useRouteMatch<{ id?: string }>();
   const clientTypeMatch = useRouteMatch<{ type?: string }>('/clients/:type');
   const { id } = match.params;
 
-  const onFinishHandler = async (values: any) => {
-    setAdding(true);
+  const onCancelHandler = ()=> {
+    setNewVisible(false);
+      form.resetFields();
+  }
+
+  const { loading: adding, run } = useRequest(addBeneficiary, {
+    manual: true,
+    onSuccess: () => {
+      message.success('Add Successfully');
+      getBeneficiaries();
+      onCancelHandler();
+    },
+  });
+
+
+  const onFinishHandler = async (values: FormIndividualReceiverInfo) => {
     const clientType = clientTypeMatch?.params.type;
     if (!clientType || !id) {
       message.error('Error URL PATH!');
-      setAdding(false);
       return;
     }
     const res = await request('/api/addBeneficiary', {
       method: 'post',
       data: values,
     });
-    setAdding(false);
     if (res.success) {
       message.success('Adding Successfully!');
       setNewVisible(false);

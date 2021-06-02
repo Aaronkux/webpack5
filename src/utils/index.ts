@@ -206,3 +206,11 @@ export function createFormData(data: {
   }
   return formdata;
 }
+
+export const imageFileProcesser = (file: any) => {
+  if (isBlob(file)) {
+    return file;
+  } else {
+    return undefined;
+  }
+};

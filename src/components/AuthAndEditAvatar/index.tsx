@@ -69,7 +69,7 @@ export default function UploadAvatar({
         className={styles.container}
       >
         {typeof value === 'string' || !value ? (
-          <AuthImg size={size} path={value} />
+          <AuthImg isAvatar size={size} path={value} />
         ) : (
           <img
             ref={imgRef}

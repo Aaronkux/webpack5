@@ -1,14 +1,16 @@
 import React, { useEffect, useState } from 'react';
 import { getImg } from '@/services/global';
-import { Avatar } from 'antd';
+import { Image } from 'antd';
 import { UserOutlined } from '@ant-design/icons';
 
 interface PropsType {
   path?: string;
-  size?: number
+  size?: number;
+  isAvatar?: boolean;
+  preview?: boolean
 }
 
-const AuthImg = ({ path, size=48 }: PropsType) => {
+const AuthImg = ({ path, size = 48, isAvatar = false, preview = false }: PropsType) => {
   const [imgSrc, setImgSrc] = useState<string>();
   useEffect(() => {
     const test = async (path: string) => {
@@ -24,9 +26,23 @@ const AuthImg = ({ path, size=48 }: PropsType) => {
     }
   }, []);
   return path ? (
-    <Avatar size={size} src={imgSrc} />
+    <Image
+      width={size}
+      height={size}
+      style={{
+        borderRadius: isAvatar ? '50%' : 0,
+      }}
+      preview={preview}
+      src={imgSrc}
+    />
   ) : (
-    <Avatar size={size} icon={<UserOutlined />} />
+    <UserOutlined
+      style={{
+        width: `${size}px`,
+        height: `${size}px`,
+        borderRadius: isAvatar ? '50%' : 0,
+      }}
+    />
   );
 };
 

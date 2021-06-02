@@ -1,7 +1,11 @@
 import React from 'react';
 import { Form, Input, Col, Row, Button } from 'antd';
 
-export default function Filter() {
+interface PropsType {
+  setVisible: React.Dispatch<React.SetStateAction<boolean>>;
+}
+
+export default function Filter({ setVisible }: PropsType) {
   const [form] = Form.useForm();
   return (
     <Form form={form} onFinish={(values) => console.log(values)}>
@@ -13,6 +17,11 @@ export default function Filter() {
         </Col>
       </Row>
       <Row gutter={[8, 0]} justify="end">
+        <Col>
+          <Button type="primary" onClick={() => setVisible(true)}>
+            New
+          </Button>
+        </Col>
         <Col>
           <Button
             type="primary"

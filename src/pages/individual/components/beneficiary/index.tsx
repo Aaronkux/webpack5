@@ -1,55 +1,57 @@
-import React from 'react';
-import { connect } from 'umi';
-import type { ClientsModelState, Loading } from 'umi';
-import type { BeneficiaryInfo } from '@/services/clients';
-import { Divider, Skeleton } from 'antd';
+import React, { useEffect } from 'react';
+import { Divider } from 'antd';
+import { useRequest, useRouteMatch } from 'umi';
 import Detail from './Detail';
 import NavBar from './NavBar';
+import { getIndividualBeneficiaries } from '@/services/clients';
 import type { ParamsObjType } from '@/hooks/useURLParams';
 import styles from './index.less';
 
 interface PropsType {
-  beneficiary: BeneficiaryInfo[];
-  beneficiaryDetail?: BeneficiaryInfo;
-  beneficiaryLoading: boolean;
-  beneficiaryDetailLoading: boolean;
   urlState: ParamsObjType;
   setURL: React.Dispatch<React.SetStateAction<ParamsObjType>>;
 }
 
-const Beneficiary = ({
-  beneficiary,
-  beneficiaryDetail,
-  beneficiaryLoading,
-  beneficiaryDetailLoading,
-  urlState,
-  setURL,
-}: PropsType) => {
+const Beneficiary = ({ urlState, setURL }: PropsType) => {
+  const match = useRouteMatch<{ id?: string }>();
+  const { id } = match.params;
+  const { data, loading, run: queryIndividualBeneficiaries } = useRequest(
+    getIndividualBeneficiaries,
+    {
+      manual: true,
+      onSuccess: (res) => {
+        setURL({ q: res?.data[0]?.id?.toString() });
+      },
+    },
+  );
+
+  const getBeneficiaries = () => {
+    if (id) {
+      queryIndividualBeneficiaries(id);
+    }
+  };
+
+  useEffect(() => {
+    getBeneficiaries();
+  }, [id]);
+
   return (
     <div className={styles.container}>
       <NavBar
+        data={data?.data}
+        loading={loading}
         urlState={urlState}
         setURL={setURL}
-        data={beneficiary}
-        loading={!beneficiaryLoading && beneficiary.length > 0}
+        getBeneficiaries={getBeneficiaries}
       />
       <Divider className={styles.divider} type="vertical" />
-      {beneficiary.length > 0 &&
-      !beneficiaryDetailLoading &&
-      beneficiaryDetail !== undefined ? (
-        <Detail setURL={setURL} data={beneficiaryDetail!} />
-      ) : (
-        <Skeleton paragraph={{ rows: 10 }} />
-      )}
+      <Detail
+        urlState={urlState}
+        setURL={setURL}
+        getBeneficiaries={getBeneficiaries}
+      />
     </div>
   );
 };
 
-export default connect(
-  ({ clients, loading }: { clients: ClientsModelState; loading: Loading }) => ({
-    beneficiary: clients.beneficiary,
-    beneficiaryDetail: clients.beneficiaryDetail,
-    beneficiaryLoading: loading.effects['clients/getIndividualBeneficiaries']!,
-    beneficiaryDetailLoading: loading.effects['clients/getBeneficiaryDetail']!,
-  }),
-)(React.memo(Beneficiary));
+export default React.memo(Beneficiary);

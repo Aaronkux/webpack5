@@ -45,19 +45,23 @@ export default async function generatePDF(
       name: {
         x: 124,
         y: 643,
-        text: orderDetail.clientInfo.name ?? '',
+        text: orderDetail.companyClient?.name
+          ? orderDetail.companyClient?.name
+          : orderDetail.individualClient?.name ?? '',
         font: fontType.boldFont,
       },
       address: {
         x: 124,
         y: 687,
-        text: orderDetail.clientInfo.address ?? '',
+        text: orderDetail.companyClient?.address
+          ? orderDetail.companyClient?.address
+          : orderDetail.individualClient?.address ?? '',
         font: fontType.normalFont,
       },
       adnOrAcn: {
         x: 586,
         y: 821,
-        text: orderDetail.clientInfo.abnOrAcn ?? '',
+        text: orderDetail.companyClient?.abnOrAcn ?? '',
         font: fontType.normalFont,
       },
       transNo: {
@@ -133,13 +137,17 @@ export default async function generatePDF(
       name: {
         x: 540,
         y: 1191,
-        text: orderDetail.clientInfo.name ?? '',
+        text: orderDetail.companyClient?.name
+          ? orderDetail.companyClient?.name
+          : orderDetail.individualClient?.name ?? '',
         font: fontType.boldFont,
       },
       address: {
         x: 540,
         y: 1249,
-        text: orderDetail.clientInfo.address ?? '',
+        text: orderDetail.companyClient?.address
+          ? orderDetail.companyClient?.address
+          : orderDetail.individualClient?.address ?? '',
         font: fontType.boldFont,
       },
     },

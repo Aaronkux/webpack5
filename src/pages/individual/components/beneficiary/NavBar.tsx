@@ -1,55 +1,37 @@
-import React, { useEffect, useState } from 'react';
-import { useDispatch, useRouteMatch } from 'umi';
-import type { BeneficiaryInfo } from '@/services/clients';
+import React, { useState } from 'react';
 import { Menu, Tag, Skeleton, Card } from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
+import type { BeneficiaryInfo } from '@/services/clients';
 import Create from './Create';
 import styles from './NavBar.less';
 import type { ParamsObjType } from '@/hooks/useURLParams';
 
 interface PropsType {
-  data: BeneficiaryInfo[];
-  loading: boolean;
   urlState: ParamsObjType;
   setURL: React.Dispatch<React.SetStateAction<ParamsObjType>>;
+  data?: BeneficiaryInfo[];
+  loading: boolean;
+  getBeneficiaries: ()=>void
 }
-const NavBar = ({ data, loading, urlState, setURL }: PropsType) => {
-  const dispatch = useDispatch();
-  const match = useRouteMatch<{ id?: string }>();
-  const { id } = match.params;
-  const selectedParam = urlState.q;
+const NavBar = ({ urlState, setURL, data, loading, getBeneficiaries }: PropsType) => {
   const [newVisible, setNewVisible] = useState(false);
-
-  useEffect(() => {
-    if (!urlState?.q && data[0]?.id) {
-      setURL({ q: data[0]?.id?.toString() });
-    }
-  }, [urlState, data]);
-
-  useEffect(() => {
-    if (id) {
-      dispatch({
-        type: 'clients/getIndividualBeneficiaries',
-        payload: { id },
-      });
-    }
-  }, [id]);
-  useEffect(() => {
-    if (selectedParam) {
-      dispatch({
-        type: 'clients/getBeneficiaryDetail',
-        payload: { id: selectedParam },
-      });
-    }
-  }, [selectedParam]);
+  // useEffect(() => {
+  //   if (selectedParam) {
+  //     dispatch({
+  //       type: 'clients/getBeneficiaryDetail',
+  //       payload: { id: selectedParam },
+  //     });
+  //   }
+  // }, [selectedParam]);
+  console.log(loading);
   return (
     <>
-      {loading ? (
-        <Menu selectedKeys={[selectedParam]} className={styles.subNav}>
+      {!loading ? (
+        <Menu selectedKeys={[urlState.q]} className={styles.subNav}>
           <div onClick={() => setNewVisible(true)} className={styles.plus}>
             <PlusOutlined />
           </div>
-          {data.map((item) => (
+          {data?.map((item) => (
             <Menu.Item
               onClick={() => {
                 setURL({ q: item.id });
@@ -87,6 +69,7 @@ const NavBar = ({ data, loading, urlState, setURL }: PropsType) => {
         </div>
       )}
       <Create
+        getBeneficiaries={getBeneficiaries}
         setURL={setURL}
         visible={newVisible}
         setNewVisible={setNewVisible}

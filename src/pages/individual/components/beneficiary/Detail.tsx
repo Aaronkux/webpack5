@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Form,
   Input,
@@ -12,17 +12,22 @@ import {
   InputNumber,
   Popconfirm,
   message,
+  Skeleton,
 } from 'antd';
-import { useDispatch, request } from 'umi';
+import { useRequest } from 'umi';
 import NormalText from '@/components/NormalText';
 import UploadPicture from '@/components/UploadPicture';
 import type { BeneficiaryInfo } from '@/services/clients';
-import type { NoDataResponse } from '@/services';
 import moment from 'moment';
 import type { Moment } from 'moment';
 import styles from './Detail.less';
 import type { ParamsObjType } from '@/hooks/useURLParams';
 import { createFormData } from '@/utils';
+import {
+  getBeneficiaryDetail,
+  updateBeneficiaryDetail,
+  deleteBeneficiary,
+} from '@/services/clients';
 
 const { Option } = Select;
 
@@ -31,8 +36,9 @@ const layout = {
   wrapperCol: { span: 19 },
 };
 interface PropsType {
-  data: BeneficiaryInfo;
   setURL: React.Dispatch<React.SetStateAction<ParamsObjType>>;
+  getBeneficiaries: () => void;
+  urlState: ParamsObjType;
 }
 
 type Merge<M, N> = Omit<M, Extract<keyof M, keyof N>> & N;
@@ -44,22 +50,59 @@ type FormBeneficiaryInfo = Merge<
   }
 >;
 
-const Detail = ({ data, setURL }: PropsType) => {
+const Detail = ({ setURL, urlState, getBeneficiaries }: PropsType) => {
+  const { data, loading, run } = useRequest(getBeneficiaryDetail, {
+    manual: true,
+  });
+
+  const queryBeneficiaryDetail = () => {
+    if (urlState.q) {
+      run(urlState.q);
+    }
+  };
+
+  const { loading: deleteLoading, run: deleteRecord } = useRequest(
+    deleteBeneficiary,
+    {
+      manual: true,
+      onSuccess: () => {
+        message.success('Delete Successfully!');
+        getBeneficiaries();
+      },
+    },
+  );
+
+  const deleteBeneficiaryQuery = () => {
+    if (data?.id) {
+      deleteRecord(data.id);
+    }
+  };
+
+  const { loading: savingLoading, run: saveRecord } = useRequest(
+    updateBeneficiaryDetail,
+    {
+      manual: true,
+      onSuccess: () => {
+        message.success('Update Successfully!');
+        setEditing(false);
+        queryBeneficiaryDetail();
+      },
+      onError: () => {
+        setEditing(false);
+      },
+    },
+  );
+
   const [form] = Form.useForm();
-  const dispatch = useDispatch();
   const [editing, setEditing] = useState(false);
-  const [savingLoading, setSavingLoading] = useState(false);
-  const [deleteLoading, setDeleteLoading] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
-  const [remitType, setRemitType] = useState(data.receiverType);
-  const [accountType, setAccountType] = useState(data.isTrustAccount ? 1 : 0);
+  const [remitType, setRemitType] = useState(false);
+  const [accountType, setAccountType] = useState(false);
   const id = data?.id;
 
   const onFinishHandler = async (values: FormBeneficiaryInfo) => {
-    setSavingLoading(true);
     if (!id) {
       message.error(`Can't Find Id Of The Receiver`);
-      setSavingLoading(false);
       setEditing(false);
       return;
     }
@@ -75,227 +118,112 @@ const Detail = ({ data, setURL }: PropsType) => {
         isTrustAccount: formatIsTrustAccount,
       },
     };
-    const res = await request<NoDataResponse>(`/api/receiver/${id}`, {
-      method: 'post',
-      body: createFormData(tempData),
-    });
-    setSavingLoading(false);
-    setEditing(false);
-    if (res.success) {
-      message.success('Update Successfully!');
-      dispatch({
-        type: 'clients/getBeneficiaryDetail',
-        payload: {
-          id,
-        },
-      });
-    }
+    saveRecord(id, createFormData(tempData));
   };
 
-  const onDeleteHandler = async () => {
-    setDeleteLoading(true);
-    if (!id) {
-      message.error(`Can't Find Id Of The Receiver`);
-      setDeleteLoading(false);
-      return;
-    }
-    const res = await request<NoDataResponse>(`/api/receiver/${id}`, {
-      method: 'delete',
-    });
-    setDeleteLoading(false);
-    if (res.success) {
-      message.success('Delete Successfully!');
-
-      if (id) {
-        await dispatch({
-          type: 'clients/getIndividualBeneficiaries',
-          payload: { id },
-        });
-        setURL({ q: undefined });
-      }
-    }
-  };
+  useEffect(() => {
+    queryBeneficiaryDetail();
+  }, [urlState.q]);
 
   return (
     <>
-      <div className={styles.content}>
-        <Form
-          {...layout}
-          className={styles.form}
-          form={form}
-          onFinish={onFinishHandler}
-        >
-          <div className={styles.titleAndButton}>
-            <h1 className={styles.title}>Beneficiary Information</h1>
-            <Row gutter={[16, 0]} justify="end">
-              {!editing && (
-                <Col>
-                  <Form.Item>
-                    <Popconfirm
-                      title="Are you sure to delete this receiver?"
-                      onConfirm={onDeleteHandler}
-                    >
-                      <Button loading={deleteLoading} danger>
-                        Delete
+      {!loading ? (
+        <>
+          <div className={styles.content}>
+            <Form
+              {...layout}
+              className={styles.form}
+              form={form}
+              onFinish={onFinishHandler}
+            >
+              <div className={styles.titleAndButton}>
+                <h1 className={styles.title}>Beneficiary Information</h1>
+                <Row gutter={[16, 0]} justify="end">
+                  {!editing && (
+                    <Col>
+                      <Form.Item>
+                        <Popconfirm
+                          title="Are you sure to delete this receiver?"
+                          onConfirm={deleteBeneficiaryQuery}
+                        >
+                          <Button loading={deleteLoading} danger>
+                            Delete
+                          </Button>
+                        </Popconfirm>
+                      </Form.Item>
+                    </Col>
+                  )}
+                  {editing && (
+                    <Col>
+                      <Form.Item>
+                        <Button
+                          loading={savingLoading}
+                          type="primary"
+                          htmlType="submit"
+                        >
+                          Save
+                        </Button>
+                      </Form.Item>
+                    </Col>
+                  )}
+                  <Col>
+                    {editing ? (
+                      <Button
+                        type="primary"
+                        onClick={() => setModalVisible(true)}
+                      >
+                        Cancel
                       </Button>
-                    </Popconfirm>
+                    ) : (
+                      <Button type="primary" onClick={() => setEditing(true)}>
+                        Edit
+                      </Button>
+                    )}
+                  </Col>
+                </Row>
+              </div>
+              <Divider />
+              <Row>
+                <Col xs={24} sm={24} md={24} lg={24} xl={12}>
+                  <Form.Item
+                    label="Type"
+                    name="receiverType"
+                    initialValue={remitType ? 1 : 0}
+                    required
+                    rules={[
+                      {
+                        required: true,
+                        message: 'Please Select Receiver Type',
+                      },
+                    ]}
+                  >
+                    {editing ? (
+                      <Select
+                        onChange={(value: string) => setRemitType(!!value)}
+                      >
+                        <Option value={0}>Remit to my personal account</Option>
+                        <Option value={1}>Remit to other's account</Option>
+                      </Select>
+                    ) : (
+                      <NormalText
+                        transform={(value) =>
+                          value
+                            ? 'Remit to my personal account'
+                            : `Remit to other's account`
+                        }
+                      />
+                    )}
                   </Form.Item>
                 </Col>
-              )}
-              {editing && (
-                <Col>
-                  <Form.Item>
-                    <Button
-                      loading={savingLoading}
-                      type="primary"
-                      htmlType="submit"
-                    >
-                      Save
-                    </Button>
-                  </Form.Item>
-                </Col>
-              )}
-              <Col>
-                {editing ? (
-                  <Button type="primary" onClick={() => setModalVisible(true)}>
-                    Cancel
-                  </Button>
-                ) : (
-                  <Button type="primary" onClick={() => setEditing(true)}>
-                    Edit
-                  </Button>
-                )}
-              </Col>
-            </Row>
-          </div>
-          <Divider />
-          <Row>
-            <Col xs={24} sm={24} md={24} lg={24} xl={12}>
-              <Form.Item
-                label="Type"
-                name="receiverType"
-                initialValue={data.receiverType ? 1 : 0}
-                required
-                rules={[
-                  { required: true, message: 'Please Select Receiver Type' },
-                ]}
-              >
-                {editing ? (
-                  <Select onChange={(value: string) => setRemitType(!!value)}>
-                    <Option value={0}>Remit to my personal account</Option>
-                    <Option value={1}>Remit to other's account</Option>
-                  </Select>
-                ) : (
-                  <NormalText
-                    transform={(value) =>
-                      value
-                        ? 'Remit to my personal account'
-                        : `Remit to other's account`
-                    }
-                  />
-                )}
-              </Form.Item>
-            </Col>
 
-            <Col xs={24} sm={24} md={24} lg={24} xl={12}>
-              <Form.Item
-                label="Bank Name"
-                name="bankName"
-                initialValue={data.bankName}
-                required
-                rules={[{ required: true, message: 'Please Enter Bank Name!' }]}
-              >
-                {editing ? <Input /> : <NormalText />}
-              </Form.Item>
-            </Col>
-            <Col xs={24} sm={24} md={24} lg={24} xl={12}>
-              <Form.Item
-                label="Account Name"
-                name="accountName"
-                initialValue={data.accountName}
-                required
-                rules={[
-                  { required: true, message: 'Please Enter Account Name' },
-                ]}
-              >
-                {editing ? <Input /> : <NormalText />}
-              </Form.Item>
-            </Col>
-            <Col xs={24} sm={24} md={24} lg={24} xl={12}>
-              <Form.Item
-                label="Account Number"
-                name="accountNumber"
-                initialValue={data.accountNumber}
-                required
-                rules={[
-                  {
-                    required: true,
-                    type: 'number',
-                    message: 'Please Enter Account Number',
-                  },
-                ]}
-              >
-                {editing ? (
-                  <InputNumber style={{ width: '100%' }} step="1" />
-                ) : (
-                  <NormalText />
-                )}
-              </Form.Item>
-            </Col>
-            <Col xs={24} sm={24} md={24} lg={24} xl={12}>
-              <Form.Item
-                label="BSB"
-                name="bsb"
-                initialValue={data.bsb}
-                required
-                rules={[
-                  {
-                    required: true,
-                    type: 'number',
-                    message: 'Please Enter BSB Number',
-                  },
-                ]}
-              >
-                {editing ? (
-                  <InputNumber style={{ width: '100%' }} step="1" />
-                ) : (
-                  <NormalText />
-                )}
-              </Form.Item>
-            </Col>
-            <Col xs={24} sm={24} md={24} lg={24} xl={12}>
-              <Form.Item
-                label="Branch Name"
-                name="branchName"
-                initialValue={data.branchName}
-                required
-                rules={[
-                  {
-                    required: true,
-                    message: 'Please Enter Branch Name',
-                  },
-                ]}
-              >
-                {editing ? <Input /> : <NormalText />}
-              </Form.Item>
-            </Col>
-            {remitType && (
-              <>
                 <Col xs={24} sm={24} md={24} lg={24} xl={12}>
                   <Form.Item
-                    label="Name"
-                    name="name"
-                    initialValue={
-                      data.individualClient
-                        ? data.individualClient?.name
-                        : data.companyClient?.name
-                    }
+                    label="Bank Name"
+                    name="bankName"
+                    initialValue={data?.bankName}
                     required
                     rules={[
-                      {
-                        required: true,
-                        message: 'Please Enter Receiver Name',
-                      },
+                      { required: true, message: 'Please Enter Bank Name!' },
                     ]}
                   >
                     {editing ? <Input /> : <NormalText />}
@@ -303,25 +231,12 @@ const Detail = ({ data, setURL }: PropsType) => {
                 </Col>
                 <Col xs={24} sm={24} md={24} lg={24} xl={12}>
                   <Form.Item
-                    label="DOB"
-                    name="DOB"
-                    initialValue={moment(data.DOB)}
-                    required
-                  >
-                    <DatePicker disabled={!editing} style={{ width: '100%' }} />
-                  </Form.Item>
-                </Col>
-                <Col xs={24} sm={24} md={24} lg={24} xl={12}>
-                  <Form.Item
-                    label="Address"
-                    name="address"
-                    initialValue={data.address}
+                    label="Account Name"
+                    name="accountName"
+                    initialValue={data?.accountName}
                     required
                     rules={[
-                      {
-                        required: true,
-                        message: 'Please Enter DOB',
-                      },
+                      { required: true, message: 'Please Enter Account Name' },
                     ]}
                   >
                     {editing ? <Input /> : <NormalText />}
@@ -329,47 +244,15 @@ const Detail = ({ data, setURL }: PropsType) => {
                 </Col>
                 <Col xs={24} sm={24} md={24} lg={24} xl={12}>
                   <Form.Item
-                    label="Suburb"
-                    name="suburb"
-                    initialValue={data.suburb}
-                    required
-                    rules={[
-                      {
-                        required: true,
-                        message: 'Please Enter Suburb',
-                      },
-                    ]}
-                  >
-                    {editing ? <Input /> : <NormalText />}
-                  </Form.Item>
-                </Col>
-                <Col xs={24} sm={24} md={24} lg={24} xl={12}>
-                  <Form.Item
-                    label="State"
-                    name="state"
-                    initialValue={data.state}
-                    required
-                    rules={[
-                      {
-                        required: true,
-                        message: 'Please Enter State',
-                      },
-                    ]}
-                  >
-                    {editing ? <Input /> : <NormalText />}
-                  </Form.Item>
-                </Col>
-                <Col xs={24} sm={24} md={24} lg={24} xl={12}>
-                  <Form.Item
-                    label="Postcode"
-                    name="postcode"
-                    initialValue={data.postcode}
+                    label="Account Number"
+                    name="accountNumber"
+                    initialValue={data?.accountNumber}
                     required
                     rules={[
                       {
                         required: true,
                         type: 'number',
-                        message: 'Please Enter Postcode',
+                        message: 'Please Enter Account Number',
                       },
                     ]}
                   >
@@ -382,101 +265,137 @@ const Detail = ({ data, setURL }: PropsType) => {
                 </Col>
                 <Col xs={24} sm={24} md={24} lg={24} xl={12}>
                   <Form.Item
-                    label="Country"
-                    name="country"
-                    initialValue={data.country}
+                    label="BSB"
+                    name="bsb"
+                    initialValue={data?.bsb}
                     required
                     rules={[
                       {
                         required: true,
-                        message: 'Please Enter Country',
+                        type: 'number',
+                        message: 'Please Enter BSB Number',
                       },
                     ]}
-                  >
-                    {editing ? <Input /> : <NormalText />}
-                  </Form.Item>
-                </Col>
-                <Col xs={24} sm={24} md={24} lg={24} xl={12}>
-                  <Form.Item
-                    label="Occupation"
-                    name="occupation"
-                    initialValue={data.occupation}
-                    required
-                    rules={[
-                      {
-                        required: true,
-                        message: 'Please Enter Occupation',
-                      },
-                    ]}
-                  >
-                    {editing ? <Input /> : <NormalText />}
-                  </Form.Item>
-                </Col>
-                <Col xs={24} sm={24} md={24} lg={24} xl={12}>
-                  <Form.Item
-                    label="Phone"
-                    name="phone"
-                    initialValue={data.phone}
-                  >
-                    {editing ? <Input /> : <NormalText />}
-                  </Form.Item>
-                </Col>
-                <Col xs={24} sm={24} md={24} lg={24} xl={12}>
-                  <Form.Item
-                    label="Relationship"
-                    name="relationship"
-                    initialValue={data.relationship}
-                  >
-                    {editing ? <Input /> : <NormalText />}
-                  </Form.Item>
-                </Col>
-                <Col xs={24} sm={24} md={24} lg={24} xl={12}>
-                  <Form.Item
-                    label="Account Type"
-                    name="isTrustAccount"
-                    initialValue={data.isTrustAccount ? 1 : 0}
                   >
                     {editing ? (
-                      <Select
-                        onChange={(value: 0 | 1) => setAccountType(value)}
-                      >
-                        <Option value={0}>Non-Trust Account</Option>
-                        <Option value={1}>Trust Account</Option>
-                      </Select>
+                      <InputNumber style={{ width: '100%' }} step="1" />
                     ) : (
-                      <NormalText
-                        transform={(value) =>
-                          value === 0 ? 'Non-Trust Account' : 'Trust Account'
-                        }
-                      />
+                      <NormalText />
                     )}
                   </Form.Item>
                 </Col>
-                {accountType === 1 ? (
+                <Col xs={24} sm={24} md={24} lg={24} xl={12}>
+                  <Form.Item
+                    label="Branch Name"
+                    name="branchName"
+                    initialValue={data?.branchName}
+                    required
+                    rules={[
+                      {
+                        required: true,
+                        message: 'Please Enter Branch Name',
+                      },
+                    ]}
+                  >
+                    {editing ? <Input /> : <NormalText />}
+                  </Form.Item>
+                </Col>
+                {remitType && (
                   <>
                     <Col xs={24} sm={24} md={24} lg={24} xl={12}>
                       <Form.Item
-                        label="Company Name"
-                        name="companyName"
-                        initialValue={data.trustAccountCompanyName}
+                        label="Name"
+                        name="name"
+                        initialValue={
+                          data?.individualClient
+                            ? data?.individualClient?.name
+                            : data?.companyClient?.name
+                        }
+                        required
+                        rules={[
+                          {
+                            required: true,
+                            message: 'Please Enter Receiver Name',
+                          },
+                        ]}
                       >
                         {editing ? <Input /> : <NormalText />}
                       </Form.Item>
                     </Col>
                     <Col xs={24} sm={24} md={24} lg={24} xl={12}>
                       <Form.Item
-                        label="Company Address"
-                        name="companyAddress"
-                        initialValue={data.trustAccountCompanyAddress}
+                        label="DOB"
+                        name="DOB"
+                        initialValue={moment(data?.DOB)}
+                        required
+                      >
+                        <DatePicker
+                          disabled={!editing}
+                          style={{ width: '100%' }}
+                        />
+                      </Form.Item>
+                    </Col>
+                    <Col xs={24} sm={24} md={24} lg={24} xl={12}>
+                      <Form.Item
+                        label="Address"
+                        name="address"
+                        initialValue={data?.address}
+                        required
+                        rules={[
+                          {
+                            required: true,
+                            message: 'Please Enter DOB',
+                          },
+                        ]}
                       >
                         {editing ? <Input /> : <NormalText />}
                       </Form.Item>
                     </Col>
                     <Col xs={24} sm={24} md={24} lg={24} xl={12}>
                       <Form.Item
-                        label="Company ABN"
-                        name="companyABN"
-                        initialValue={data.trustAccountCompanyABN}
+                        label="Suburb"
+                        name="suburb"
+                        initialValue={data?.suburb}
+                        required
+                        rules={[
+                          {
+                            required: true,
+                            message: 'Please Enter Suburb',
+                          },
+                        ]}
+                      >
+                        {editing ? <Input /> : <NormalText />}
+                      </Form.Item>
+                    </Col>
+                    <Col xs={24} sm={24} md={24} lg={24} xl={12}>
+                      <Form.Item
+                        label="State"
+                        name="state"
+                        initialValue={data?.state}
+                        required
+                        rules={[
+                          {
+                            required: true,
+                            message: 'Please Enter State',
+                          },
+                        ]}
+                      >
+                        {editing ? <Input /> : <NormalText />}
+                      </Form.Item>
+                    </Col>
+                    <Col xs={24} sm={24} md={24} lg={24} xl={12}>
+                      <Form.Item
+                        label="Postcode"
+                        name="postcode"
+                        initialValue={data?.postcode}
+                        required
+                        rules={[
+                          {
+                            required: true,
+                            type: 'number',
+                            message: 'Please Enter Postcode',
+                          },
+                        ]}
                       >
                         {editing ? (
                           <InputNumber style={{ width: '100%' }} step="1" />
@@ -485,87 +404,201 @@ const Detail = ({ data, setURL }: PropsType) => {
                         )}
                       </Form.Item>
                     </Col>
+                    <Col xs={24} sm={24} md={24} lg={24} xl={12}>
+                      <Form.Item
+                        label="Country"
+                        name="country"
+                        initialValue={data?.country}
+                        required
+                        rules={[
+                          {
+                            required: true,
+                            message: 'Please Enter Country',
+                          },
+                        ]}
+                      >
+                        {editing ? <Input /> : <NormalText />}
+                      </Form.Item>
+                    </Col>
+                    <Col xs={24} sm={24} md={24} lg={24} xl={12}>
+                      <Form.Item
+                        label="Occupation"
+                        name="occupation"
+                        initialValue={data?.occupation}
+                        required
+                        rules={[
+                          {
+                            required: true,
+                            message: 'Please Enter Occupation',
+                          },
+                        ]}
+                      >
+                        {editing ? <Input /> : <NormalText />}
+                      </Form.Item>
+                    </Col>
+                    <Col xs={24} sm={24} md={24} lg={24} xl={12}>
+                      <Form.Item
+                        label="Phone"
+                        name="phone"
+                        initialValue={data?.phone}
+                      >
+                        {editing ? <Input /> : <NormalText />}
+                      </Form.Item>
+                    </Col>
+                    <Col xs={24} sm={24} md={24} lg={24} xl={12}>
+                      <Form.Item
+                        label="Relationship"
+                        name="relationship"
+                        initialValue={data?.relationship}
+                      >
+                        {editing ? <Input /> : <NormalText />}
+                      </Form.Item>
+                    </Col>
+                    <Col xs={24} sm={24} md={24} lg={24} xl={12}>
+                      <Form.Item
+                        label="Account Type"
+                        name="isTrustAccount"
+                        initialValue={data?.isTrustAccount ? 1 : 0}
+                      >
+                        {editing ? (
+                          <Select
+                            onChange={(value: 0 | 1) => setAccountType(!!value)}
+                          >
+                            <Option value={0}>Non-Trust Account</Option>
+                            <Option value={1}>Trust Account</Option>
+                          </Select>
+                        ) : (
+                          <NormalText
+                            transform={(value) =>
+                              value === 0
+                                ? 'Non-Trust Account'
+                                : 'Trust Account'
+                            }
+                          />
+                        )}
+                      </Form.Item>
+                    </Col>
+                    {accountType ? (
+                      <>
+                        <Col xs={24} sm={24} md={24} lg={24} xl={12}>
+                          <Form.Item
+                            label="Company Name"
+                            name="companyName"
+                            initialValue={data?.trustAccountCompanyName}
+                          >
+                            {editing ? <Input /> : <NormalText />}
+                          </Form.Item>
+                        </Col>
+                        <Col xs={24} sm={24} md={24} lg={24} xl={12}>
+                          <Form.Item
+                            label="Company Address"
+                            name="companyAddress"
+                            initialValue={data?.trustAccountCompanyAddress}
+                          >
+                            {editing ? <Input /> : <NormalText />}
+                          </Form.Item>
+                        </Col>
+                        <Col xs={24} sm={24} md={24} lg={24} xl={12}>
+                          <Form.Item
+                            label="Company ABN"
+                            name="companyABN"
+                            initialValue={data?.trustAccountCompanyABN}
+                          >
+                            {editing ? (
+                              <InputNumber style={{ width: '100%' }} step="1" />
+                            ) : (
+                              <NormalText />
+                            )}
+                          </Form.Item>
+                        </Col>
+                      </>
+                    ) : (
+                      <Col xs={24} sm={24} md={24} lg={24} xl={12}></Col>
+                    )}
+                    <Col xs={24} sm={24} md={24} lg={24} xl={12}>
+                      <Form.Item
+                        label="ID Front"
+                        name="idFront"
+                        initialValue={data?.idFront}
+                      >
+                        <UploadPicture disabled={!editing} />
+                      </Form.Item>
+                    </Col>
+                    <Col xs={24} sm={24} md={24} lg={24} xl={12}>
+                      <Form.Item
+                        label="ID Back"
+                        name="idBack"
+                        initialValue={data?.idBack}
+                      >
+                        <UploadPicture disabled={!editing} />
+                      </Form.Item>
+                    </Col>
                   </>
-                ) : (
-                  <Col xs={24} sm={24} md={24} lg={24} xl={12}></Col>
                 )}
-                <Col xs={24} sm={24} md={24} lg={24} xl={12}>
-                  <Form.Item
-                    label="ID Front"
-                    name="idFront"
-                    initialValue={data.idFront}
-                  >
-                    <UploadPicture disabled={!editing} />
-                  </Form.Item>
-                </Col>
-                <Col xs={24} sm={24} md={24} lg={24} xl={12}>
-                  <Form.Item
-                    label="ID Back"
-                    name="idBack"
-                    initialValue={data.idBack}
-                  >
-                    <UploadPicture disabled={!editing} />
-                  </Form.Item>
-                </Col>
-              </>
-            )}
-          </Row>
-          <Row gutter={[16, 0]} justify="end">
-            {!editing && (
-              <Col>
-                <Form.Item>
-                  <Popconfirm
-                    title="Are you sure to delete this receiver?"
-                    onConfirm={onDeleteHandler}
-                  >
-                    <Button loading={deleteLoading} danger>
-                      Delete
+              </Row>
+              <Row gutter={[16, 0]} justify="end">
+                {!editing && (
+                  <Col>
+                    <Form.Item>
+                      <Popconfirm
+                        title="Are you sure to delete this receiver?"
+                        onConfirm={deleteBeneficiaryQuery}
+                      >
+                        <Button loading={deleteLoading} danger>
+                          Delete
+                        </Button>
+                      </Popconfirm>
+                    </Form.Item>
+                  </Col>
+                )}
+                {editing && (
+                  <Col>
+                    <Form.Item>
+                      <Button
+                        loading={savingLoading}
+                        type="primary"
+                        htmlType="submit"
+                      >
+                        Save
+                      </Button>
+                    </Form.Item>
+                  </Col>
+                )}
+                <Col>
+                  {editing ? (
+                    <Button
+                      type="primary"
+                      onClick={() => setModalVisible(true)}
+                    >
+                      Cancel
                     </Button>
-                  </Popconfirm>
-                </Form.Item>
-              </Col>
-            )}
-            {editing && (
-              <Col>
-                <Form.Item>
-                  <Button
-                    loading={savingLoading}
-                    type="primary"
-                    htmlType="submit"
-                  >
-                    Save
-                  </Button>
-                </Form.Item>
-              </Col>
-            )}
-            <Col>
-              {editing ? (
-                <Button type="primary" onClick={() => setModalVisible(true)}>
-                  Cancel
-                </Button>
-              ) : (
-                <Button type="primary" onClick={() => setEditing(true)}>
-                  Edit
-                </Button>
-              )}
-            </Col>
-          </Row>
-        </Form>
-      </div>
-      <Modal
-        centered
-        title="Unsaved confirm"
-        visible={modalVisible}
-        onOk={() => {
-          form.resetFields();
-          setEditing(false);
-          setModalVisible(false);
-          setRemitType(data.receiverType);
-        }}
-        onCancel={() => setModalVisible(false)}
-      >
-        <p>All unsaved changes will be discharged.</p>
-      </Modal>
+                  ) : (
+                    <Button type="primary" onClick={() => setEditing(true)}>
+                      Edit
+                    </Button>
+                  )}
+                </Col>
+              </Row>
+            </Form>
+          </div>
+          <Modal
+            centered
+            title="Unsaved confirm"
+            visible={modalVisible}
+            onOk={() => {
+              form.resetFields();
+              setEditing(false);
+              setModalVisible(false);
+              setRemitType(data?.receiverType ?? false);
+            }}
+            onCancel={() => setModalVisible(false)}
+          >
+            <p>All unsaved changes will be discharged.</p>
+          </Modal>
+        </>
+      ) : (
+        <Skeleton paragraph={{ rows: 10 }} />
+      )}
     </>
   );
 };
