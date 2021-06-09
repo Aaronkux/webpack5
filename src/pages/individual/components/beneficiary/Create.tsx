@@ -210,7 +210,7 @@ export default function Create({
                   optionFilterProp="children"
                 >
                   {searchReceiversData
-                    ?.filter((item) => !ids.includes(item.id))
+                    ?.filter((item) => !ids.includes(item.id) && !item.receiverType)
                     .map((val) => (
                       <Option value={val.id}>{val.name}</Option>
                     ))}

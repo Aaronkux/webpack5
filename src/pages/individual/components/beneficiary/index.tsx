@@ -30,7 +30,7 @@ const Beneficiary = ({ urlState, setURL }: PropsType) => {
         if (temp?.data) {
           temp.data = res?.data?.data.reverse() ?? [];
         }
-        return temp
+        return temp;
       },
     },
   );
@@ -73,13 +73,18 @@ const Beneficiary = ({ urlState, setURL }: PropsType) => {
       <Divider className={styles.divider} type="vertical" />
       {detailLoading ? (
         <Skeleton paragraph={{ rows: 10 }} />
-      ) : (
-        detailData ? 
+      ) : detailData ? (
         <Detail
           data={detailData}
+          clientId={id}
+          allBeneficiaryIds={data?.data.map(val=>val.id) ?? []}
           queryBeneficiaryDetail={queryBeneficiaryDetail}
           getBeneficiaries={getBeneficiaries}
-        /> : <div className={styles.emptyBeneficiaryContent}>You Haven't Create Any Beneficiary Yet</div>
+        />
+      ) : (
+        <div className={styles.emptyBeneficiaryContent}>
+          You Haven't Create Any Beneficiary Yet
+        </div>
       )}
     </div>
   );

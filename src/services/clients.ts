@@ -207,8 +207,3 @@ export function addBeneficiary(data: FormData) {
     body: data,
   });
 }
-export function deleteBeneficiary(id: string) {
-  return request<NoDataResponse>(`/api/receiver/${id}`, {
-    method: 'delete',
-  });
-}

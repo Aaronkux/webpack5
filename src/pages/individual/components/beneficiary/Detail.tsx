@@ -21,7 +21,10 @@ import moment from 'moment';
 import type { Moment } from 'moment';
 import styles from './Detail.less';
 import { createFormData, imageFileProcesser } from '@/utils';
-import { updateBeneficiaryDetail, deleteBeneficiary } from '@/services/clients';
+import {
+  updateBeneficiaryDetail,
+  updateIndividualClientsDetail,
+} from '@/services/clients';
 
 const { Option } = Select;
 
@@ -32,6 +35,8 @@ const layout = {
 interface PropsType {
   getBeneficiaries: () => void;
   data?: BeneficiaryInfo;
+  allBeneficiaryIds: string[];
+  clientId?: string;
   queryBeneficiaryDetail: () => void;
 }
 
@@ -48,10 +53,12 @@ type FormBeneficiaryInfo = Merge<
 const Detail = ({
   getBeneficiaries,
   data,
+  allBeneficiaryIds,
+  clientId,
   queryBeneficiaryDetail,
 }: PropsType) => {
   const { loading: deleteLoading, run: deleteRecord } = useRequest(
-    deleteBeneficiary,
+    updateIndividualClientsDetail,
     {
       manual: true,
       onSuccess: () => {
@@ -62,8 +69,16 @@ const Detail = ({
   );
 
   const deleteBeneficiaryQuery = () => {
-    if (data?.id) {
-      deleteRecord(data.id);
+    if (data?.id && clientId) {
+      let idsSet = new Set(allBeneficiaryIds);
+      idsSet.delete(data.id);
+      const resArr = Array.from(idsSet);
+      deleteRecord(
+        clientId,
+        createFormData({
+          receiver: JSON.stringify(resArr),
+        }),
+      );
     }
   };
 
