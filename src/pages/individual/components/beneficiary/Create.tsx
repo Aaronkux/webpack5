@@ -46,6 +46,7 @@ type FormIndividualReceiverInfo = Merge<
     method: 0 | 1;
     idFront: File | undefined | string;
     idBack: File | undefined | string;
+    beneficiary: any
   }
 >;
 
@@ -120,14 +121,15 @@ export default function Create({
       idBack,
       DOB,
       receiverType,
+      beneficiary,
       ...rest
     } = values;
     // add existing beneficiary
     if (method === 1) {
       const tempData = {
         receiver: data
-          ? JSON.stringify(data.map((item) => item.id))
-          : JSON.stringify([]),
+          ? JSON.stringify([...data.map((item) => item.id), beneficiary])
+          : JSON.stringify([beneficiary]),
       };
       addExistingBeneficiary(id, createFormData(tempData));
     } else {
