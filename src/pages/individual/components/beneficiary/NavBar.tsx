@@ -15,19 +15,10 @@ interface PropsType {
 }
 const NavBar = ({ urlState, setURL, data, loading, getBeneficiaries }: PropsType) => {
   const [newVisible, setNewVisible] = useState(false);
-  // useEffect(() => {
-  //   if (selectedParam) {
-  //     dispatch({
-  //       type: 'clients/getBeneficiaryDetail',
-  //       payload: { id: selectedParam },
-  //     });
-  //   }
-  // }, [selectedParam]);
-  console.log(loading);
   return (
     <>
       {!loading ? (
-        <Menu selectedKeys={[urlState.q]} className={styles.subNav}>
+        <Menu selectedKeys={[urlState.q?.toString()]} className={styles.subNav}>
           <div onClick={() => setNewVisible(true)} className={styles.plus}>
             <PlusOutlined />
           </div>
@@ -73,6 +64,7 @@ const NavBar = ({ urlState, setURL, data, loading, getBeneficiaries }: PropsType
         setURL={setURL}
         visible={newVisible}
         setNewVisible={setNewVisible}
+        data={data}
       />
     </>
   );

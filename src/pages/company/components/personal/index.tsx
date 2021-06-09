@@ -56,16 +56,6 @@ type FormClientInfo = Merge<
   }
 >;
 
-const imageFileProcesser = (file: any) => {
-  if (isBlob(file)) {
-    return file;
-  } else if (file?.status === 'removed') {
-    return null;
-  } else {
-    return undefined;
-  }
-};
-
 const Personal = ({ companyClientDetail, loading }: PropsType) => {
   const [form] = Form.useForm();
   const match = useRouteMatch<{ id?: string }>();

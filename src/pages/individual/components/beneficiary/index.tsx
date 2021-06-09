@@ -1,9 +1,12 @@
 import React, { useEffect } from 'react';
-import { Divider } from 'antd';
+import { Divider, Skeleton } from 'antd';
 import { useRequest, useRouteMatch } from 'umi';
 import Detail from './Detail';
 import NavBar from './NavBar';
-import { getIndividualBeneficiaries } from '@/services/clients';
+import {
+  getIndividualBeneficiaries,
+  getBeneficiaryDetail,
+} from '@/services/clients';
 import type { ParamsObjType } from '@/hooks/useURLParams';
 import styles from './index.less';
 
@@ -22,6 +25,13 @@ const Beneficiary = ({ urlState, setURL }: PropsType) => {
       onSuccess: (res) => {
         setURL({ q: res?.data[0]?.id?.toString() });
       },
+      formatResult: (res) => {
+        let temp = res.data;
+        if (temp?.data) {
+          temp.data = res?.data?.data.reverse() ?? [];
+        }
+        return temp
+      },
     },
   );
 
@@ -31,10 +41,26 @@ const Beneficiary = ({ urlState, setURL }: PropsType) => {
     }
   };
 
+  const { data: detailData, loading: detailLoading, run } = useRequest(
+    getBeneficiaryDetail,
+    {
+      manual: true,
+    },
+  );
+
+  const queryBeneficiaryDetail = () => {
+    if (urlState.q) {
+      run(urlState.q);
+    }
+  };
+
+  useEffect(() => {
+    queryBeneficiaryDetail();
+  }, [urlState.q]);
+
   useEffect(() => {
     getBeneficiaries();
   }, [id]);
-
   return (
     <div className={styles.container}>
       <NavBar
@@ -45,11 +71,16 @@ const Beneficiary = ({ urlState, setURL }: PropsType) => {
         getBeneficiaries={getBeneficiaries}
       />
       <Divider className={styles.divider} type="vertical" />
-      <Detail
-        urlState={urlState}
-        setURL={setURL}
-        getBeneficiaries={getBeneficiaries}
-      />
+      {detailLoading ? (
+        <Skeleton paragraph={{ rows: 10 }} />
+      ) : (
+        detailData ? 
+        <Detail
+          data={detailData}
+          queryBeneficiaryDetail={queryBeneficiaryDetail}
+          getBeneficiaries={getBeneficiaries}
+        /> : <div className={styles.emptyBeneficiaryContent}>You Haven't Create Any Beneficiary Yet</div>
+      )}
     </div>
   );
 };

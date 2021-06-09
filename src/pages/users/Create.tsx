@@ -5,7 +5,7 @@ import { EyeInvisibleOutlined, EyeTwoTone } from '@ant-design/icons';
 import { CloseCircleOutlined } from '@ant-design/icons';
 import { addUser } from '@/services/users';
 import type { UserInfo } from '@/services/users';
-import { createFormData, isBlob } from '@/utils';
+import { createFormData, imageFileProcesser } from '@/utils';
 import AuthAndEditAvatar from '@/components/AuthAndEditAvatar';
 import styles from './Create.less';
 import { CloseOutlined, CheckOutlined } from '@ant-design/icons';
@@ -15,14 +15,6 @@ interface PropsType {
   setNewVisible: React.Dispatch<React.SetStateAction<boolean>>;
   fetchUsers: () => void;
 }
-
-const imageFileProcesser = (file: any) => {
-  if (isBlob(file)) {
-    return file;
-  } else {
-    return undefined;
-  }
-};
 
 type FormSaleInfo = Partial<UserInfo>;
 
@@ -38,6 +30,7 @@ export default function Create({
 }: PropsType) {
   const [form] = Form.useForm();
   const [orderChecked, setOrderChecked] = useState(false);
+  const [adminChecked, setAdminChecked] = useState(false);
   const { loading: adding, run } = useRequest(addUser, {
     manual: true,
     onSuccess: () => {
@@ -77,6 +70,10 @@ export default function Create({
         checkClientComfirmed: true,
         checkFundPaid: true,
       });
+      setOrderChecked(true)
+      setAdminChecked(true);
+    } else {
+      setAdminChecked(false);
     }
     if (orderPermission === false) {
       form.setFieldsValue({
@@ -199,6 +196,7 @@ export default function Create({
               initialValue={false}
             >
               <Switch
+                disabled={adminChecked}
                 checkedChildren={<CheckOutlined />}
                 unCheckedChildren={<CloseOutlined />}
               />
@@ -212,6 +210,7 @@ export default function Create({
               initialValue={false}
             >
               <Switch
+                disabled={adminChecked}
                 checkedChildren={<CheckOutlined />}
                 unCheckedChildren={<CloseOutlined />}
               />
@@ -225,6 +224,7 @@ export default function Create({
               initialValue={false}
             >
               <Switch
+                disabled={adminChecked}
                 checkedChildren={<CheckOutlined />}
                 unCheckedChildren={<CloseOutlined />}
               />
@@ -238,6 +238,7 @@ export default function Create({
               initialValue={false}
             >
               <Switch
+                disabled={adminChecked}
                 onChange={(checked: boolean) => setOrderChecked(checked)}
                 checkedChildren={<CheckOutlined />}
                 unCheckedChildren={<CloseOutlined />}
@@ -258,7 +259,7 @@ export default function Create({
               <Switch
                 checkedChildren={<CheckOutlined />}
                 unCheckedChildren={<CloseOutlined />}
-                disabled={!orderChecked}
+                disabled={!orderChecked || adminChecked}
               />
             </Form.Item>
           </Col>
@@ -272,7 +273,7 @@ export default function Create({
               <Switch
                 checkedChildren={<CheckOutlined />}
                 unCheckedChildren={<CloseOutlined />}
-                disabled={!orderChecked}
+                disabled={!orderChecked || adminChecked}
               />
             </Form.Item>
           </Col>
@@ -286,7 +287,7 @@ export default function Create({
               <Switch
                 checkedChildren={<CheckOutlined />}
                 unCheckedChildren={<CloseOutlined />}
-                disabled={!orderChecked}
+                disabled={!orderChecked || adminChecked}
               />
             </Form.Item>
           </Col>
@@ -300,7 +301,7 @@ export default function Create({
               <Switch
                 checkedChildren={<CheckOutlined />}
                 unCheckedChildren={<CloseOutlined />}
-                disabled={!orderChecked}
+                disabled={!orderChecked || adminChecked}
               />
             </Form.Item>
           </Col>
@@ -314,7 +315,7 @@ export default function Create({
               <Switch
                 checkedChildren={<CheckOutlined />}
                 unCheckedChildren={<CloseOutlined />}
-                disabled={!orderChecked}
+                disabled={!orderChecked || adminChecked}
               />
             </Form.Item>
           </Col>

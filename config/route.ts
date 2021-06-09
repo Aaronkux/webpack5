@@ -17,6 +17,7 @@ export const routes: IBestAFSRoute[] = [
         component: '@/pages/sales',
         name: 'Sales',
         icon: 'UserOutlined',
+        access: 'salesPermission'
       },
       {
         path: '/order',

@@ -28,7 +28,7 @@ export interface IndividualClientInfo {
   faceImage?: string;
   faceTest?: string;
   purpose?: string;
-  // compliance: string;
+  receiver: BeneficiaryInfo[]
   unsubscribe?: boolean;
   id1ExpireDate?: string;
   id2ExpireDate?: string;
@@ -42,6 +42,7 @@ export type IndividualClientsDetailResponse = ResponseType<IndividualClientInfo>
 
 export interface CompanyClientInfo {
   id: string;
+  createdDate?: string;
   name: string;
   email: string;
   ABN_ACN_ARBN: string;
@@ -69,7 +70,6 @@ export interface CompanyClientInfo {
   accountHolderResidentialAddress?: string;
   person1ExpireDate?: string;
   person2ExpireDate?: string;
-  createdDate?: string;
 }
 export type CompanyClientsResponse = ResponseType<{
   data: CompanyClientInfo[];
@@ -79,16 +79,17 @@ export type CompanyClientsDetailResponse = ResponseType<CompanyClientInfo>;
 
 export interface BeneficiaryInfo {
   id: string;
-  companyClient?: { id: string; name: string };
-  individualClient?: { id: string; name: string };
-  receiverType: boolean;
+  createdDate: string;
+  individualClient?: string;
+  companyClient?: string;
   name?: string;
   DOB?: string;
+  receiverType: boolean;
   address?: string;
   suburb?: string;
   state?: string;
-  postcode?: string;
   country?: string;
+  postcode?: string;
   phone?: string;
   occupation?: string;
   relationship?: string;
@@ -165,6 +166,15 @@ export function getCompanyClientsDetail(id: string) {
   });
 }
 
+export function getSearchBeneficiaries(name: string) {
+  return request<BeneficiaryResponse>(
+    `/api/receivers?limit=10&offset=0&name=${name}`,
+    {
+      method: 'get',
+    },
+  );
+}
+
 export function getIndividualBeneficiaries(id: string) {
   return request<BeneficiaryResponse>(
     `/api/individualclient/${id}/receivers?limit=5&offset=0`,
@@ -173,6 +183,7 @@ export function getIndividualBeneficiaries(id: string) {
     },
   );
 }
+
 export function getCompanyBeneficiaries(id: string) {
   return request<BeneficiaryResponse>(`/api/companyclient/${id}/receivers`, {
     method: 'get',
@@ -186,7 +197,7 @@ export function getBeneficiaryDetail(id: string) {
 }
 export function updateBeneficiaryDetail(id: string, data: FormData) {
   return request<NoDataResponse>(`/api/receiver/${id}`, {
-    method: 'post',
+    method: 'put',
     body: data,
   });
 }

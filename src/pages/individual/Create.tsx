@@ -19,7 +19,7 @@ import { CloseCircleOutlined } from '@ant-design/icons';
 import { addIndividualClient } from '@/services/clients';
 import type { IndividualClientInfo } from '@/services/clients';
 import type { Moment } from 'moment';
-import { createFormData, isBlob, imageFileProcesser } from '@/utils';
+import { createFormData, imageFileProcesser } from '@/utils';
 import styles from './Create.less';
 
 const { Option } = Select;

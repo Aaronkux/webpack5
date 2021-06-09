@@ -20,16 +20,8 @@ import NormalText from '@/components/NormalText';
 import AuthAndEditAvatar from '@/components/AuthAndEditAvatar';
 import type { UserInfo } from '@/services/users';
 import { updateUser, getUserDetail } from '@/services/users';
-import { createFormData, isBlob } from '@/utils';
+import { createFormData, imageFileProcesser } from '@/utils';
 import styles from './Detail.less';
-
-const imageFileProcesser = (file: any) => {
-  if (isBlob(file)) {
-    return file;
-  } else {
-    return undefined;
-  }
-};
 
 type FormSaleInfo = Partial<UserInfo>;
 
@@ -50,6 +42,9 @@ const Detail = () => {
       form.resetFields();
       if (data?.orderPermission) {
         setOrderChecked(data?.orderPermission);
+      }
+      if (data?.isAdmin) {
+        setAdminChecked(data.isAdmin);
       }
       setLoading(false);
     },
@@ -74,6 +69,7 @@ const Detail = () => {
   const [orderChecked, setOrderChecked] = useState(
     data?.orderPermission ?? false,
   );
+  const [adminChecked, setAdminChecked] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
 
   const finishHandler = async (values: FormSaleInfo) => {
@@ -105,7 +101,10 @@ const Detail = () => {
         checkClientComfirmed: true,
         checkFundPaid: true,
       });
-      setOrderChecked(true);
+      setOrderChecked(true)
+      setAdminChecked(true);
+    } else {
+      setAdminChecked(false);
     }
     if (orderPermission === false) {
       form.setFieldsValue({
@@ -235,7 +234,7 @@ const Detail = () => {
                 <Switch
                   checkedChildren={<CheckOutlined />}
                   unCheckedChildren={<CloseOutlined />}
-                  disabled={!editing}
+                  disabled={!editing || adminChecked}
                 />
               </Form.Item>
             </Col>
@@ -249,7 +248,7 @@ const Detail = () => {
                 <Switch
                   checkedChildren={<CheckOutlined />}
                   unCheckedChildren={<CloseOutlined />}
-                  disabled={!editing}
+                  disabled={!editing || adminChecked}
                 />
               </Form.Item>
             </Col>
@@ -263,7 +262,7 @@ const Detail = () => {
                 <Switch
                   checkedChildren={<CheckOutlined />}
                   unCheckedChildren={<CloseOutlined />}
-                  disabled={!editing}
+                  disabled={!editing || adminChecked}
                 />
               </Form.Item>
             </Col>
@@ -278,7 +277,7 @@ const Detail = () => {
                   onChange={(checked: boolean) => setOrderChecked(checked)}
                   checkedChildren={<CheckOutlined />}
                   unCheckedChildren={<CloseOutlined />}
-                  disabled={!editing}
+                  disabled={!editing || adminChecked}
                 />
               </Form.Item>
             </Col>
@@ -296,7 +295,7 @@ const Detail = () => {
                 <Switch
                   checkedChildren={<CheckOutlined />}
                   unCheckedChildren={<CloseOutlined />}
-                  disabled={!editing || !orderChecked}
+                  disabled={!editing || !orderChecked || adminChecked}
                 />
               </Form.Item>
             </Col>
@@ -310,7 +309,7 @@ const Detail = () => {
                 <Switch
                   checkedChildren={<CheckOutlined />}
                   unCheckedChildren={<CloseOutlined />}
-                  disabled={!editing || !orderChecked}
+                  disabled={!editing || !orderChecked || adminChecked}
                 />
               </Form.Item>
             </Col>
@@ -324,7 +323,7 @@ const Detail = () => {
                 <Switch
                   checkedChildren={<CheckOutlined />}
                   unCheckedChildren={<CloseOutlined />}
-                  disabled={!editing || !orderChecked}
+                  disabled={!editing || !orderChecked || adminChecked}
                 />
               </Form.Item>
             </Col>
@@ -338,7 +337,7 @@ const Detail = () => {
                 <Switch
                   checkedChildren={<CheckOutlined />}
                   unCheckedChildren={<CloseOutlined />}
-                  disabled={!editing || !orderChecked}
+                  disabled={!editing || !orderChecked || adminChecked}
                 />
               </Form.Item>
             </Col>
@@ -352,7 +351,7 @@ const Detail = () => {
                 <Switch
                   checkedChildren={<CheckOutlined />}
                   unCheckedChildren={<CloseOutlined />}
-                  disabled={!editing || !orderChecked}
+                  disabled={!editing || !orderChecked || adminChecked}
                 />
               </Form.Item>
             </Col>

@@ -193,11 +193,11 @@ export function isBlob(file: any) {
 }
 
 export function createFormData(data: {
-  [props: string]: string | boolean | number | File;
+  [props: string]: string | boolean | number | File | undefined;
 }) {
   let formdata = new FormData();
   for (let [key, value] of Object.entries(data)) {
-    if (value === undefined) continue;
+    if (value === undefined || value === null) continue;
     if (typeof value === 'number' || typeof value === 'boolean') {
       formdata.append(key, value.toString());
       continue;
@@ -207,10 +207,12 @@ export function createFormData(data: {
   return formdata;
 }
 
-export const imageFileProcesser = (file: any) => {
+export function imageFileProcesser(file: any) {
   if (isBlob(file)) {
     return file;
+  } else if (file?.status === 'removed') {
+    return '';
   } else {
     return undefined;
   }
-};
+}

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { request, useDispatch, useRouteMatch, useRequest } from 'umi';
+import { useRouteMatch, useRequest } from 'umi';
 import {
   Modal,
   Form,
@@ -13,12 +13,17 @@ import {
   DatePicker,
   message,
 } from 'antd';
-import type {Moment} from 'moment'
-import {addBeneficiary} from '@/services/clients'
-import type {BeneficiaryInfo} from '@/services/clients'
+import type { Moment } from 'moment';
+import {
+  addBeneficiary,
+  updateIndividualClientsDetail,
+  getSearchBeneficiaries,
+} from '@/services/clients';
+import type { BeneficiaryInfo } from '@/services/clients';
 import { CloseCircleOutlined } from '@ant-design/icons';
 import UploadPicture from '@/components/UploadPicture';
 import type { ParamsObjType } from '@/hooks/useURLParams';
+import { imageFileProcesser, createFormData } from '@/utils/index';
 import styles from './Create.less';
 
 const { Option } = Select;
@@ -28,6 +33,7 @@ interface PropsType {
   setNewVisible: React.Dispatch<React.SetStateAction<boolean>>;
   setURL: React.Dispatch<React.SetStateAction<ParamsObjType>>;
   getBeneficiaries: () => void;
+  data: BeneficiaryInfo[] | undefined;
 }
 
 type Merge<M, N> = Omit<M, Extract<keyof M, keyof N>> & N;
@@ -35,31 +41,40 @@ type Merge<M, N> = Omit<M, Extract<keyof M, keyof N>> & N;
 type FormIndividualReceiverInfo = Merge<
   Partial<BeneficiaryInfo>,
   {
-    DOB: Moment;
-    clientId: string
+    DOB: Moment | undefined;
+    idExpireDate: Moment | undefined;
+    method: 0 | 1;
+    idFront: File | undefined | string;
+    idBack: File | undefined | string;
   }
 >;
-
 
 const layout = {
   labelCol: { span: 6 },
   wrapperCol: { span: 16 },
 };
 
-export default function Create({ setURL, visible, setNewVisible, getBeneficiaries }: PropsType) {
-  const dispatch = useDispatch();
+export default function Create({
+  visible,
+  setNewVisible,
+  getBeneficiaries,
+  data,
+}: PropsType) {
   const [method, setMethod] = useState(0);
-  const [remitType, setRemitType] = useState(0);
+  const [remitType, setRemitType] = useState(1);
   const [accountType, setAccountType] = useState(0);
   const [form] = Form.useForm();
   const match = useRouteMatch<{ id?: string }>();
-  const clientTypeMatch = useRouteMatch<{ type?: string }>('/clients/:type');
   const { id } = match.params;
+  const ids = data?.map((item) => item.id) ?? [];
 
-  const onCancelHandler = ()=> {
+  const onCancelHandler = () => {
     setNewVisible(false);
-      form.resetFields();
-  }
+    setMethod(0);
+    setRemitType(1);
+    setAccountType(0);
+    form.resetFields();
+  };
 
   const { loading: adding, run } = useRequest(addBeneficiary, {
     manual: true,
@@ -70,29 +85,64 @@ export default function Create({ setURL, visible, setNewVisible, getBeneficiarie
     },
   });
 
+  const {
+    loading: addExistingLoading,
+    run: addExistingBeneficiary,
+  } = useRequest(updateIndividualClientsDetail, {
+    manual: true,
+    onSuccess: () => {
+      message.success('Add Successfully');
+      getBeneficiaries();
+      onCancelHandler();
+    },
+  });
+
+  //working on this
+  const {
+    data: searchReceiversData,
+    loading: receiversLoading,
+    run: searchReceivers,
+  } = useRequest(getSearchBeneficiaries, {
+    manual: true,
+    debounceInterval: 500,
+    formatResult: (res) => res.data?.data,
+  });
 
   const onFinishHandler = async (values: FormIndividualReceiverInfo) => {
-    const clientType = clientTypeMatch?.params.type;
-    if (!clientType || !id) {
+    if (!id) {
       message.error('Error URL PATH!');
       return;
     }
-    const res = await request('/api/addBeneficiary', {
-      method: 'post',
-      data: values,
-    });
-    if (res.success) {
-      message.success('Adding Successfully!');
-      setNewVisible(false);
-      form.resetFields();
-
-      if (id) {
-        await dispatch({
-          type: 'clients/getIndividualBeneficiaries',
-          payload: { id },
-        });
-        setURL({ q: undefined });
-      }
+    const {
+      method,
+      idExpireDate,
+      idFront,
+      idBack,
+      DOB,
+      receiverType,
+      ...rest
+    } = values;
+    // add existing beneficiary
+    if (method === 1) {
+      const tempData = {
+        receiver: data
+          ? JSON.stringify(data.map((item) => item.id))
+          : JSON.stringify([]),
+      };
+      addExistingBeneficiary(id, createFormData(tempData));
+    } else {
+      const tempData = {
+        ...rest,
+        ...{
+          DOB: DOB?.format('YYYY-MM-DD'),
+          idExpireDate: idExpireDate?.format('YYYY-MM-DD'),
+          receiverType: remitType ? 0 : 1,
+        },
+        individualClient: id,
+        idFront: imageFileProcesser(idFront),
+        idBack: imageFileProcesser(idBack),
+      };
+      run(createFormData(tempData));
     }
   };
 
@@ -108,14 +158,14 @@ export default function Create({ setURL, visible, setNewVisible, getBeneficiarie
       onCancel={() => {
         setNewVisible(false);
         form.resetFields();
-        setRemitType(0);
+        setRemitType(1);
         setMethod(0);
         setAccountType(0);
       }}
       maskClosable={false}
       okText={'Add'}
       cancelText="Cancel"
-      confirmLoading={adding}
+      confirmLoading={adding || addExistingLoading}
     >
       <Form
         {...layout}
@@ -141,17 +191,27 @@ export default function Create({ setURL, visible, setNewVisible, getBeneficiarie
           </Col>
           <Col xs={24} sm={24} md={24} lg={12} xl={12}></Col>
 
-          {method === 1 && (
+          {method === 1 && id && (
             <Col xs={24} sm={24} md={24} lg={12} xl={12}>
               <Form.Item
                 label="Beneficiary"
                 name="beneficiary"
                 required
-                rules={[{ required: true, message: 'Please Select Option!' }]}
+                rules={[
+                  { required: true, message: 'Please Select Beneficiary!' },
+                ]}
               >
-                <Select showSearch optionFilterProp="children">
-                  <Option value={'individual'}>Individual</Option>
-                  <Option value={'company'}>Company</Option>
+                <Select
+                  loading={receiversLoading}
+                  onSearch={(val) => searchReceivers(val)}
+                  showSearch
+                  optionFilterProp="children"
+                >
+                  {searchReceiversData
+                    ?.filter((item) => !ids.includes(item.id))
+                    .map((val) => (
+                      <Option value={val.id}>{val.name}</Option>
+                    ))}
                 </Select>
               </Form.Item>
             </Col>
@@ -166,7 +226,7 @@ export default function Create({ setURL, visible, setNewVisible, getBeneficiarie
                   rules={[
                     { required: true, message: 'Please Select Receiver Type!' },
                   ]}
-                  initialValue={0}
+                  initialValue={remitType}
                 >
                   <Select onChange={(value: number) => setRemitType(value)}>
                     <Option value={0}>Remit to my personal account</Option>
@@ -251,19 +311,19 @@ export default function Create({ setURL, visible, setNewVisible, getBeneficiarie
                     <Form.Item
                       label="Name"
                       name="name"
-                      required
-                      rules={[
-                        {
-                          required: true,
-                          message: 'Please Enter Receiver Name',
-                        },
-                      ]}
+                      // required
+                      // rules={[
+                      //   {
+                      //     required: true,
+                      //     message: 'Please Enter Receiver Name',
+                      //   },
+                      // ]}
                     >
                       <Input />
                     </Form.Item>
                   </Col>
                   <Col xs={24} sm={24} md={24} lg={24} xl={12}>
-                    <Form.Item label="DOB" name="DOB" required>
+                    <Form.Item label="DOB" name="DOB">
                       <DatePicker style={{ width: '100%' }} />
                     </Form.Item>
                   </Col>
@@ -271,13 +331,12 @@ export default function Create({ setURL, visible, setNewVisible, getBeneficiarie
                     <Form.Item
                       label="Address"
                       name="address"
-                      required
-                      rules={[
-                        {
-                          required: true,
-                          message: 'Please Enter DOB',
-                        },
-                      ]}
+                      // rules={[
+                      //   {
+                      //     required: true,
+                      //     message: 'Please Enter DOB',
+                      //   },
+                      // ]}
                     >
                       <Input />
                     </Form.Item>
@@ -286,13 +345,12 @@ export default function Create({ setURL, visible, setNewVisible, getBeneficiarie
                     <Form.Item
                       label="Suburb"
                       name="suburb"
-                      required
-                      rules={[
-                        {
-                          required: true,
-                          message: 'Please Enter Suburb',
-                        },
-                      ]}
+                      // rules={[
+                      //   {
+                      //     required: true,
+                      //     message: 'Please Enter Suburb',
+                      //   },
+                      // ]}
                     >
                       <Input />
                     </Form.Item>
@@ -301,13 +359,12 @@ export default function Create({ setURL, visible, setNewVisible, getBeneficiarie
                     <Form.Item
                       label="State"
                       name="state"
-                      required
-                      rules={[
-                        {
-                          required: true,
-                          message: 'Please Enter State',
-                        },
-                      ]}
+                      // rules={[
+                      //   {
+                      //     required: true,
+                      //     message: 'Please Enter State',
+                      //   },
+                      // ]}
                     >
                       <Input />
                     </Form.Item>
@@ -316,14 +373,13 @@ export default function Create({ setURL, visible, setNewVisible, getBeneficiarie
                     <Form.Item
                       label="Postcode"
                       name="postcode"
-                      required
-                      rules={[
-                        {
-                          required: true,
-                          type: 'number',
-                          message: 'Please Enter Postcode',
-                        },
-                      ]}
+                      // rules={[
+                      //   {
+                      //     required: true,
+                      //     type: 'number',
+                      //     message: 'Please Enter Postcode',
+                      //   },
+                      // ]}
                     >
                       <InputNumber style={{ width: '100%' }} step="1" />
                     </Form.Item>
@@ -332,13 +388,12 @@ export default function Create({ setURL, visible, setNewVisible, getBeneficiarie
                     <Form.Item
                       label="Country"
                       name="country"
-                      required
-                      rules={[
-                        {
-                          required: true,
-                          message: 'Please Enter Country',
-                        },
-                      ]}
+                      // rules={[
+                      //   {
+                      //     required: true,
+                      //     message: 'Please Enter Country',
+                      //   },
+                      // ]}
                     >
                       <Input />
                     </Form.Item>
@@ -347,13 +402,12 @@ export default function Create({ setURL, visible, setNewVisible, getBeneficiarie
                     <Form.Item
                       label="Occupation"
                       name="occupation"
-                      required
-                      rules={[
-                        {
-                          required: true,
-                          message: 'Please Enter Occupation',
-                        },
-                      ]}
+                      // rules={[
+                      //   {
+                      //     required: true,
+                      //     message: 'Please Enter Occupation',
+                      //   },
+                      // ]}
                     >
                       <Input />
                     </Form.Item>
@@ -385,20 +439,26 @@ export default function Create({ setURL, visible, setNewVisible, getBeneficiarie
                   {accountType === 1 ? (
                     <>
                       <Col xs={24} sm={24} md={24} lg={24} xl={12}>
-                        <Form.Item label="Company Name" name="companyName">
+                        <Form.Item
+                          label="Company Name"
+                          name="trustAccountCompanyName"
+                        >
                           <Input />
                         </Form.Item>
                       </Col>
                       <Col xs={24} sm={24} md={24} lg={24} xl={12}>
                         <Form.Item
                           label="Company Address"
-                          name="companyAddress"
+                          name="trustAccountCompanyAddress"
                         >
                           <Input />
                         </Form.Item>
                       </Col>
                       <Col xs={24} sm={24} md={24} lg={24} xl={12}>
-                        <Form.Item label="Company ABN" name="companyABN">
+                        <Form.Item
+                          label="Company ABN"
+                          name="trustAccountCompanyABN"
+                        >
                           <InputNumber style={{ width: '100%' }} step="1" />
                         </Form.Item>
                       </Col>
@@ -414,6 +474,11 @@ export default function Create({ setURL, visible, setNewVisible, getBeneficiarie
                   <Col xs={24} sm={24} md={24} lg={24} xl={12}>
                     <Form.Item label="ID Back" name="idBack">
                       <UploadPicture />
+                    </Form.Item>
+                  </Col>
+                  <Col xs={24} sm={24} md={24} lg={12} xl={12}>
+                    <Form.Item label="ID Expire Date" name="idExpireDate">
+                      <DatePicker style={{ width: '100%' }} />
                     </Form.Item>
                   </Col>
                 </>

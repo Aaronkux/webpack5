@@ -22,7 +22,7 @@ import moment from 'moment';
 import type { Moment } from 'moment';
 import styles from './Detail.less';
 import type { ParamsObjType } from '@/hooks/useURLParams';
-import {createFormData} from '@/utils'
+import { createFormData } from '@/utils';
 
 const { Option } = Select;
 
@@ -300,7 +300,7 @@ const Detail = ({ data, setURL }: PropsType) => {
                   <Form.Item
                     label="DOB"
                     name="DOB"
-                    initialValue={moment(data.DOB)}
+                    initialValue={data.DOB ? moment(data.DOB) : undefined}
                     required
                   >
                     <DatePicker disabled={!editing} style={{ width: '100%' }} />

@@ -25,7 +25,7 @@ import {
   updateIndividualClientsDetail,
   getIndividualClientsDetail,
 } from '@/services/clients';
-import { isBlob, createFormData } from '@/utils';
+import { createFormData, imageFileProcesser } from '@/utils';
 import styles from './index.less';
 
 const { Option } = Select;
@@ -51,23 +51,13 @@ type FormClientInfo = Merge<
   Omit<Partial<IndividualClientInfo>, 'salesman' | 'gender'>,
   {
     DOB: Moment;
-    id1ExpireDate: Moment;
-    id2ExpireDate: Moment;
+    id1ExpireDate: Moment | '';
+    id2ExpireDate: Moment | '';
     salesman: string;
     purpose: string;
     other: string;
   }
 >;
-
-const imageFileProcesser = (file: any) => {
-  if (isBlob(file)) {
-    return file;
-  } else if (file?.status === 'removed') {
-    return null;
-  } else {
-    return undefined;
-  }
-};
 
 const Personal = () => {
   const [form] = Form.useForm();
@@ -101,14 +91,14 @@ const Personal = () => {
       onSuccess: () => {
         setEditing(false);
         message.success('Update Successfully!');
-        setLoading(true)
+        setLoading(true);
         queryIndividualClientsDetail();
       },
     },
   );
 
   useEffect(() => {
-    setLoading(true)
+    setLoading(true);
     queryIndividualClientsDetail();
   }, [id]);
 
@@ -140,8 +130,12 @@ const Personal = () => {
       ...values,
       ...{
         DOB: DOB?.format('YYYY-MM-DD'),
-        id1ExpireDate: id1ExpireDate?.format('YYYY-MM-DD'),
-        id2ExpireDate: id2ExpireDate?.format('YYYY-MM-DD'),
+        id1ExpireDate: id1ExpireDate
+          ? id1ExpireDate?.format('YYYY-MM-DD')
+          : undefined,
+        id2ExpireDate: id2ExpireDate
+          ? id2ExpireDate?.format('YYYY-MM-DD')
+          : undefined,
         id1front: imageFileProcesser(id1front),
         id1back: imageFileProcesser(id1back),
         id2front: imageFileProcesser(id2front),
@@ -475,20 +469,33 @@ const Personal = () => {
             </Col>
             <Col xs={24} sm={24} md={24} lg={12} xl={12}>
               <Form.Item
+                label="ID1 Expire Date"
+                name="id1ExpireDate"
+                initialValue={
+                  data?.id1ExpireDate ? moment(data?.id1ExpireDate) : undefined
+                }
+              >
+                <DatePicker disabled={!editing} style={{ width: '100%' }} />
+              </Form.Item>
+            </Col>
+            <Col xs={24} sm={24} md={24} lg={12} xl={12}>
+              <Form.Item
+                label="ID2 Expire Date"
+                name="id2ExpireDate"
+                initialValue={
+                  data?.id2ExpireDate ? moment(data?.id2ExpireDate) : undefined
+                }
+              >
+                <DatePicker disabled={!editing} style={{ width: '100%' }} />
+              </Form.Item>
+            </Col>
+            <Col xs={24} sm={24} md={24} lg={12} xl={12}>
+              <Form.Item
                 label="Signature"
                 name="signature"
                 initialValue={data?.signature}
               >
                 <UploadPicture disabled={!editing} />
-              </Form.Item>
-            </Col>
-            <Col xs={24} sm={24} md={24} lg={12} xl={12}>
-              <Form.Item
-                label="Expire Date"
-                name="id1ExpireDate"
-                initialValue={moment(data?.id1ExpireDate)}
-              >
-                <DatePicker disabled={!editing} style={{ width: '100%' }} />
               </Form.Item>
             </Col>
           </Row>

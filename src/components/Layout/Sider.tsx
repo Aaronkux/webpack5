@@ -1,4 +1,4 @@
-import React, { useMemo, useEffect, useState } from 'react';
+import React, { useMemo } from 'react';
 import { Layout, Drawer, Menu } from 'antd';
 import { NavLink } from 'react-router-dom';
 import styles from './Sider.less';
@@ -8,7 +8,7 @@ import { route2List } from '@/utils';
 import { useResponsive } from '@umijs/hooks';
 import logo from '@/assets/gplogo.png';
 import { routes } from '../../../config/route';
-import { useLocation, useHistory } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import store from 'store';
 
 const { Sider } = Layout;
@@ -101,8 +101,6 @@ const MenuComponent = ({
 export default function MySider({ collapsed, setCollapsed }: PropsType) {
   const responsive = useResponsive();
   const location = useLocation();
-  const history = useHistory();
-  // const [pathname, setPathname] = useState(() => location.pathname);
   const drawerSider = !responsive['md'];
   const user = store.get('user');
   const [routeMap, routeList] = useMemo(() => route2List(routes, user), []);
@@ -114,11 +112,6 @@ export default function MySider({ collapsed, setCollapsed }: PropsType) {
     return location.pathname;
   }, []);
 
-  // useEffect(() => {
-  //   history.listen((location) => {
-  //     if (location.pathname !== pathname) setPathname(location.pathname);
-  //   });
-  // }, []);
   return (
     <>
       {drawerSider ? (

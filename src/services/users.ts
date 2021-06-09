@@ -10,7 +10,6 @@ export interface UserInfo {
   isAdmin: boolean;
   createdDate: string;
   token: string;
-
   salesPermission: boolean;
   clientPermission: boolean;
   orderPermission: boolean;
@@ -18,6 +17,7 @@ export interface UserInfo {
   checkCompliance: boolean;
   checkFundNotified: boolean;
   checkFundReceived: boolean;
+  checkConfirmationSent: boolean;
   checkClientComfirmed: boolean;
   checkFundPaid: boolean;
 }

@@ -4,7 +4,7 @@ import { useRequest } from 'umi';
 import { CloseCircleOutlined } from '@ant-design/icons';
 import type { SalesInfo } from '@/services/sales';
 import { querySale, updateSale } from '@/services/sales';
-import { isBlob, createFormData } from '@/utils';
+import { isBlob, createFormData, imageFileProcesser } from '@/utils';
 import EditForm from './components/EditForm';
 import styles from './Edit.less';
 
@@ -17,14 +17,6 @@ interface PropsType {
 }
 
 type FormSaleInfo = Partial<SalesInfo>;
-
-const imageFileProcesser = (file: any) => {
-  if (isBlob(file)) {
-    return file;
-  } else {
-    return undefined;
-  }
-};
 
 export default function Edit({
   saleId,
