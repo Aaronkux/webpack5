@@ -138,7 +138,7 @@ export default function Create({
         ...{
           DOB: DOB?.format('YYYY-MM-DD'),
           idExpireDate: idExpireDate?.format('YYYY-MM-DD'),
-          receiverType: remitType ? 0 : 1,
+          receiverType: remitType ? 1 : 0,
         },
         individualClient: id,
         idFront: imageFileProcesser(idFront),
@@ -231,8 +231,8 @@ export default function Create({
                   initialValue={remitType}
                 >
                   <Select onChange={(value: number) => setRemitType(value)}>
-                    <Option value={0}>Remit to my personal account</Option>
                     <Option value={1}>Remit to other's account</Option>
+                    <Option value={0}>Remit to my personal account</Option>
                   </Select>
                 </Form.Item>
               </Col>

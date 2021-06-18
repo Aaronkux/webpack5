@@ -42,7 +42,7 @@ const NavBar = ({ urlState, setURL, data, loading, getBeneficiaries }: PropsType
                   className={styles.address}
                 >{`${item.address}, ${item.suburb}`}</p>
                 <p className={styles.contact}>{`${item.name} ${item.phone}`}</p>
-                {item.receiverType && (
+                {!item.receiverType && (
                   <Tag className={styles.selfTag} color="#f50">
                     Self
                   </Tag>
