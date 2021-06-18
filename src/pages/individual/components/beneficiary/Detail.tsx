@@ -190,7 +190,7 @@ const Detail = ({
               <Form.Item
                 label="Type"
                 name="receiverType"
-                initialValue={remitType ? 0 : 1}
+                initialValue={remitType ? 1 : 0}
                 required
                 rules={[
                   {
@@ -242,7 +242,6 @@ const Detail = ({
                 rules={[
                   {
                     required: true,
-                    type: 'number',
                     message: 'Please Enter Account Number',
                   },
                 ]}
@@ -263,7 +262,6 @@ const Detail = ({
                 rules={[
                   {
                     required: true,
-                    type: 'number',
                     message: 'Please Enter BSB Number',
                   },
                 ]}
@@ -291,7 +289,7 @@ const Detail = ({
                 {editing ? <Input /> : <NormalText />}
               </Form.Item>
             </Col>
-            {!remitType && (
+            {remitType && (
               <>
                 <Col xs={24} sm={24} md={24} lg={24} xl={12}>
                   <Form.Item label="Name" name="name" initialValue={data?.name}>
@@ -524,7 +522,7 @@ const Detail = ({
           form.resetFields();
           setEditing(false);
           setModalVisible(false);
-          setRemitType(data?.receiverType ?? false);
+          setRemitType(data?.receiverType!);
         }}
         onCancel={() => setModalVisible(false)}
       >
