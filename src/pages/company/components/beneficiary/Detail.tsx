@@ -248,7 +248,6 @@ const Detail = ({
                 rules={[
                   {
                     required: true,
-                    type: 'number',
                     message: 'Please Enter Account Number',
                   },
                 ]}
@@ -269,7 +268,6 @@ const Detail = ({
                 rules={[
                   {
                     required: true,
-                    type: 'number',
                     message: 'Please Enter BSB Number',
                   },
                 ]}
