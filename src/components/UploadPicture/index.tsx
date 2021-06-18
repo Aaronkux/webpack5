@@ -26,7 +26,7 @@ interface PropsType {
   acceptableTypes?: string[];
   limitMB?: number;
   value?: string | File;
-  onChange?: (value: File | Blob | undefined) => void;
+  onChange?: (value: any) => void;
   disabled?: boolean;
 }
 
@@ -49,7 +49,7 @@ export default function UploadPicture({
     file: UploadFile;
     fileList: UploadFile[];
   }) => {
-    onChange?.(newFileList?.[0]?.originFileObj);
+    onChange?.(newFileList?.[0]?.originFileObj ?? file);
     setFileList(newFileList);
   };
 

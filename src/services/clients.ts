@@ -1,5 +1,6 @@
 import { request } from 'umi';
 import type { ResponseType, NoDataResponse } from './index';
+import type { SalesInfo } from './sales';
 
 export interface IndividualClientInfo {
   id: string;
@@ -8,10 +9,7 @@ export interface IndividualClientInfo {
   gender?: boolean;
   DOB: string;
   email: string;
-  salesman?: {
-    id: string;
-    name: string;
-  };
+  salesman?: SalesInfo;
   address?: string;
   suburb?: string;
   state?: string;
@@ -28,7 +26,7 @@ export interface IndividualClientInfo {
   faceImage?: string;
   faceTest?: string;
   purpose?: string;
-  receiver: BeneficiaryInfo[]
+  receiver: BeneficiaryInfo[];
   unsubscribe?: boolean;
   id1ExpireDate?: string;
   id2ExpireDate?: string;
@@ -47,20 +45,17 @@ export interface CompanyClientInfo {
   email: string;
   ABN_ACN_ARBN: string;
   companyType?: string;
+  salesman?: SalesInfo;
   registeredBusinessAddress?: string;
   principleBusinessAddress?: string;
   companyContactNumber?: string;
   unsubscribe?: boolean;
-  salesman?: {
-    id: string;
-    name: string;
-  };
   purpose?: string;
   signature?: string;
   legalPerson1front?: string;
   legalPerson1back?: string;
   legalPerson2front?: string;
-  legalPersion2back?: string;
+  legalPerson2back?: string;
   companyExtract?: string;
   accountHolderName?: string;
   accountHolderPosition?: string;
@@ -70,6 +65,7 @@ export interface CompanyClientInfo {
   accountHolderResidentialAddress?: string;
   person1ExpireDate?: string;
   person2ExpireDate?: string;
+  receiver: BeneficiaryInfo[];
 }
 export type CompanyClientsResponse = ResponseType<{
   data: CompanyClientInfo[];
@@ -117,8 +113,8 @@ export function getIndividualClients(current: number, pageSize: number) {
   return request<IndividualClientsResponse>('/api/individualclients', {
     method: 'get',
     params: {
-      current,
-      pageSize,
+      limit: pageSize,
+      offset: (current - 1) * pageSize,
     },
   });
 }
@@ -131,8 +127,19 @@ export function getIndividualClientsDetail(id: string) {
     },
   );
 }
+export function getCompanyClientsDetail(id: string) {
+  return request<CompanyClientsDetailResponse>(`/api/companyclient/${id}`, {
+    method: 'get',
+  });
+}
 export function addIndividualClient(data: FormData) {
   return request<NoDataResponse>(`/api/individualclient`, {
+    method: 'post',
+    body: data,
+  });
+}
+export function addCompanyClient(data: FormData) {
+  return request<NoDataResponse>(`/api/companyclient`, {
     method: 'post',
     body: data,
   });
@@ -143,26 +150,32 @@ export function deleteIndividualClient(id: string) {
   });
 }
 
+export function deleteCompanyClient(id: string) {
+  return request<NoDataResponse>(`/api/companyclient/${id}`, {
+    method: 'delete',
+  });
+}
+
 export function updateIndividualClientsDetail(id: string, data: FormData) {
   return request<NoDataResponse>(`/api/individualclient/${id}`, {
     method: 'put',
     body: data,
   });
 }
-
-export function getCompanyClients(current: number, pageSize: number) {
-  return request<CompanyClientsResponse>('/api/companyclient', {
-    method: 'get',
-    params: {
-      current,
-      pageSize,
-    },
+export function updateCompanyClientsDetail(id: string, data: FormData) {
+  return request<NoDataResponse>(`/api/companyclient/${id}`, {
+    method: 'put',
+    body: data,
   });
 }
 
-export function getCompanyClientsDetail(id: string) {
-  return request<CompanyClientsDetailResponse>(`/api/companyclient/${id}`, {
+export function getCompanyClients(current: number, pageSize: number) {
+  return request<CompanyClientsResponse>('/api/companyclients', {
     method: 'get',
+    params: {
+      limit: pageSize,
+      offset: (current - 1) * pageSize,
+    },
   });
 }
 
@@ -176,17 +189,22 @@ export function getSearchBeneficiaries(name: string) {
 }
 
 export function getIndividualBeneficiaries(id: string) {
-  return request<BeneficiaryResponse>(
-    `/api/individualclient/${id}/receivers?limit=5&offset=0`,
-    {
-      method: 'get',
+  return request<BeneficiaryResponse>(`/api/individualclient/${id}/receivers`, {
+    method: 'get',
+    params: {
+      limit: 5,
+      offset: 0,
     },
-  );
+  });
 }
 
 export function getCompanyBeneficiaries(id: string) {
   return request<BeneficiaryResponse>(`/api/companyclient/${id}/receivers`, {
     method: 'get',
+    params: {
+      limit: 5,
+      offset: 0,
+    },
   });
 }
 
@@ -206,4 +224,25 @@ export function addBeneficiary(data: FormData) {
     method: 'post',
     body: data,
   });
+}
+
+type CommonClientsResponse = ResponseType<{
+  data: {
+    id: string;
+    name: string;
+    receiver: BeneficiaryInfo[];
+  }[];
+  total: number;
+}>;
+
+export function getClients(clientType: string, name: string) {
+  return request<CommonClientsResponse>(
+    `/api/${clientType}?limit=10&offset=0`,
+    {
+      method: 'get',
+      params: {
+        name,
+      },
+    },
+  );
 }

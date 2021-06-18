@@ -1,10 +1,9 @@
-import React, { useEffect, useState } from 'react';
-import { request, useDispatch, useRouteMatch } from 'umi';
+import React, { useState } from 'react';
+import { useRouteMatch, useRequest } from 'umi';
 import {
   Modal,
   Form,
   Input,
-  Switch,
   Select,
   Radio,
   Divider,
@@ -14,9 +13,17 @@ import {
   DatePicker,
   message,
 } from 'antd';
+import type { Moment } from 'moment';
+import {
+  addBeneficiary,
+  updateCompanyClientsDetail,
+  getSearchBeneficiaries,
+} from '@/services/clients';
+import type { BeneficiaryInfo } from '@/services/clients';
 import { CloseCircleOutlined } from '@ant-design/icons';
 import UploadPicture from '@/components/UploadPicture';
 import type { ParamsObjType } from '@/hooks/useURLParams';
+import { imageFileProcesser, createFormData } from '@/utils/index';
 import styles from './Create.less';
 
 const { Option } = Select;
@@ -25,49 +32,118 @@ interface PropsType {
   visible: boolean;
   setNewVisible: React.Dispatch<React.SetStateAction<boolean>>;
   setURL: React.Dispatch<React.SetStateAction<ParamsObjType>>;
+  getBeneficiaries: () => void;
+  data: BeneficiaryInfo[] | undefined;
 }
+
+type Merge<M, N> = Omit<M, Extract<keyof M, keyof N>> & N;
+
+type FormIndividualReceiverInfo = Merge<
+  Partial<BeneficiaryInfo>,
+  {
+    DOB: Moment | undefined;
+    idExpireDate: Moment | undefined;
+    method: 0 | 1;
+    idFront: File | undefined | string;
+    idBack: File | undefined | string;
+    relatedDoc: File | undefined | string;
+    beneficiary: any;
+  }
+>;
 
 const layout = {
   labelCol: { span: 6 },
   wrapperCol: { span: 16 },
 };
 
-export default function Create({ setURL, visible, setNewVisible }: PropsType) {
-  const dispatch = useDispatch();
+export default function Create({
+  visible,
+  setNewVisible,
+  getBeneficiaries,
+  data,
+}: PropsType) {
   const [method, setMethod] = useState(0);
-  const [remitType, setRemitType] = useState(0);
-  const [accountType, setAccountType] = useState(0);
+  const [remitType, setRemitType] = useState(1);
   const [form] = Form.useForm();
-  const [adding, setAdding] = useState(false);
   const match = useRouteMatch<{ id?: string }>();
-  const clientTypeMatch = useRouteMatch<{ type?: string }>('/clients/:type');
   const { id } = match.params;
+  const ids = data?.map((item) => item.id) ?? [];
 
-  const onFinishHandler = async (values: any) => {
-    setAdding(true);
-    const clientType = clientTypeMatch?.params.type;
-    if (!clientType || !id) {
+  const onCancelHandler = () => {
+    setNewVisible(false);
+    setMethod(0);
+    setRemitType(1);
+    form.resetFields();
+  };
+
+  const { loading: adding, run } = useRequest(addBeneficiary, {
+    manual: true,
+    onSuccess: () => {
+      message.success('Add Successfully');
+      getBeneficiaries();
+      onCancelHandler();
+    },
+  });
+
+  const {
+    loading: addExistingLoading,
+    run: addExistingBeneficiary,
+  } = useRequest(updateCompanyClientsDetail, {
+    manual: true,
+    onSuccess: () => {
+      message.success('Add Successfully');
+      getBeneficiaries();
+      onCancelHandler();
+    },
+  });
+
+  //working on this
+  const {
+    data: searchReceiversData,
+    loading: receiversLoading,
+    run: searchReceivers,
+  } = useRequest(getSearchBeneficiaries, {
+    manual: true,
+    debounceInterval: 500,
+    formatResult: (res) => res.data?.data,
+  });
+
+  const onFinishHandler = async (values: FormIndividualReceiverInfo) => {
+    if (!id) {
       message.error('Error URL PATH!');
-      setAdding(false);
       return;
     }
-    const res = await request('/api/addBeneficiary', {
-      method: 'post',
-      data: values,
-    });
-    setAdding(false);
-    if (res.success) {
-      message.success('Adding Successfully!');
-      setNewVisible(false);
-      form.resetFields();
-
-      if (id) {
-        await dispatch({
-          type: 'clients/getIndividualBeneficiaries',
-          payload: { id },
-        });
-        setURL({ q: undefined });
-      }
+    const {
+      method,
+      idExpireDate,
+      idFront,
+      idBack,
+      DOB,
+      receiverType,
+      beneficiary,
+      relatedDoc,
+      ...rest
+    } = values;
+    // add existing beneficiary
+    if (method === 1) {
+      const tempData = {
+        receiver: data
+          ? JSON.stringify([...data.map((item) => item.id), beneficiary])
+          : JSON.stringify([beneficiary]),
+      };
+      addExistingBeneficiary(id, createFormData(tempData));
+    } else {
+      const tempData = {
+        ...rest,
+        DOB: DOB?.format('YYYY-MM-DD'),
+        idExpireDate: idExpireDate?.format('YYYY-MM-DD'),
+        receiverType: remitType ? 0 : 1,
+        companyClient: id,
+        idFront: imageFileProcesser(idFront),
+        idBack: imageFileProcesser(idBack),
+        relatedDoc: imageFileProcesser(relatedDoc),
+      };
+      run(createFormData(tempData));
     }
   };
 
@@ -83,14 +159,13 @@ export default function Create({ setURL, visible, setNewVisible }: PropsType) {
       onCancel={() => {
         setNewVisible(false);
         form.resetFields();
-        setRemitType(0);
+        setRemitType(1);
         setMethod(0);
-        setAccountType(0);
       }}
       maskClosable={false}
       okText={'Add'}
       cancelText="Cancel"
-      confirmLoading={adding}
+      confirmLoading={adding || addExistingLoading}
     >
       <Form
         {...layout}
@@ -116,17 +191,29 @@ export default function Create({ setURL, visible, setNewVisible }: PropsType) {
           </Col>
           <Col xs={24} sm={24} md={24} lg={12} xl={12}></Col>
 
-          {method === 1 && (
+          {method === 1 && id && (
             <Col xs={24} sm={24} md={24} lg={12} xl={12}>
               <Form.Item
                 label="Beneficiary"
                 name="beneficiary"
                 required
-                rules={[{ required: true, message: 'Please Select Option!' }]}
+                rules={[
+                  { required: true, message: 'Please Select Beneficiary!' },
+                ]}
               >
-                <Select showSearch optionFilterProp="children">
-                  <Option value={'individual'}>Individual</Option>
-                  <Option value={'company'}>Company</Option>
+                <Select
+                  loading={receiversLoading}
+                  onSearch={(val) => searchReceivers(val)}
+                  showSearch
+                  optionFilterProp="children"
+                >
+                  {searchReceiversData
+                    ?.filter(
+                      (item) => !ids.includes(item.id) && !item.receiverType,
+                    )
+                    .map((val) => (
+                      <Option value={val.id}>{val.name}</Option>
+                    ))}
                 </Select>
               </Form.Item>
             </Col>
@@ -141,11 +228,11 @@ export default function Create({ setURL, visible, setNewVisible }: PropsType) {
                   rules={[
                     { required: true, message: 'Please Select Receiver Type!' },
                   ]}
-                  initialValue={0}
+                  initialValue={remitType}
                 >
                   <Select onChange={(value: number) => setRemitType(value)}>
-                    <Option value={0}>Remit to my personal account</Option>
-                    <Option value={1}>Remit to other's account</Option>
+                    <Option value={1}>Remit to personal account</Option>
+                    <Option value={0}>Remit to company's account</Option>
                   </Select>
                 </Form.Item>
               </Col>
@@ -220,167 +307,138 @@ export default function Create({ setURL, visible, setNewVisible }: PropsType) {
                   <Input />
                 </Form.Item>
               </Col>
+
+              <Col xs={24} sm={24} md={24} lg={24} xl={12}>
+                <Form.Item
+                  label="Name"
+                  name="name"
+                  // required
+                  // rules={[
+                  //   {
+                  //     required: true,
+                  //     message: 'Please Enter Receiver Name',
+                  //   },
+                  // ]}
+                >
+                  <Input />
+                </Form.Item>
+              </Col>
+              <Col xs={24} sm={24} md={24} lg={24} xl={12}>
+                <Form.Item label="DOB" name="DOB">
+                  <DatePicker style={{ width: '100%' }} />
+                </Form.Item>
+              </Col>
+              <Col xs={24} sm={24} md={24} lg={24} xl={12}>
+                <Form.Item
+                  label="Address"
+                  name="address"
+                  // rules={[
+                  //   {
+                  //     required: true,
+                  //     message: 'Please Enter DOB',
+                  //   },
+                  // ]}
+                >
+                  <Input />
+                </Form.Item>
+              </Col>
+              <Col xs={24} sm={24} md={24} lg={24} xl={12}>
+                <Form.Item
+                  label="Suburb"
+                  name="suburb"
+                  // rules={[
+                  //   {
+                  //     required: true,
+                  //     message: 'Please Enter Suburb',
+                  //   },
+                  // ]}
+                >
+                  <Input />
+                </Form.Item>
+              </Col>
+              <Col xs={24} sm={24} md={24} lg={24} xl={12}>
+                <Form.Item
+                  label="State"
+                  name="state"
+                  // rules={[
+                  //   {
+                  //     required: true,
+                  //     message: 'Please Enter State',
+                  //   },
+                  // ]}
+                >
+                  <Input />
+                </Form.Item>
+              </Col>
+              <Col xs={24} sm={24} md={24} lg={24} xl={12}>
+                <Form.Item
+                  label="Postcode"
+                  name="postcode"
+                  // rules={[
+                  //   {
+                  //     required: true,
+                  //     type: 'number',
+                  //     message: 'Please Enter Postcode',
+                  //   },
+                  // ]}
+                >
+                  <InputNumber style={{ width: '100%' }} step="1" />
+                </Form.Item>
+              </Col>
+              <Col xs={24} sm={24} md={24} lg={24} xl={12}>
+                <Form.Item
+                  label="Country"
+                  name="country"
+                  // rules={[
+                  //   {
+                  //     required: true,
+                  //     message: 'Please Enter Country',
+                  //   },
+                  // ]}
+                >
+                  <Input />
+                </Form.Item>
+              </Col>
               {remitType === 1 && (
                 <>
                   <Col xs={24} sm={24} md={24} lg={24} xl={12}>
                     <Form.Item
-                      label="Name"
-                      name="name"
-                      required
-                      rules={[
-                        {
-                          required: true,
-                          message: 'Please Enter Receiver Name',
-                        },
-                      ]}
-                    >
-                      <Input />
-                    </Form.Item>
-                  </Col>
-                  <Col xs={24} sm={24} md={24} lg={24} xl={12}>
-                    <Form.Item label="DOB" name="DOB" required>
-                      <DatePicker style={{ width: '100%' }} />
-                    </Form.Item>
-                  </Col>
-                  <Col xs={24} sm={24} md={24} lg={24} xl={12}>
-                    <Form.Item
-                      label="Address"
-                      name="address"
-                      required
-                      rules={[
-                        {
-                          required: true,
-                          message: 'Please Enter DOB',
-                        },
-                      ]}
-                    >
-                      <Input />
-                    </Form.Item>
-                  </Col>
-                  <Col xs={24} sm={24} md={24} lg={24} xl={12}>
-                    <Form.Item
-                      label="Suburb"
-                      name="suburb"
-                      required
-                      rules={[
-                        {
-                          required: true,
-                          message: 'Please Enter Suburb',
-                        },
-                      ]}
-                    >
-                      <Input />
-                    </Form.Item>
-                  </Col>
-                  <Col xs={24} sm={24} md={24} lg={24} xl={12}>
-                    <Form.Item
-                      label="State"
-                      name="state"
-                      required
-                      rules={[
-                        {
-                          required: true,
-                          message: 'Please Enter State',
-                        },
-                      ]}
-                    >
-                      <Input />
-                    </Form.Item>
-                  </Col>
-                  <Col xs={24} sm={24} md={24} lg={24} xl={12}>
-                    <Form.Item
-                      label="Postcode"
-                      name="postcode"
-                      required
-                      rules={[
-                        {
-                          required: true,
-                          type: 'number',
-                          message: 'Please Enter Postcode',
-                        },
-                      ]}
-                    >
-                      <InputNumber style={{ width: '100%' }} step="1" />
-                    </Form.Item>
-                  </Col>
-                  <Col xs={24} sm={24} md={24} lg={24} xl={12}>
-                    <Form.Item
-                      label="Country"
-                      name="country"
-                      required
-                      rules={[
-                        {
-                          required: true,
-                          message: 'Please Enter Country',
-                        },
-                      ]}
-                    >
-                      <Input />
-                    </Form.Item>
-                  </Col>
-                  <Col xs={24} sm={24} md={24} lg={24} xl={12}>
-                    <Form.Item
                       label="Occupation"
                       name="occupation"
-                      required
-                      rules={[
-                        {
-                          required: true,
-                          message: 'Please Enter Occupation',
-                        },
-                      ]}
+                      // rules={[
+                      //   {
+                      //     required: true,
+                      //     message: 'Please Enter Occupation',
+                      //   },
+                      // ]}
                     >
                       <Input />
                     </Form.Item>
                   </Col>
+                </>
+              )}
+              <Col xs={24} sm={24} md={24} lg={24} xl={12}>
+                <Form.Item label="Phone" name="phone">
+                  <Input />
+                </Form.Item>
+              </Col>
+              <Col xs={24} sm={24} md={24} lg={24} xl={12}>
+                <Form.Item label="Relationship" name="relationship">
+                  <Input />
+                </Form.Item>
+              </Col>
+              {remitType === 0 && (
+                <>
+                  <Col xs={24} sm={24} md={24} lg={24} xl={12}></Col>
                   <Col xs={24} sm={24} md={24} lg={24} xl={12}>
-                    <Form.Item label="Phone" name="phone">
-                      <Input />
+                    <Form.Item label="Related Doc" name="relatedDoc">
+                      <UploadPicture />
                     </Form.Item>
                   </Col>
-                  <Col xs={24} sm={24} md={24} lg={24} xl={12}>
-                    <Form.Item label="Relationship" name="relationship">
-                      <Input />
-                    </Form.Item>
-                  </Col>
-                  <Col xs={24} sm={24} md={24} lg={24} xl={12}>
-                    <Form.Item
-                      label="Account Type"
-                      name="isTrustAccount"
-                      initialValue={0}
-                    >
-                      <Select
-                        onChange={(value: 0 | 1) => setAccountType(value)}
-                      >
-                        <Option value={0}>Non-Trust Account</Option>
-                        <Option value={1}>Trust Account</Option>
-                      </Select>
-                    </Form.Item>
-                  </Col>
-                  {accountType === 1 ? (
-                    <>
-                      <Col xs={24} sm={24} md={24} lg={24} xl={12}>
-                        <Form.Item label="Company Name" name="companyName">
-                          <Input />
-                        </Form.Item>
-                      </Col>
-                      <Col xs={24} sm={24} md={24} lg={24} xl={12}>
-                        <Form.Item
-                          label="Company Address"
-                          name="companyAddress"
-                        >
-                          <Input />
-                        </Form.Item>
-                      </Col>
-                      <Col xs={24} sm={24} md={24} lg={24} xl={12}>
-                        <Form.Item label="Company ABN" name="companyABN">
-                          <InputNumber style={{ width: '100%' }} step="1" />
-                        </Form.Item>
-                      </Col>
-                    </>
-                  ) : (
-                    <Col xs={24} sm={24} md={24} lg={24} xl={12}></Col>
-                  )}
+                </>
+              )}
+              {remitType === 1 && (
+                <>
                   <Col xs={24} sm={24} md={24} lg={24} xl={12}>
                     <Form.Item label="ID Front" name="idFront">
                       <UploadPicture />
@@ -389,6 +447,11 @@ export default function Create({ setURL, visible, setNewVisible }: PropsType) {
                   <Col xs={24} sm={24} md={24} lg={24} xl={12}>
                     <Form.Item label="ID Back" name="idBack">
                       <UploadPicture />
+                    </Form.Item>
+                  </Col>
+                  <Col xs={24} sm={24} md={24} lg={12} xl={12}>
+                    <Form.Item label="ID Expire Date" name="idExpireDate">
+                      <DatePicker style={{ width: '100%' }} />
                     </Form.Item>
                   </Col>
                 </>

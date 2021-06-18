@@ -13,16 +13,18 @@ import {
   Popconfirm,
   message,
 } from 'antd';
-import { useDispatch } from 'umi';
+import { useRequest } from 'umi';
 import NormalText from '@/components/NormalText';
 import UploadPicture from '@/components/UploadPicture';
-import { deleteBeneficiary, updateBeneficiaryDetail } from '@/services/clients';
 import type { BeneficiaryInfo } from '@/services/clients';
 import moment from 'moment';
 import type { Moment } from 'moment';
 import styles from './Detail.less';
-import type { ParamsObjType } from '@/hooks/useURLParams';
-import { createFormData } from '@/utils';
+import { createFormData, imageFileProcesser } from '@/utils';
+import {
+  updateBeneficiaryDetail,
+  updateCompanyClientsDetail,
+} from '@/services/clients';
 
 const { Option } = Select;
 
@@ -31,8 +33,11 @@ const layout = {
   wrapperCol: { span: 19 },
 };
 interface PropsType {
-  data: BeneficiaryInfo;
-  setURL: React.Dispatch<React.SetStateAction<ParamsObjType>>;
+  getBeneficiaries: () => void;
+  data?: BeneficiaryInfo;
+  allBeneficiaryIds: string[];
+  clientId?: string;
+  queryBeneficiaryDetail: () => void;
 }
 
 type Merge<M, N> = Omit<M, Extract<keyof M, keyof N>> & N;
@@ -40,75 +45,97 @@ type Merge<M, N> = Omit<M, Extract<keyof M, keyof N>> & N;
 type FormBeneficiaryInfo = Merge<
   Omit<Partial<BeneficiaryInfo>, 'companyClient' | 'individualClient'>,
   {
-    DOB: Moment;
+    method: 0 | 1;
+    DOB: Moment | undefined;
+    idExpireDate: Moment | undefined;
+    idFront: File | undefined | string;
+    idBack: File | undefined | string;
+    relatedDoc: File | undefined | string;
+    beneficiary: any;
   }
 >;
 
-const Detail = ({ data, setURL }: PropsType) => {
-  const [form] = Form.useForm();
-  const dispatch = useDispatch();
-  const [editing, setEditing] = useState(false);
-  const [savingLoading, setSavingLoading] = useState(false);
-  const [deleteLoading, setDeleteLoading] = useState(false);
-  const [modalVisible, setModalVisible] = useState(false);
-  const [remitType, setRemitType] = useState(data.receiverType);
-  const [accountType, setAccountType] = useState(data.isTrustAccount ? 1 : 0);
-  const id = data?.id;
-
-  const onFinishHandler = async (values: FormBeneficiaryInfo) => {
-    setSavingLoading(true);
-    if (!id) {
-      message.error(`Can't Find Id Of The Receiver`);
-      setSavingLoading(false);
-      setEditing(false);
-      return;
-    }
-    const { DOB, receiverType, isTrustAccount } = values;
-    const formatDOB = DOB?.format('YYYY-MM-DD');
-    const formatReceiverType = receiverType ? true : false;
-    const formatIsTrustAccount = isTrustAccount ? true : false;
-    const tempData = {
-      ...values,
-      ...{
-        DOB: formatDOB,
-        receiverType: formatReceiverType,
-        isTrustAccount: formatIsTrustAccount,
+const Detail = ({
+  getBeneficiaries,
+  data,
+  allBeneficiaryIds,
+  clientId,
+  queryBeneficiaryDetail,
+}: PropsType) => {
+  const { loading: deleteLoading, run: deleteRecord } = useRequest(
+    updateCompanyClientsDetail,
+    {
+      manual: true,
+      onSuccess: () => {
+        message.success('Delete Successfully!');
+        getBeneficiaries();
       },
-    };
-    const res = await updateBeneficiaryDetail(id, createFormData(tempData));
-    setSavingLoading(false);
-    setEditing(false);
-    if (res.success) {
-      message.success('Update Successfully!');
-      dispatch({
-        type: 'clients/getBeneficiaryDetail',
-        payload: {
-          id,
-        },
-      });
+    },
+  );
+
+  const deleteBeneficiaryQuery = () => {
+    if (data?.id && clientId) {
+      let idsSet = new Set(allBeneficiaryIds);
+      idsSet.delete(data.id);
+      const resArr = Array.from(idsSet);
+      deleteRecord(
+        clientId,
+        createFormData({
+          receiver: JSON.stringify(resArr),
+        }),
+      );
     }
   };
 
-  const onDeleteHandler = async () => {
-    setDeleteLoading(true);
+  const { loading: savingLoading, run: saveRecord } = useRequest(
+    updateBeneficiaryDetail,
+    {
+      manual: true,
+      onSuccess: () => {
+        message.success('Update Successfully!');
+        setEditing(false);
+        queryBeneficiaryDetail();
+      },
+      onError: () => {
+        setEditing(false);
+      },
+    },
+  );
+
+  const [form] = Form.useForm();
+  const [editing, setEditing] = useState(false);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [remitType, setRemitType] = useState(data?.receiverType);
+  const id = data?.id;
+
+  const onFinishHandler = async (values: FormBeneficiaryInfo) => {
     if (!id) {
       message.error(`Can't Find Id Of The Receiver`);
-      setDeleteLoading(false);
+      setEditing(false);
       return;
     }
-    const res = await deleteBeneficiary(id);
-    setDeleteLoading(false);
-    if (res.success) {
-      message.success('Delete Successfully!');
-
-      if (id) {
-        await dispatch({
-          type: 'clients/getCompanyBeneficiaries',
-          payload: { id },
-        });
-        setURL({ q: undefined });
-      }
-    }
+    const {
+      method,
+      idExpireDate,
+      idFront,
+      idBack,
+      DOB,
+      receiverType,
+      beneficiary,
+      relatedDoc,
+      ...rest
+    } = values;
+    const tempData = {
+      ...rest,
+      DOB: DOB?.format('YYYY-MM-DD'),
+      idExpireDate: idExpireDate?.format('YYYY-MM-DD'),
+      receiverType: remitType ? 0 : 1,
+      companyClient: id,
+      idFront: imageFileProcesser(idFront),
+      idBack: imageFileProcesser(idBack),
+      relatedDoc: imageFileProcesser(relatedDoc),
+    };
+    saveRecord(id, createFormData(tempData));
   };
 
   return (
@@ -128,7 +155,7 @@ const Detail = ({ data, setURL }: PropsType) => {
                   <Form.Item>
                     <Popconfirm
                       title="Are you sure to delete this receiver?"
-                      onConfirm={onDeleteHandler}
+                      onConfirm={deleteBeneficiaryQuery}
                     >
                       <Button loading={deleteLoading} danger>
                         Delete
@@ -169,26 +196,22 @@ const Detail = ({ data, setURL }: PropsType) => {
               <Form.Item
                 label="Type"
                 name="receiverType"
-                initialValue={data.receiverType ? 1 : 0}
+                initialValue={remitType ? 0 : 1}
                 required
                 rules={[
-                  { required: true, message: 'Please Select Receiver Type' },
+                  {
+                    required: true,
+                    message: 'Please Select Receiver Type',
+                  },
                 ]}
               >
-                {editing ? (
-                  <Select onChange={(value: string) => setRemitType(!!value)}>
-                    <Option value={0}>Remit to my personal account</Option>
-                    <Option value={1}>Remit to other's account</Option>
-                  </Select>
-                ) : (
-                  <NormalText
-                    transform={(value) =>
-                      value
-                        ? 'Remit to my personal account'
-                        : `Remit to other's account`
-                    }
-                  />
-                )}
+                <NormalText
+                  transform={(value) =>
+                    value
+                      ? `Remit to personal account`
+                      : `Remit to company's account`
+                  }
+                />
               </Form.Item>
             </Col>
 
@@ -196,7 +219,7 @@ const Detail = ({ data, setURL }: PropsType) => {
               <Form.Item
                 label="Bank Name"
                 name="bankName"
-                initialValue={data.bankName}
+                initialValue={data?.bankName}
                 required
                 rules={[{ required: true, message: 'Please Enter Bank Name!' }]}
               >
@@ -207,7 +230,7 @@ const Detail = ({ data, setURL }: PropsType) => {
               <Form.Item
                 label="Account Name"
                 name="accountName"
-                initialValue={data.accountName}
+                initialValue={data?.accountName}
                 required
                 rules={[
                   { required: true, message: 'Please Enter Account Name' },
@@ -220,7 +243,7 @@ const Detail = ({ data, setURL }: PropsType) => {
               <Form.Item
                 label="Account Number"
                 name="accountNumber"
-                initialValue={data.accountNumber}
+                initialValue={data?.accountNumber}
                 required
                 rules={[
                   {
@@ -241,7 +264,7 @@ const Detail = ({ data, setURL }: PropsType) => {
               <Form.Item
                 label="BSB"
                 name="bsb"
-                initialValue={data.bsb}
+                initialValue={data?.bsb}
                 required
                 rules={[
                   {
@@ -262,7 +285,7 @@ const Detail = ({ data, setURL }: PropsType) => {
               <Form.Item
                 label="Branch Name"
                 name="branchName"
-                initialValue={data.branchName}
+                initialValue={data?.branchName}
                 required
                 rules={[
                   {
@@ -274,221 +297,96 @@ const Detail = ({ data, setURL }: PropsType) => {
                 {editing ? <Input /> : <NormalText />}
               </Form.Item>
             </Col>
-            {remitType && (
+
+            <Col xs={24} sm={24} md={24} lg={24} xl={12}>
+              <Form.Item label="Name" name="name" initialValue={data?.name}>
+                {editing ? <Input /> : <NormalText />}
+              </Form.Item>
+            </Col>
+            <Col xs={24} sm={24} md={24} lg={24} xl={12}>
+              <Form.Item
+                label="DOB"
+                name="DOB"
+                initialValue={data?.DOB ? moment(data?.DOB) : null}
+              >
+                <DatePicker disabled={!editing} style={{ width: '100%' }} />
+              </Form.Item>
+            </Col>
+            <Col xs={24} sm={24} md={24} lg={24} xl={12}>
+              <Form.Item
+                label="Address"
+                name="address"
+                initialValue={data?.address}
+              >
+                {editing ? <Input /> : <NormalText />}
+              </Form.Item>
+            </Col>
+            <Col xs={24} sm={24} md={24} lg={24} xl={12}>
+              <Form.Item
+                label="Suburb"
+                name="suburb"
+                initialValue={data?.suburb}
+              >
+                {editing ? <Input /> : <NormalText />}
+              </Form.Item>
+            </Col>
+            <Col xs={24} sm={24} md={24} lg={24} xl={12}>
+              <Form.Item label="State" name="state" initialValue={data?.state}>
+                {editing ? <Input /> : <NormalText />}
+              </Form.Item>
+            </Col>
+            <Col xs={24} sm={24} md={24} lg={24} xl={12}>
+              <Form.Item
+                label="Postcode"
+                name="postcode"
+                initialValue={data?.postcode}
+              >
+                {editing ? (
+                  <InputNumber style={{ width: '100%' }} step="1" />
+                ) : (
+                  <NormalText />
+                )}
+              </Form.Item>
+            </Col>
+            <Col xs={24} sm={24} md={24} lg={24} xl={12}>
+              <Form.Item
+                label="Country"
+                name="country"
+                initialValue={data?.country}
+              >
+                {editing ? <Input /> : <NormalText />}
+              </Form.Item>
+            </Col>
+            <Col xs={24} sm={24} md={24} lg={24} xl={12}>
+              <Form.Item label="Phone" name="phone" initialValue={data?.phone}>
+                {editing ? <Input /> : <NormalText />}
+              </Form.Item>
+            </Col>
+            <Col xs={24} sm={24} md={24} lg={24} xl={12}>
+              <Form.Item
+                label="Relationship"
+                name="relationship"
+                initialValue={data?.relationship}
+              >
+                {editing ? <Input /> : <NormalText />}
+              </Form.Item>
+            </Col>
+            {!remitType ? (
               <>
-                <Col xs={24} sm={24} md={24} lg={24} xl={12}>
-                  <Form.Item
-                    label="Name"
-                    name="name"
-                    initialValue={
-                      data.individualClient
-                        ? data.individualClient?.name
-                        : data.companyClient?.name
-                    }
-                    required
-                    rules={[
-                      {
-                        required: true,
-                        message: 'Please Enter Receiver Name',
-                      },
-                    ]}
-                  >
-                    {editing ? <Input /> : <NormalText />}
-                  </Form.Item>
-                </Col>
-                <Col xs={24} sm={24} md={24} lg={24} xl={12}>
-                  <Form.Item
-                    label="DOB"
-                    name="DOB"
-                    initialValue={data.DOB ? moment(data.DOB) : undefined}
-                    required
-                  >
-                    <DatePicker disabled={!editing} style={{ width: '100%' }} />
-                  </Form.Item>
-                </Col>
-                <Col xs={24} sm={24} md={24} lg={24} xl={12}>
-                  <Form.Item
-                    label="Address"
-                    name="address"
-                    initialValue={data.address}
-                    required
-                    rules={[
-                      {
-                        required: true,
-                        message: 'Please Enter DOB',
-                      },
-                    ]}
-                  >
-                    {editing ? <Input /> : <NormalText />}
-                  </Form.Item>
-                </Col>
-                <Col xs={24} sm={24} md={24} lg={24} xl={12}>
-                  <Form.Item
-                    label="Suburb"
-                    name="suburb"
-                    initialValue={data.suburb}
-                    required
-                    rules={[
-                      {
-                        required: true,
-                        message: 'Please Enter Suburb',
-                      },
-                    ]}
-                  >
-                    {editing ? <Input /> : <NormalText />}
-                  </Form.Item>
-                </Col>
-                <Col xs={24} sm={24} md={24} lg={24} xl={12}>
-                  <Form.Item
-                    label="State"
-                    name="state"
-                    initialValue={data.state}
-                    required
-                    rules={[
-                      {
-                        required: true,
-                        message: 'Please Enter State',
-                      },
-                    ]}
-                  >
-                    {editing ? <Input /> : <NormalText />}
-                  </Form.Item>
-                </Col>
-                <Col xs={24} sm={24} md={24} lg={24} xl={12}>
-                  <Form.Item
-                    label="Postcode"
-                    name="postcode"
-                    initialValue={data.postcode}
-                    required
-                    rules={[
-                      {
-                        required: true,
-                        type: 'number',
-                        message: 'Please Enter Postcode',
-                      },
-                    ]}
-                  >
-                    {editing ? (
-                      <InputNumber style={{ width: '100%' }} step="1" />
-                    ) : (
-                      <NormalText />
-                    )}
-                  </Form.Item>
-                </Col>
-                <Col xs={24} sm={24} md={24} lg={24} xl={12}>
-                  <Form.Item
-                    label="Country"
-                    name="country"
-                    initialValue={data.country}
-                    required
-                    rules={[
-                      {
-                        required: true,
-                        message: 'Please Enter Country',
-                      },
-                    ]}
-                  >
-                    {editing ? <Input /> : <NormalText />}
-                  </Form.Item>
-                </Col>
                 <Col xs={24} sm={24} md={24} lg={24} xl={12}>
                   <Form.Item
                     label="Occupation"
                     name="occupation"
-                    initialValue={data.occupation}
-                    required
-                    rules={[
-                      {
-                        required: true,
-                        message: 'Please Enter Occupation',
-                      },
-                    ]}
+                    initialValue={data?.occupation}
                   >
                     {editing ? <Input /> : <NormalText />}
                   </Form.Item>
                 </Col>
-                <Col xs={24} sm={24} md={24} lg={24} xl={12}>
-                  <Form.Item
-                    label="Phone"
-                    name="phone"
-                    initialValue={data.phone}
-                  >
-                    {editing ? <Input /> : <NormalText />}
-                  </Form.Item>
-                </Col>
-                <Col xs={24} sm={24} md={24} lg={24} xl={12}>
-                  <Form.Item
-                    label="Relationship"
-                    name="relationship"
-                    initialValue={data.relationship}
-                  >
-                    {editing ? <Input /> : <NormalText />}
-                  </Form.Item>
-                </Col>
-                <Col xs={24} sm={24} md={24} lg={24} xl={12}>
-                  <Form.Item
-                    label="Account Type"
-                    name="isTrustAccount"
-                    initialValue={data.isTrustAccount ? 1 : 0}
-                  >
-                    {editing ? (
-                      <Select
-                        onChange={(value: 0 | 1) => setAccountType(value)}
-                      >
-                        <Option value={0}>Non-Trust Account</Option>
-                        <Option value={1}>Trust Account</Option>
-                      </Select>
-                    ) : (
-                      <NormalText
-                        transform={(value) =>
-                          value === 0 ? 'Non-Trust Account' : 'Trust Account'
-                        }
-                      />
-                    )}
-                  </Form.Item>
-                </Col>
-                {accountType === 1 ? (
-                  <>
-                    <Col xs={24} sm={24} md={24} lg={24} xl={12}>
-                      <Form.Item
-                        label="Company Name"
-                        name="companyName"
-                        initialValue={data.trustAccountCompanyName}
-                      >
-                        {editing ? <Input /> : <NormalText />}
-                      </Form.Item>
-                    </Col>
-                    <Col xs={24} sm={24} md={24} lg={24} xl={12}>
-                      <Form.Item
-                        label="Company Address"
-                        name="companyAddress"
-                        initialValue={data.trustAccountCompanyAddress}
-                      >
-                        {editing ? <Input /> : <NormalText />}
-                      </Form.Item>
-                    </Col>
-                    <Col xs={24} sm={24} md={24} lg={24} xl={12}>
-                      <Form.Item
-                        label="Company ABN"
-                        name="companyABN"
-                        initialValue={data.trustAccountCompanyABN}
-                      >
-                        {editing ? (
-                          <InputNumber style={{ width: '100%' }} step="1" />
-                        ) : (
-                          <NormalText />
-                        )}
-                      </Form.Item>
-                    </Col>
-                  </>
-                ) : (
-                  <Col xs={24} sm={24} md={24} lg={24} xl={12}></Col>
-                )}
                 <Col xs={24} sm={24} md={24} lg={24} xl={12}>
                   <Form.Item
                     label="ID Front"
                     name="idFront"
-                    initialValue={data.idFront}
+                    initialValue={data?.idFront}
                   >
                     <UploadPicture disabled={!editing} />
                   </Form.Item>
@@ -497,9 +395,29 @@ const Detail = ({ data, setURL }: PropsType) => {
                   <Form.Item
                     label="ID Back"
                     name="idBack"
-                    initialValue={data.idBack}
+                    initialValue={data?.idBack}
                   >
                     <UploadPicture disabled={!editing} />
+                  </Form.Item>
+                </Col>
+                <Col xs={24} sm={24} md={24} lg={24} xl={12}>
+                  <Form.Item
+                    label="ID Expire Date"
+                    name="idExpireDate"
+                    initialValue={
+                      data?.idExpireDate ? moment(data.idExpireDate) : undefined
+                    }
+                  >
+                    <DatePicker disabled={!editing} style={{ width: '100%' }} />
+                  </Form.Item>
+                </Col>
+              </>
+            ) : (
+              <>
+                <Col xs={24} sm={24} md={24} lg={24} xl={12}></Col>
+                <Col xs={24} sm={24} md={24} lg={24} xl={12}>
+                  <Form.Item label="Related Doc" name="relatedDoc">
+                    <UploadPicture />
                   </Form.Item>
                 </Col>
               </>
@@ -511,7 +429,7 @@ const Detail = ({ data, setURL }: PropsType) => {
                 <Form.Item>
                   <Popconfirm
                     title="Are you sure to delete this receiver?"
-                    onConfirm={onDeleteHandler}
+                    onConfirm={deleteBeneficiaryQuery}
                   >
                     <Button loading={deleteLoading} danger>
                       Delete
@@ -555,7 +473,7 @@ const Detail = ({ data, setURL }: PropsType) => {
           form.resetFields();
           setEditing(false);
           setModalVisible(false);
-          setRemitType(data.receiverType);
+          setRemitType(data?.receiverType ?? false);
         }}
         onCancel={() => setModalVisible(false)}
       >

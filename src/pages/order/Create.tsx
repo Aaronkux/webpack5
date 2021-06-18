@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
-import { useDispatch, connect } from 'umi';
-import type { Loading } from 'umi';
+import { useRequest } from 'umi';
 import {
   Modal,
   Form,
@@ -10,17 +9,22 @@ import {
   Select,
   InputNumber,
   Divider,
+  message,
 } from 'antd';
 import { CloseCircleOutlined } from '@ant-design/icons';
+import type { BeneficiaryInfo } from '@/services/clients';
+import { addOrder } from '@/services/order';
+import { getClients } from '@/services/clients';
 import styles from './Create.less';
+import { createFormData } from '@/utils';
 
 const { Option } = Select;
 const { TextArea } = Input;
 
 interface PropsType {
   newVisible: boolean;
-  addLoading: boolean;
   setNewVisible: React.Dispatch<React.SetStateAction<boolean>>;
+  queryOrders: () => void;
 }
 
 const layout = {
@@ -40,25 +44,21 @@ const currencies = [
   'JPY',
 ];
 
-const mockClients = [
-  { id: '1', name: 'test1', amount: 0 },
-  { id: '2', name: 'test2', amount: 0 },
-];
-
-let objMockClients: any = {};
-for (let i of mockClients) {
-  objMockClients[i.id] = i;
-}
-
-const Create = ({ newVisible, setNewVisible, addLoading }: PropsType) => {
+const Create = ({ newVisible, setNewVisible, queryOrders }: PropsType) => {
   const [form] = Form.useForm();
+  const [clientType, setClientType] = useState(0);
   const [clients, setClients] = useState<{
     [prop: string]: {
       id: string;
       name: string;
-      amount: number;
+      amount?: number;
     };
   }>({});
+
+  const [canSelectedReceivers, setCanSelectedReceivers] = useState<
+    BeneficiaryInfo[]
+  >([]);
+
   const [receivers, setReceivers] = useState<{
     [prop: string]: {
       id: string;
@@ -66,28 +66,51 @@ const Create = ({ newVisible, setNewVisible, addLoading }: PropsType) => {
       amount: number;
     };
   }>({});
-  const dispatch = useDispatch();
+
+  const onCancelHandler = () => {
+    form.resetFields();
+    setNewVisible(false);
+  };
+
+  const { loading: addLoading, run: updateAction } = useRequest(addOrder, {
+    manual: true,
+    onSuccess: () => {
+      message.success('Add Successfully');
+      queryOrders();
+      onCancelHandler();
+    },
+  });
 
   const finishHandler = async (values: any) => {
     const { clientType, client, ...rest } = values;
     let clientInfo: any = {};
-    switch (clientType) {
-      case 'individual':
-        clientInfo['individualClient'] = client;
-        break;
-      case 'company':
-        clientInfo['companyClient'] = client;
-        break;
+    if (clientType) {
+      clientInfo['companyClient'] = client;
+    } else {
+      clientInfo['individualClient'] = client;
     }
-    const res = await dispatch({
-      type: 'orders/addOrder',
-      payload: { ...rest, ...clientInfo },
-    });
+    updateAction(createFormData({ ...rest, ...clientInfo }));
+  };
+
+  const {
+    data: clientData,
+    loading: clientLoading,
+    mutate,
+    run: queryClients,
+  } = useRequest(getClients, {
+    manual: true,
+    formatResult: (res) => {
+      return res.data?.data ?? [];
+    },
+  });
+
+  const fetchClients = (name: string) => {
+    queryClients(clientType ? 'companyclients' : 'individualclients', name);
   };
 
   const onSelectHandler = (id: string) => {
     if (!clients[id]) {
-      setClients({ ...clients, ...{ [id]: objMockClients[id] } });
+      setClients({ ...clients, ...{ [id]: clientData?.find(item=>item.id === id)! } });
     }
   };
 
@@ -103,7 +126,12 @@ const Create = ({ newVisible, setNewVisible, addLoading }: PropsType) => {
     });
   };
 
-  console.log(clients)
+  const onClientTypeChangeHandler = (val: number) => {
+    setClientType(val);
+    setClients({});
+    form.setFieldsValue({ client: [] });
+    mutate([]);
+  };
 
   return (
     <Modal
@@ -140,10 +168,11 @@ const Create = ({ newVisible, setNewVisible, addLoading }: PropsType) => {
                 { required: true, message: 'Please select client type!' },
               ]}
               required
+              initialValue={clientType}
             >
-              <Select>
-                <Option value={'individual'}>Individual</Option>
-                <Option value={'company'}>Company</Option>
+              <Select value={clientType} onChange={onClientTypeChangeHandler}>
+                <Option value={0}>Individual</Option>
+                <Option value={1}>Company</Option>
               </Select>
             </Form.Item>
           </Col>
@@ -156,15 +185,18 @@ const Create = ({ newVisible, setNewVisible, addLoading }: PropsType) => {
               required
             >
               <Select
-                onSearch={(val) => console.log(val)}
+                onSearch={(val) => fetchClients(val)}
+                loading={clientLoading}
                 showSearch
                 mode="multiple"
                 optionFilterProp="children"
                 onSelect={onSelectHandler}
                 onDeselect={onDeselectHandler}
               >
-                {mockClients.map((v) => (
-                  <Option value={v.id}>{v.name}</Option>
+                {clientData?.map((v) => (
+                  <Option key={v.id} value={v.id}>
+                    {v.name}
+                  </Option>
                 ))}
               </Select>
             </Form.Item>
@@ -172,6 +204,7 @@ const Create = ({ newVisible, setNewVisible, addLoading }: PropsType) => {
           <Col xs={24} sm={24} md={24} lg={12} xl={12}></Col>
           {Object.values(clients).map((item) => (
             <Col
+              key={item.id}
               xs={16}
               sm={16}
               md={16}
@@ -408,6 +441,4 @@ const Create = ({ newVisible, setNewVisible, addLoading }: PropsType) => {
   );
 };
 
-export default connect(({ loading }: { loading: Loading }) => ({
-  addLoading: loading.effects['orders/addOrder']!,
-}))(React.memo(Create));
+export default React.memo(Create);

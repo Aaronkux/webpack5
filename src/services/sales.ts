@@ -18,12 +18,24 @@ export type SalesResponse = ResponseType<SalesResType>;
 export type SingleSaleResponse = ResponseType<SalesInfo>;
 
 export function queryAllSales(current: number, pageSize: number) {
-  return request<SalesResponse>(
-    `/api/saleslist?limit=${pageSize}&offset=${(current - 1) * pageSize}`,
-    {
-      method: 'get',
+  return request<SalesResponse>('/api/saleslist', {
+    method: 'get',
+    params: {
+      limit: pageSize,
+      offset: (current - 1) * pageSize,
     },
-  );
+  });
+}
+
+export function queryAllSalesByName(name: string) {
+  return request<SalesResponse>('/api/saleslist', {
+    method: 'get',
+    params: {
+      limit: 10,
+      offset: 0,
+      name,
+    },
+  });
 }
 
 export async function querySale(id: string) {

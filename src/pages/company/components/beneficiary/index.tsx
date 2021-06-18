@@ -1,55 +1,93 @@
-import React from 'react';
-import { connect } from 'umi';
-import type { ClientsModelState, Loading } from 'umi';
-import type { BeneficiaryInfo } from '@/services/clients';
+import React, { useEffect } from 'react';
 import { Divider, Skeleton } from 'antd';
+import { useRequest, useRouteMatch } from 'umi';
 import Detail from './Detail';
 import NavBar from './NavBar';
+import {
+  getCompanyBeneficiaries,
+  getBeneficiaryDetail,
+} from '@/services/clients';
 import type { ParamsObjType } from '@/hooks/useURLParams';
 import styles from './index.less';
 
 interface PropsType {
-  beneficiary: BeneficiaryInfo[];
-  beneficiaryDetail?: BeneficiaryInfo;
-  beneficiaryLoading: boolean;
-  beneficiaryDetailLoading: boolean;
   urlState: ParamsObjType;
   setURL: React.Dispatch<React.SetStateAction<ParamsObjType>>;
 }
 
-const Beneficiary = ({
-  beneficiary,
-  beneficiaryDetail,
-  beneficiaryLoading,
-  beneficiaryDetailLoading,
-  urlState,
-  setURL,
-}: PropsType) => {
+const Beneficiary = ({ urlState, setURL }: PropsType) => {
+  const match = useRouteMatch<{ id?: string }>();
+  const { id } = match.params;
+  const { data, loading, run: queryCompanyBeneficiaries } = useRequest(
+    getCompanyBeneficiaries,
+    {
+      manual: true,
+      onSuccess: (res) => {
+        setURL({ q: res?.data[0]?.id?.toString() });
+      },
+      formatResult: (res) => {
+        let temp = res.data;
+        if (temp?.data) {
+          temp.data = res?.data?.data.reverse() ?? [];
+        }
+        return temp;
+      },
+    },
+  );
+
+  const getBeneficiaries = () => {
+    if (id) {
+      queryCompanyBeneficiaries(id);
+    }
+  };
+
+  const { data: detailData, loading: detailLoading, run } = useRequest(
+    getBeneficiaryDetail,
+    {
+      manual: true,
+    },
+  );
+
+  const queryBeneficiaryDetail = () => {
+    if (urlState.q) {
+      run(urlState.q);
+    }
+  };
+
+  useEffect(() => {
+    queryBeneficiaryDetail();
+  }, [urlState.q]);
+
+  useEffect(() => {
+    getBeneficiaries();
+  }, [id]);
   return (
     <div className={styles.container}>
       <NavBar
+        data={data?.data}
+        loading={loading}
         urlState={urlState}
         setURL={setURL}
-        data={beneficiary}
-        loading={!beneficiaryLoading && beneficiary.length > 0}
+        getBeneficiaries={getBeneficiaries}
       />
       <Divider className={styles.divider} type="vertical" />
-      {beneficiary.length > 0 &&
-      !beneficiaryDetailLoading &&
-      beneficiaryDetail !== undefined ? (
-        <Detail setURL={setURL} data={beneficiaryDetail!} />
-      ) : (
+      {detailLoading ? (
         <Skeleton paragraph={{ rows: 10 }} />
+      ) : detailData ? (
+        <Detail
+          data={detailData}
+          clientId={id}
+          allBeneficiaryIds={data?.data.map(val=>val.id) ?? []}
+          queryBeneficiaryDetail={queryBeneficiaryDetail}
+          getBeneficiaries={getBeneficiaries}
+        />
+      ) : (
+        <div className={styles.emptyBeneficiaryContent}>
+          You Haven't Create Any Beneficiary Yet
+        </div>
       )}
     </div>
   );
 };
 
-export default connect(
-  ({ clients, loading }: { clients: ClientsModelState; loading: Loading }) => ({
-    beneficiary: clients.beneficiary,
-    beneficiaryDetail: clients.beneficiaryDetail,
-    beneficiaryLoading: loading.effects['clients/getCompanyBeneficiaries']!,
-    beneficiaryDetailLoading: loading.effects['clients/getBeneficiaryDetail']!,
-  }),
-)(React.memo(Beneficiary));
+export default React.memo(Beneficiary);

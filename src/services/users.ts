@@ -44,9 +44,13 @@ export function login(username: string, password: string) {
 
 export function getUsers(current: number, pageSize: number) {
   return request<UsersResponse>(
-    `/api/users?limit=${pageSize}&offset=${(current - 1) * pageSize}`,
+    '/api/users',
     {
       method: 'get',
+      params: {
+        limit: pageSize,
+        offset: (current - 1) * pageSize,
+      },
     },
   );
 }

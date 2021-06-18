@@ -13,10 +13,11 @@ import {
 import { CheckCircleOutlined, CloseCircleOutlined } from '@ant-design/icons';
 import type { PaginationProps } from 'antd';
 import useURLParams from '@/hooks/useURLParams';
-import { connect, useDispatch, request } from 'umi';
-import type { ClientsModelState, Loading } from 'umi';
+import { useRequest } from 'umi';
 import moment from 'moment';
+import { getCompanyClients, deleteCompanyClient } from '@/services/clients';
 import type { CompanyClientInfo } from '@/services/clients';
+import Create from './Create';
 import Filter from './components/Filter';
 import { Link } from 'react-router-dom';
 import styles from './index.less';
@@ -42,10 +43,30 @@ interface PropsType {
   loading: boolean;
 }
 
-const IndividualClients = ({ companyClients, total, loading }: PropsType) => {
+const CompanyClients = () => {
+  const [visible, setVisible] = useState(false);
   const [urlState, setURL] = useURLParams();
-  const dispatch = useDispatch();
-  const [actionLoading, setActionLoading] = useState(false);
+  const { data, loading, run } = useRequest(getCompanyClients, {
+    manual: true,
+  });
+  const { loading: deleteLoading, run: deleteClient } = useRequest(
+    deleteCompanyClient,
+    {
+      manual: true,
+      onSuccess: () => {
+        message.success('Delete Successfully!');
+        fetchCompanyClients();
+      },
+    },
+  );
+  const deleteHandler = (clientId: string) => {
+    deleteClient(clientId);
+  };
+
+  const fetchCompanyClients = () => {
+    const { current = 1, pageSize = 5 } = urlState;
+    run(current, pageSize);
+  };
   const onChangeHandler: PaginationProps['onChange'] = (page, pageSize) => {
     setURL({ current: page.toString(), pageSize: pageSize?.toString() });
   };
@@ -105,34 +126,35 @@ const IndividualClients = ({ companyClients, total, loading }: PropsType) => {
       dataIndex: 'legalPerson1front',
       key: 'legalPerson1front',
       width: 150,
-      render: (img: string) => <Image src={img} width='64px' height='64px' />,
+      render: (img: string) => <Image src={img} width="64px" height="64px" />,
     },
     legalPerson1back: {
       title: 'Legal Person1 Back',
       dataIndex: 'legalPerson1back',
       key: 'legalPerson1back',
       width: 150,
-      render: (img: string) => <Image src={img} width='64px' height='64px' />,
+      render: (img: string) => <Image src={img} width="64px" height="64px" />,
     },
     legalPerson2front: {
       title: 'Legal Person2 Front',
       dataIndex: 'legalPerson2front',
       key: 'legalPerson2front',
       width: 150,
-      render: (img: string) => <Image src={img} width='64px' height='64px' />,
+      render: (img: string) => <Image src={img} width="64px" height="64px" />,
     },
     legalPersion2back: {
       title: 'Legal Persion2 Back',
       dataIndex: 'legalPersion2back',
       key: 'legalPersion2back',
       width: 150,
-      render: (img: string) => <Image src={img} width='64px' height='64px' />,
+      render: (img: string) => <Image src={img} width="64px" height="64px" />,
     },
     companyExtract: {
       title: 'Company Extract',
       dataIndex: 'companyExtract',
       key: 'companyExtract',
       width: 150,
+      render: (img: string) => <Image src={img} width="64px" height="64px" />,
     },
     accountHolderName: {
       title: 'AccountHolder Name',
@@ -151,7 +173,7 @@ const IndividualClients = ({ companyClients, total, loading }: PropsType) => {
       dataIndex: 'accountHolderDOB',
       key: 'accountHolderDOB',
       render: (dob: string, record: any) => {
-        return <>{moment(dob).zone(6).format('DD-MM-YYYY')}</>;
+        return <>{dob && moment(dob).zone(6).format('DD-MM-YYYY')}</>;
       },
       width: 150,
     },
@@ -184,7 +206,7 @@ const IndividualClients = ({ companyClients, total, loading }: PropsType) => {
       dataIndex: 'signature',
       key: 'signature',
       width: 150,
-      render: (img: string) => <Image src={img} width='64px' height='64px' />,
+      render: (img: string) => <Image src={img} width="64px" height="64px" />,
     },
     unsubscribe: {
       title: 'Unsubscribe',
@@ -215,7 +237,7 @@ const IndividualClients = ({ companyClients, total, loading }: PropsType) => {
       dataIndex: 'person1ExpireDate',
       key: 'person1ExpireDate',
       render: (dob: string) => {
-        return <>{moment(dob).zone(6).format('DD-MM-YYYY')}</>;
+        return <>{dob && moment(dob).zone(6).format('DD-MM-YYYY')}</>;
       },
       width: 150,
     },
@@ -224,7 +246,7 @@ const IndividualClients = ({ companyClients, total, loading }: PropsType) => {
       dataIndex: 'person2ExpireDate',
       key: 'person2ExpireDate',
       render: (dob: string) => {
-        return <>{moment(dob).zone(6).format('DD-MM-YYYY')}</>;
+        return <>{dob && moment(dob).zone(6).format('DD-MM-YYYY')}</>;
       },
       width: 150,
     },
@@ -276,42 +298,23 @@ const IndividualClients = ({ companyClients, total, loading }: PropsType) => {
   };
 
   dynamicColumns = [headColumns, ...dynamicColumns, operators];
-  const deleteHandler = async (clientId: string) => {
-    setActionLoading(true);
-    const res = await request(`/api/getIndividualClients/${clientId}`, {
-      method: 'delete',
-    });
-    if (res.success) {
-      message.success('Success');
-      dispatch({
-        type: 'orders/getOrders',
-        payload: { current: urlState.current, pageSize: urlState.pageSize },
-      });
-    } else {
-      message.error(res.errorMessage);
-    }
-    setActionLoading(false);
-  };
 
   useEffect(() => {
-    dispatch({
-      type: 'clients/getCompanyClients',
-      payload: { current: urlState.current, pageSize: urlState.pageSize },
-    });
+    fetchCompanyClients();
   }, [urlState]);
 
   return (
     <>
       <Card className={styles.filterContainer}>
-        <Filter />
+        <Filter setVisible={setVisible} />
       </Card>
       <Card>
         <Table
           className={styles.table}
           bordered
-          loading={loading || actionLoading}
+          loading={loading || deleteLoading}
           columns={dynamicColumns}
-          dataSource={companyClients}
+          dataSource={data?.data}
           rowKey={'id'}
           pagination={false}
           scroll={{ x: 1500 }}
@@ -324,18 +327,17 @@ const IndividualClients = ({ companyClients, total, loading }: PropsType) => {
             current={urlState.current ? parseInt(urlState.current) : 1}
             pageSize={urlState.pageSize ? parseInt(urlState.pageSize) : 5}
             pageSizeOptions={['5', '10', '15']}
-            total={total}
+            total={data?.total}
           />
         </Row>
+        <Create
+          fetchCompanyClients={fetchCompanyClients}
+          newVisible={visible}
+          setNewVisible={setVisible}
+        />
       </Card>
     </>
   );
 };
 
-export default connect(
-  ({ clients, loading }: { clients: ClientsModelState; loading: Loading }) => ({
-    companyClients: clients.companyClients.clients,
-    total: clients.companyClients.total,
-    loading: loading.models.clients,
-  }),
-)(React.memo(IndividualClients));
+export default React.memo(CompanyClients);

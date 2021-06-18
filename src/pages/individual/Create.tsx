@@ -77,9 +77,11 @@ export default function Create({
       id2ExpireDate,
       purpose,
       other,
+      receiver,
+      ...rest
     } = values;
     const tempData = {
-      ...values,
+      ...rest,
       ...{
         DOB: DOB?.format('YYYY-MM-DD'),
         id1ExpireDate: id1ExpireDate?.format('YYYY-MM-DD'),
@@ -289,6 +291,16 @@ export default function Create({
         <Divider />
         <Row>
           <Col xs={24} sm={24} md={24} lg={12} xl={12}>
+            <Form.Item label="ID1 Expire Date" name="id1ExpireDate">
+              <DatePicker style={{ width: '100%' }} />
+            </Form.Item>
+          </Col>
+          <Col xs={24} sm={24} md={24} lg={12} xl={12}>
+            <Form.Item label="ID2 Expire Date" name="id2ExpireDate">
+              <DatePicker style={{ width: '100%' }} />
+            </Form.Item>
+          </Col>
+          <Col xs={24} sm={24} md={24} lg={12} xl={12}>
             <Form.Item label="ID1 Front" name="id1front">
               <UploadPicture />
             </Form.Item>
@@ -306,16 +318,6 @@ export default function Create({
           <Col xs={24} sm={24} md={24} lg={12} xl={12}>
             <Form.Item label="ID2 Back" name="id2back">
               <UploadPicture />
-            </Form.Item>
-          </Col>
-          <Col xs={24} sm={24} md={24} lg={12} xl={12}>
-            <Form.Item label="ID1 Expire Date" name="id1ExpireDate">
-              <DatePicker style={{ width: '100%' }} />
-            </Form.Item>
-          </Col>
-          <Col xs={24} sm={24} md={24} lg={12} xl={12}>
-            <Form.Item label="ID2 Expire Date" name="id2ExpireDate">
-              <DatePicker style={{ width: '100%' }} />
             </Form.Item>
           </Col>
           <Col xs={24} sm={24} md={24} lg={12} xl={12}>

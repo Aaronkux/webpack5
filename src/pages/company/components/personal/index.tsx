@@ -5,110 +5,167 @@ import {
   Input,
   Row,
   Col,
+  Select,
+  Radio,
   DatePicker,
+  InputNumber,
+  Switch,
   Button,
   Divider,
   Modal,
-  Switch,
-  Select,
   message,
 } from 'antd';
-import { connect, useDispatch, useRouteMatch } from 'umi';
-import type { ClientsModelState, Loading } from 'umi';
+import { useRouteMatch, useRequest } from 'umi';
 import moment from 'moment';
 import type { Moment } from 'moment';
 import NormalText from '@/components/NormalText';
 import UploadPicture from '@/components/UploadPicture';
 import type { CompanyClientInfo } from '@/services/clients';
-import { updateIndividualClientsDetail } from '@/services/clients';
-import { isBlob, createFormData } from '@/utils';
+import {
+  updateCompanyClientsDetail,
+  getCompanyClientsDetail,
+} from '@/services/clients';
+import { queryAllSalesByName } from '@/services/sales';
+import { createFormData, imageFileProcesser } from '@/utils';
 import styles from './index.less';
 
 const { Option } = Select;
+
 const layout = {
   labelCol: { span: 8 },
   wrapperCol: { span: 19 },
 };
 
 const purposeOptions = [
+  'provider',
+  'salary',
   'property',
-  'pepayment',
-  'immigration',
+  'Loan_Mortgage_Rent_Billing',
   'investment',
-  'living',
-  'deposit',
-  'gift',
 ];
-
-interface PropsType {
-  companyClientDetail?: CompanyClientInfo;
-  loading: boolean;
-}
 
 type Merge<M, N> = Omit<M, Extract<keyof M, keyof N>> & N;
 
-type FormClientInfo = Merge<
-  Omit<Partial<CompanyClientInfo>, 'salesman' | 'gender'>,
+type FormCompanyClientInfo = Merge<
+  Partial<CompanyClientInfo>,
   {
-    DOB: Moment;
-    id1expiredate: Moment;
-    gender: 0 | 1;
+    accountHolderDOB: Moment;
+    person1ExpireDate: Moment;
+    person2ExpireDate: Moment;
+    salesman: string;
+    purpose: string;
+    other: string;
   }
 >;
 
-const Personal = ({ companyClientDetail, loading }: PropsType) => {
+const Personal = () => {
   const [form] = Form.useForm();
   const match = useRouteMatch<{ id?: string }>();
-  const dispatch = useDispatch();
+  const { id } = match.params;
+
   const [showOther, setShowOther] = useState(false);
   const [editing, setEditing] = useState(false);
-  const [updating, setUpdating] = useState(false);
+  const [salesmanChanged, setSalesmanChanged] = useState(false);
+  // should resetFields after fetch, manual setloading avoiding re-request & re-render of form and img.
+  const [loading, setLoading] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
-  const { id } = match.params;
-  useEffect(() => {
-    if (id) {
-      dispatch({
-        type: 'clients/getCompanyClientsDetail',
-        payload: { id },
-      });
-    }
-  }, [id]);
-  useEffect(() => {
-    if (companyClientDetail?.purpose) {
-      if (!purposeOptions.includes(companyClientDetail?.purpose)) {
-        setShowOther(true);
-      }
-    }
-  }, [companyClientDetail]);
 
-  const onFinishHandler = async (values: FormClientInfo) => {
+  const {
+    data: salesData,
+    loading: salesLoading,
+    mutate,
+    run: querySales,
+  } = useRequest(queryAllSalesByName, {
+    manual: true,
+    formatResult: (res) => {
+      return res.data?.data ?? [];
+    },
+  });
+
+  const { data, run } = useRequest(getCompanyClientsDetail, {
+    manual: true,
+    onSuccess: (res) => {
+      form.resetFields();
+      setLoading(false);
+    },
+  });
+
+  const queryIndividualClientsDetail = () => {
+    if (id) {
+      run(id);
+    }
+  };
+
+  const { loading: updating, run: saveChange } = useRequest(
+    updateCompanyClientsDetail,
+    {
+      manual: true,
+      onSuccess: () => {
+        setEditing(false);
+        message.success('Update Successfully!');
+        setLoading(true);
+        queryIndividualClientsDetail();
+      },
+    },
+  );
+
+  const onSearchHandler = (val: string) => {
+    if (val === '' && salesData?.length) {
+      mutate([]);
+    } else {
+      querySales(val);
+    }
+  };
+
+  useEffect(() => {
+    setLoading(true);
+    queryIndividualClientsDetail();
+  }, [id]);
+
+  useEffect(() => {
+    if (data?.purpose && !purposeOptions.includes(data.purpose)) {
+      setShowOther(true);
+    }
+  }, [data]);
+  const onFinishHandler = async (values: FormCompanyClientInfo) => {
     if (!id) {
       message.error(`Can't Find Id Of The Receiver`);
       return;
     }
-    setUpdating(true);
-    const { DOB, id1expiredate, gender } = values;
-    const formatDOB = DOB?.format('YYYY-MM-DD');
-    const formatId1expiredate = id1expiredate?.format('YYYY-MM-DD');
+    const {
+      accountHolderDOB,
+      signature,
+      person1ExpireDate,
+      legalPerson1front,
+      legalPerson1back,
+      legalPerson2front,
+      legalPerson2back,
+      companyExtract,
+      person2ExpireDate,
+      purpose,
+      receiver,
+      salesman,
+      other,
+      ...rest
+    } = values;
     const tempData = {
-      ...values,
+      ...rest,
       ...{
-        DOB: formatDOB,
-        gender: gender === 1 ? true : false,
-        id1expiredate: formatId1expiredate,
+        salesman: salesmanChanged ? salesman : undefined,
+        receiver: JSON.stringify(receiver ?? []),
+        accountHolderDOB: accountHolderDOB?.format('YYYY-MM-DD'),
+        id1ExpireDate: person1ExpireDate?.format('YYYY-MM-DD'),
+        id2ExpireDate: person2ExpireDate?.format('YYYY-MM-DD'),
+        legalPerson1front: imageFileProcesser(legalPerson1front),
+        legalPerson1back: imageFileProcesser(legalPerson1back),
+        legalPerson2front: imageFileProcesser(legalPerson2front),
+        legalPerson2back: imageFileProcesser(legalPerson2back),
+        companyExtract: imageFileProcesser(companyExtract),
+        signature: imageFileProcesser(signature),
+        purpose: purpose === 'other' ? other : purpose,
       },
     };
-    const res = await updateIndividualClientsDetail(id, createFormData(tempData));
-    setUpdating(false);
-    if (res.success) {
-      message.success('Update Successfully!');
-      setEditing(false);
-      await dispatch({
-        type: 'clients/getCompanyClientsDetail',
-        payload: { id },
-      });
-      form.resetFields();
-    }
+    saveChange(id, createFormData(tempData));
   };
 
   return (
@@ -151,56 +208,93 @@ const Personal = ({ companyClientDetail, loading }: PropsType) => {
               <Form.Item
                 label="Entity Name"
                 name="name"
-                initialValue={companyClientDetail?.name}
                 required
+                initialValue={data?.name}
                 rules={[
                   { required: true, message: 'Please Enter Your Entity Name!' },
                 ]}
               >
-                {editing ? <Input /> : <NormalText />}
+                {editing ? <Input placeholder="Entity Name" /> : <NormalText />}
               </Form.Item>
             </Col>
             <Col xs={24} sm={24} md={24} lg={12} xl={12}>
               <Form.Item
                 label="Entity Type"
                 name="companyType"
-                initialValue={companyClientDetail?.companyType}
+                initialValue={data?.companyType}
+                required
+                rules={[
+                  { required: true, message: 'Please Enter Your Entity Type!' },
+                ]}
               >
-                {editing ? <Input /> : <NormalText />}
+                {editing ? <Input placeholder="Entity Type" /> : <NormalText />}
               </Form.Item>
             </Col>
             <Col xs={24} sm={24} md={24} lg={12} xl={12}>
               <Form.Item
-                label="Registered Business Address"
+                label="Registered Address"
                 name="registeredBusinessAddress"
-                initialValue={companyClientDetail?.registeredBusinessAddress}
+                initialValue={data?.registeredBusinessAddress}
+                required
+                rules={[
+                  {
+                    required: true,
+                    message: 'Please Enter Your Registered Address!',
+                  },
+                ]}
               >
-                {editing ? <Input /> : <NormalText />}
+                {editing ? (
+                  <Input placeholder="Registered Business Address" />
+                ) : (
+                  <NormalText />
+                )}
               </Form.Item>
             </Col>
             <Col xs={24} sm={24} md={24} lg={12} xl={12}>
               <Form.Item
-                label="Principle Business Address"
+                label="Principle Address"
                 name="principleBusinessAddress"
-                initialValue={companyClientDetail?.principleBusinessAddress}
+                initialValue={data?.principleBusinessAddress}
+                required
+                rules={[
+                  {
+                    required: true,
+                    message: 'Please Enter Your Principle Address!',
+                  },
+                ]}
               >
-                {editing ? <Input /> : <NormalText />}
+                {editing ? (
+                  <Input placeholder="Principle Business Address" />
+                ) : (
+                  <NormalText />
+                )}
               </Form.Item>
             </Col>
             <Col xs={24} sm={24} md={24} lg={12} xl={12}>
               <Form.Item
-                label="Company Contact Number"
+                label="Contact Number"
                 name="companyContactNumber"
-                initialValue={companyClientDetail?.companyContactNumber}
+                initialValue={data?.companyContactNumber}
+                required
+                rules={[
+                  {
+                    required: true,
+                    message: 'Please Enter Your Contact Number!',
+                  },
+                ]}
               >
-                {editing ? <Input /> : <NormalText />}
+                {editing ? (
+                  <Input placeholder="Company Contact Number" />
+                ) : (
+                  <NormalText />
+                )}
               </Form.Item>
             </Col>
             <Col xs={24} sm={24} md={24} lg={12} xl={12}>
               <Form.Item
                 label="E-mail"
                 name="email"
-                initialValue={companyClientDetail?.email}
+                initialValue={data?.email}
                 required
                 rules={[
                   {
@@ -210,100 +304,31 @@ const Personal = ({ companyClientDetail, loading }: PropsType) => {
                   },
                 ]}
               >
-                {editing ? <Input /> : <NormalText />}
+                {editing ? (
+                  <Input placeholder="Company Email" />
+                ) : (
+                  <NormalText />
+                )}
               </Form.Item>
             </Col>
             <Col xs={24} sm={24} md={24} lg={12} xl={12}>
               <Form.Item
                 label="ABN_ACN_ARBN"
                 name="ABN_ACN_ARBN"
-                initialValue={companyClientDetail?.ABN_ACN_ARBN}
+                initialValue={data?.ABN_ACN_ARBN}
+                required
+                rules={[
+                  {
+                    required: true,
+                    message: 'Please Enter Your ABN_ACN_ARBN!',
+                  },
+                ]}
               >
-                {editing ? <Input /> : <NormalText />}
-              </Form.Item>
-            </Col>
-            <Col xs={24} sm={24} md={24} lg={12} xl={12}>
-              <Form.Item
-                label="Salesman"
-                name="salesman"
-                initialValue={companyClientDetail?.salesman?.name}
-              >
-                {editing ? <Input /> : <NormalText />}
-              </Form.Item>
-            </Col>
-
-           
-            <Col xs={24} sm={24} md={24} lg={12} xl={12}>
-              <Form.Item
-                label="ID1 Expire Date"
-                name="person1ExpireDate"
-                initialValue={moment(companyClientDetail?.person1ExpireDate)}
-              >
-                <DatePicker disabled={!editing} style={{ width: '100%' }} />
-              </Form.Item>
-            </Col>
-            <Col xs={24} sm={24} md={24} lg={12} xl={12}>
-              <Form.Item
-                label="ID2 Expire Date"
-                name="person2ExpireDate"
-                initialValue={moment(companyClientDetail?.person2ExpireDate)}
-              >
-                <DatePicker disabled={!editing} style={{ width: '100%' }} />
-              </Form.Item>
-            </Col>
-            <Col xs={24} sm={24} md={24} lg={12} xl={12}>
-              <Form.Item
-                label="ID1 Front"
-                name="legalPerson1front"
-                initialValue={companyClientDetail?.legalPerson1front}
-              >
-                <UploadPicture disabled={!editing} />
-              </Form.Item>
-            </Col>
-            <Col xs={24} sm={24} md={24} lg={12} xl={12}>
-              <Form.Item
-                label="ID1 Back"
-                name="legalPerson1back"
-                initialValue={companyClientDetail?.legalPerson1back}
-              >
-                <UploadPicture disabled={!editing} />
-              </Form.Item>
-            </Col>
-            <Col xs={24} sm={24} md={24} lg={12} xl={12}>
-              <Form.Item
-                label="ID2 Front"
-                name="legalPerson2front"
-                initialValue={companyClientDetail?.legalPerson2front}
-              >
-                <UploadPicture disabled={!editing} />
-              </Form.Item>
-            </Col>
-            <Col xs={24} sm={24} md={24} lg={12} xl={12}>
-              <Form.Item
-                label="ID2 Back"
-                name="legalPersion2back"
-                initialValue={companyClientDetail?.legalPersion2back}
-              >
-                <UploadPicture disabled={!editing} />
-              </Form.Item>
-            </Col>
-
-            <Col xs={24} sm={24} md={24} lg={12} xl={12}>
-              <Form.Item
-                label="Company Extract"
-                name="companyExtract"
-                initialValue={companyClientDetail?.companyExtract}
-              >
-                <UploadPicture disabled={!editing} />
-              </Form.Item>
-            </Col>
-            <Col xs={24} sm={24} md={24} lg={12} xl={12}>
-              <Form.Item
-                label="Signature"
-                name="signature"
-                initialValue={companyClientDetail?.signature}
-              >
-                <UploadPicture disabled={!editing} />
+                {editing ? (
+                  <Input placeholder="ABN_ACN_ARBN" />
+                ) : (
+                  <NormalText />
+                )}
               </Form.Item>
             </Col>
             <Col xs={24} sm={24} md={24} lg={12} xl={12}>
@@ -311,9 +336,9 @@ const Personal = ({ companyClientDetail, loading }: PropsType) => {
                 label="Purpose"
                 name="purpose"
                 initialValue={
-                  companyClientDetail?.purpose
-                    ? purposeOptions.includes(companyClientDetail?.purpose)
-                      ? companyClientDetail?.purpose
+                  data?.purpose
+                    ? purposeOptions.includes(data?.purpose)
+                      ? data?.purpose
                       : 'Other'
                     : undefined
                 }
@@ -328,13 +353,13 @@ const Personal = ({ companyClientDetail, loading }: PropsType) => {
                       }
                     }}
                   >
+                    <Option value="provider">Provider</Option>
+                    <Option value="salary">Salary</Option>
                     <Option value="property">Property</Option>
-                    <Option value="pepayment">Repayment</Option>
-                    <Option value="immigration">Immigration</Option>
+                    <Option value="Loan_Mortgage_Rent_Billing">
+                      Loan/Mortgage/Rent/Billing
+                    </Option>
                     <Option value="investment">Investment</Option>
-                    <Option value="living">Living</Option>
-                    <Option value="deposit">Deposit</Option>
-                    <Option value="gift">Gift</Option>
                     <Option value="other">Other</Option>
                   </Select>
                 ) : (
@@ -347,7 +372,7 @@ const Personal = ({ companyClientDetail, loading }: PropsType) => {
                 label="Unsubscribe"
                 name="unsubscribe"
                 valuePropName="checked"
-                initialValue={companyClientDetail?.unsubscribe}
+                initialValue={data?.unsubscribe}
               >
                 <Switch disabled={!editing} />
               </Form.Item>
@@ -357,13 +382,42 @@ const Personal = ({ companyClientDetail, loading }: PropsType) => {
                 <Form.Item
                   label="Other"
                   name="other"
-                  initialValue={companyClientDetail?.purpose}
+                  initialValue={data?.purpose}
                 >
-                  {editing ? <Input /> : <NormalText />}
+                  {editing ? <Input placeholder="Other" /> : <NormalText />}
                 </Form.Item>
               </Col>
             )}
+            <Col xs={24} sm={24} md={24} lg={12} xl={12}>
+              <Form.Item
+                label="Salesman"
+                name="salesman"
+                initialValue={data?.salesman?.name}
+              >
+                {editing ? (
+                  <Select
+                    disabled={!editing}
+                    showSearch
+                    allowClear
+                    optionFilterProp="children"
+                    loading={salesLoading}
+                    onSelect={() => setSalesmanChanged(true)}
+                    onSearch={onSearchHandler}
+                  >
+                    {salesData?.map((sale) => (
+                      <Option key={sale.id} value={sale.id}>
+                        {sale.name}
+                      </Option>
+                    ))}
+                  </Select>
+                ) : (
+                  <NormalText />
+                )}
+              </Form.Item>
+            </Col>
+            <Col xs={24} sm={24} md={24} lg={12} xl={12}></Col>
           </Row>
+
           <h1 className={styles.title}>Primary Account Holder</h1>
           <Divider />
           <Row>
@@ -371,80 +425,145 @@ const Personal = ({ companyClientDetail, loading }: PropsType) => {
               <Form.Item
                 label="Name"
                 name="accountHolderName"
-                initialValue={companyClientDetail?.accountHolderName}
+                initialValue={data?.accountHolderName}
               >
-                {editing ? <Input /> : <NormalText />}
+                {editing ? (
+                  <Input placeholder="Account Holder Name" />
+                ) : (
+                  <NormalText />
+                )}
               </Form.Item>
             </Col>
             <Col xs={24} sm={24} md={24} lg={12} xl={12}>
               <Form.Item
                 label="Position"
                 name="accountHolderPosition"
-                initialValue={companyClientDetail?.accountHolderPosition}
+                initialValue={data?.accountHolderPosition}
               >
-                {editing ? <Input /> : <NormalText />}
-              </Form.Item>
-            </Col>
-
-            <Col xs={24} sm={24} md={24} lg={12} xl={12}>
-              <Form.Item
-                label="Contact Number"
-                name="accountHolderContactNumber"
-                initialValue={companyClientDetail?.accountHolderContactNumber}
-              >
-                {editing ? <Input /> : <NormalText />}
-              </Form.Item>
-            </Col>
-            <Col xs={24} sm={24} md={24} lg={12} xl={12}>
-              <Form.Item
-                label="Email"
-                name="accountHolderEmail"
-                initialValue={companyClientDetail?.accountHolderEmail}
-              >
-                {editing ? <Input /> : <NormalText />}
-              </Form.Item>
-            </Col>
-            <Col xs={24} sm={24} md={24} lg={12} xl={12}>
-              <Form.Item
-                label="Residential Address"
-                name="accountHolderResidentialAddress"
-                initialValue={
-                  companyClientDetail?.accountHolderResidentialAddress
-                }
-              >
-                {editing ? <Input /> : <NormalText />}
+                {editing ? (
+                  <Input placeholder="Account Holder Position" />
+                ) : (
+                  <NormalText />
+                )}
               </Form.Item>
             </Col>
             <Col xs={24} sm={24} md={24} lg={12} xl={12}>
               <Form.Item
                 label="DOB"
                 name="accountHolderDOB"
-                initialValue={moment(companyClientDetail?.accountHolderDOB)}
+                initialValue={
+                  data?.accountHolderDOB && moment(data?.accountHolderDOB)
+                }
+              >
+                <DatePicker
+                  disabled={!editing}
+                  style={{ width: '100%' }}
+                  placeholder="Account Holder DOB"
+                />
+              </Form.Item>
+            </Col>
+            <Col xs={24} sm={24} md={24} lg={12} xl={12}>
+              <Form.Item
+                label="Contact Number"
+                name="accountHolderContactNumber"
+                initialValue={data?.accountHolderContactNumber}
+              >
+                {editing ? (
+                  <Input placeholder="Account Holder Number" />
+                ) : (
+                  <NormalText />
+                )}
+              </Form.Item>
+            </Col>
+            <Col xs={24} sm={24} md={24} lg={12} xl={12}>
+              <Form.Item
+                label="E-mail"
+                name="accountHolderEmail"
+                initialValue={data?.accountHolderEmail}
+                required
+                rules={[
+                  {
+                    required: true,
+                    type: 'email',
+                    message: 'Please Enter Correct Email!',
+                  },
+                ]}
+              >
+                {editing ? (
+                  <Input placeholder="Account Holder Email" />
+                ) : (
+                  <NormalText />
+                )}
+              </Form.Item>
+            </Col>
+            <Col xs={24} sm={24} md={24} lg={12} xl={12}>
+              <Form.Item
+                label="Address"
+                name="accountHolderResidentialAddress"
+                initialValue={data?.accountHolderResidentialAddress}
+              >
+                {editing ? (
+                  <Input placeholder="Account Holder Residential Address" />
+                ) : (
+                  <NormalText />
+                )}
+              </Form.Item>
+            </Col>
+          </Row>
+          <h1 className={styles.title}>Attachment Files</h1>
+          <Divider />
+          <Row>
+            <Col xs={24} sm={24} md={24} lg={12} xl={12}>
+              <Form.Item
+                label="Person1 Expire Date"
+                name="person1ExpireDate"
+                initialValue={
+                  data?.person1ExpireDate && moment(data?.person1ExpireDate)
+                }
               >
                 <DatePicker disabled={!editing} style={{ width: '100%' }} />
               </Form.Item>
             </Col>
-          </Row>
-          <Row gutter={[16, 0]} justify="end">
-            {editing && (
-              <Col>
-                <Form.Item>
-                  <Button loading={updating} type="primary" htmlType="submit">
-                    Save
-                  </Button>
-                </Form.Item>
-              </Col>
-            )}
-            <Col>
-              {editing ? (
-                <Button type="primary" onClick={() => setModalVisible(true)}>
-                  Cancel
-                </Button>
-              ) : (
-                <Button type="primary" onClick={() => setEditing(true)}>
-                  Edit
-                </Button>
-              )}
+            <Col xs={24} sm={24} md={24} lg={12} xl={12}>
+              <Form.Item
+                label="Person2 Expire Date"
+                name="person2ExpireDate"
+                initialValue={
+                  data?.person2ExpireDate && moment(data?.person2ExpireDate)
+                }
+              >
+                <DatePicker disabled={!editing} style={{ width: '100%' }} />
+              </Form.Item>
+            </Col>
+            <Col xs={24} sm={24} md={24} lg={12} xl={12}>
+              <Form.Item label="Legal Person1 Front" name="legalPerson1front" initialValue={data?.legalPerson1front}>
+                <UploadPicture disabled={!editing} />
+              </Form.Item>
+            </Col>
+            <Col xs={24} sm={24} md={24} lg={12} xl={12}>
+              <Form.Item label="Legal Person1 Back" name="legalPerson1back" initialValue={data?.legalPerson1back}>
+                <UploadPicture disabled={!editing} />
+              </Form.Item>
+            </Col>
+            <Col xs={24} sm={24} md={24} lg={12} xl={12}>
+              <Form.Item label="Legal Person2 Front" name="legalPerson2front" initialValue={data?.legalPerson2front}>
+                <UploadPicture disabled={!editing} />
+              </Form.Item>
+            </Col>
+            <Col xs={24} sm={24} md={24} lg={12} xl={12}>
+              <Form.Item label="Legal Person2 Back" name="legalPerson2back" initialValue={data?.legalPerson2back}>
+                <UploadPicture disabled={!editing} />
+              </Form.Item>
+            </Col>
+            <Col xs={24} sm={24} md={24} lg={12} xl={12}>
+              <Form.Item label="Company Extract" name="companyExtract">
+                <UploadPicture disabled={!editing} />
+              </Form.Item>
+            </Col>
+            <Col xs={24} sm={24} md={24} lg={12} xl={12}>
+              <Form.Item label="Signature" name="signature">
+                <UploadPicture disabled={!editing} />
+              </Form.Item>
             </Col>
           </Row>
         </Form>
@@ -473,9 +592,4 @@ const Personal = ({ companyClientDetail, loading }: PropsType) => {
     </>
   );
 };
-export default connect(
-  ({ clients, loading }: { clients: ClientsModelState; loading: Loading }) => ({
-    companyClientDetail: clients.companyClientDetail,
-    loading: loading.effects['clients/getCompanyClientsDetail']!,
-  }),
-)(React.memo(Personal));
+export default React.memo(Personal);

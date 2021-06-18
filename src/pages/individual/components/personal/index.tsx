@@ -25,6 +25,7 @@ import {
   updateIndividualClientsDetail,
   getIndividualClientsDetail,
 } from '@/services/clients';
+import { queryAllSalesByName } from '@/services/sales';
 import { createFormData, imageFileProcesser } from '@/utils';
 import styles from './index.less';
 
@@ -66,9 +67,22 @@ const Personal = () => {
 
   const [showOther, setShowOther] = useState(false);
   const [editing, setEditing] = useState(false);
+  const [salesmanChanged, setSalesmanChanged] = useState(false);
   // should resetFields after fetch, manual setloading avoiding re-request & re-render of form and img.
   const [loading, setLoading] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
+
+  const {
+    data: salesData,
+    loading: salesLoading,
+    mutate,
+    run: querySales,
+  } = useRequest(queryAllSalesByName, {
+    manual: true,
+    formatResult: (res) => {
+      return res.data?.data ?? [];
+    },
+  });
 
   const { data, run } = useRequest(getIndividualClientsDetail, {
     manual: true,
@@ -97,6 +111,14 @@ const Personal = () => {
     },
   );
 
+  const onSearchHandler = (val: string) => {
+    if (val === '' && salesData?.length) {
+      mutate([]);
+    } else {
+      querySales(val);
+    }
+  };
+
   useEffect(() => {
     setLoading(true);
     queryIndividualClientsDetail();
@@ -124,11 +146,15 @@ const Personal = () => {
       id1ExpireDate,
       id2ExpireDate,
       purpose,
+      receiver,
+      salesman,
       other,
+      ...rest
     } = values;
     const tempData = {
-      ...values,
+      ...rest,
       ...{
+        salesman: salesmanChanged ? salesman : undefined,
         DOB: DOB?.format('YYYY-MM-DD'),
         id1ExpireDate: id1ExpireDate
           ? id1ExpireDate?.format('YYYY-MM-DD')
@@ -245,12 +271,23 @@ const Personal = () => {
               <Form.Item
                 label="Salesman"
                 name="salesman"
-                initialValue={data?.salesman?.id}
+                initialValue={data?.salesman?.name}
               >
                 {editing ? (
-                  <Select>
-                    <Option value={'123321'}>James</Option>
-                    <Option value={'132213'}>Lebron</Option>
+                  <Select
+                    disabled={!editing}
+                    showSearch
+                    allowClear
+                    optionFilterProp="children"
+                    loading={salesLoading}
+                    onSelect={() => setSalesmanChanged(true)}
+                    onSearch={onSearchHandler}
+                  >
+                    {salesData?.map((sale) => (
+                      <Option key={sale.id} value={sale.id}>
+                        {sale.name}
+                      </Option>
+                    ))}
                   </Select>
                 ) : (
                   <NormalText />

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useDispatch, connect, request } from 'umi';
+import { Link, useRequest } from 'umi';
 import {
   Row,
   Pagination,
@@ -16,10 +16,10 @@ import {
   ClockCircleOutlined,
   SyncOutlined,
 } from '@ant-design/icons';
-import type { OrderModelState, Loading } from 'umi';
 import type { PaginationProps } from 'antd';
 import useURLParams from '@/hooks/useURLParams';
 import type { OrderInfo } from '@/services/order';
+import { getOrders, updateOrder, deleteOrder } from '@/services/order';
 import store from 'store';
 import Filter from './Filter';
 import Create from './Create';
@@ -27,6 +27,7 @@ import styles from './index.less';
 import edit from '@/assets/edit.svg';
 import next from '@/assets/next.svg';
 import del from '@/assets/del.svg';
+import { createFormData } from '@/utils';
 
 type StageType =
   | 'compliance'
@@ -86,58 +87,74 @@ const StagePopoverContent = ({
   );
 };
 
-interface PropsType {
-  orders: OrderInfo[];
-  total: number;
-  loading: boolean;
-}
-
-const Order = ({ orders, total, loading }: PropsType) => {
+const Order = () => {
   const [urlState, setURL] = useURLParams();
   const onChangeHandler: PaginationProps['onChange'] = (page, pageSize) => {
     setURL({ current: page.toString(), pageSize: pageSize?.toString() });
   };
-  const [actionLoading, setActionLoading] = useState(false);
   const [visible, setVisible] = useState(false);
-  const dispatch = useDispatch();
   const { id } = store.get('user');
-  const nextHandler = async (orderId: string, stage: string) => {
-    if (!stage) message.error('Already finished');
-    setActionLoading(true);
-    const res = await request(`/api/order/${id}`, {
-      method: 'put',
-      data: {
-        [stage]: orderId,
-      },
-    });
-    if (res.success) {
-      message.success('Success');
-      dispatch({
-        type: 'orders/getOrders',
-        payload: { current: urlState.current, pageSize: urlState.pageSize },
-      });
-    } else {
-      message.error(res.errorMessage);
-    }
-    setActionLoading(false);
+
+  // query all orders
+  const { data, loading, run } = useRequest(getOrders, {
+    manual: true,
+    onSuccess: () => {},
+  });
+
+  const queryOrders = () => {
+    const { current = 1, pageSize = 5 } = urlState;
+    run(current, pageSize);
   };
 
-  const deleteHandler = async (orderId: string) => {
-    setActionLoading(true);
-    const res = await request(`/api/order/${orderId}`, {
-      method: 'delete',
-    });
-    if (res.success) {
+  // next stage action
+  const { loading: nextLoading, run: nextAction } = useRequest(updateOrder, {
+    manual: true,
+    onSuccess: () => {
       message.success('Success');
-      dispatch({
-        type: 'orders/getOrders',
-        payload: { current: urlState.current, pageSize: urlState.pageSize },
-      });
-    } else {
-      message.error(res.errorMessage);
+      queryOrders();
+    },
+  });
+
+  const nextHandler = async (orderId: string, stage: string) => {
+    if (!stage) {
+      message.error('Already Finished');
+      return;
     }
-    setActionLoading(false);
+    if (!orderId) {
+      message.error('Order ID Does Not Exist');
+      return;
+    }
+    if (!id) {
+      message.error('User ID Does Not Exist');
+      return;
+    }
+    nextAction(
+      orderId,
+      createFormData({
+        [stage]: id,
+      }),
+    );
   };
+
+  // delete action
+  const { loading: deleteLoading, run: deleteAction } = useRequest(
+    deleteOrder,
+    {
+      manual: true,
+      onSuccess: () => {
+        message.success('Delete Successfully');
+        queryOrders();
+      },
+    },
+  );
+
+  const deleteHandler = async (orderId: string) => {
+    deleteAction(orderId);
+  };
+
+  useEffect(() => {
+    queryOrders();
+  }, [urlState]);
 
   const columns = [
     {
@@ -154,34 +171,12 @@ const Order = ({ orders, total, loading }: PropsType) => {
       key: 'name',
       fixed: 'left' as 'left',
       width: 150,
-      render: (_: any, record: OrderInfo) =>
-        record.individualClient
-          ? record.individualClient.name
-          : record.companyClient?.name,
+      // render: (_: any, record: OrderInfo) =>
+      //   record.individualClient
+      //     ? record.individualClient.name
+      //     : record.companyClient?.name,
     },
     { title: 'Referral', dataIndex: 'referral', key: 'referral', width: 100 },
-    {
-      title: 'Salesman',
-      dataIndex: 'salesman',
-      key: 'salesman',
-      className: styles.salesman,
-      width: 120,
-      render: (salesman: any, record: OrderInfo) => (
-        <div>
-          {' '}
-          <Popover
-            content={
-              <StagePopoverContent
-                name={record.salesman?.name ?? ''}
-                photo={record.salesman?.photo ?? ''}
-              />
-            }
-          >
-            <span className={styles.salesman}>{record.salesman?.name}</span>
-          </Popover>
-        </div>
-      ),
-    },
     {
       title: 'From Currency',
       dataIndex: 'fromCurrency',
@@ -232,7 +227,7 @@ const Order = ({ orders, total, loading }: PropsType) => {
       dataIndex: 'receiver',
       key: 'receiver',
       width: 150,
-      render: (stage: any, record: OrderInfo) => record.receiver.name,
+      // render: (stage: any, record: OrderInfo) => record.receiver.name,
     },
     {
       title: 'Stage',
@@ -375,12 +370,6 @@ const Order = ({ orders, total, loading }: PropsType) => {
     },
   ];
 
-  useEffect(() => {
-    dispatch({
-      type: 'orders/getOrders',
-      payload: { current: urlState.current, pageSize: urlState.pageSize },
-    });
-  }, [urlState]);
   return (
     <div className={styles.container}>
       <Card className={styles.filterContainer}>
@@ -389,9 +378,9 @@ const Order = ({ orders, total, loading }: PropsType) => {
       <Card>
         <Table
           bordered
-          loading={loading || actionLoading}
+          loading={loading || nextLoading || deleteLoading}
           columns={columns}
-          dataSource={orders}
+          dataSource={data?.data}
           rowKey="id"
           pagination={false}
           scroll={{ x: 1500 }}
@@ -405,19 +394,13 @@ const Order = ({ orders, total, loading }: PropsType) => {
             current={urlState.current ? parseInt(urlState.current) : 1}
             pageSize={urlState.pageSize ? parseInt(urlState.pageSize) : 5}
             pageSizeOptions={['5', '10', '15']}
-            total={total}
+            total={data?.total}
           />
         </Row>
-        <Create newVisible={visible} setNewVisible={setVisible} />
+        <Create queryOrders={queryOrders} newVisible={visible} setNewVisible={setVisible} />
       </Card>
     </div>
   );
 };
 
-export default connect(
-  ({ orders, loading }: { orders: OrderModelState; loading: Loading }) => ({
-    orders: orders.orders,
-    loading: loading.models.orders,
-    total: orders.total,
-  }),
-)(React.memo(Order));
+export default React.memo(Order);

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { getImg } from '@/services/global';
-import { Image } from 'antd';
+import { Image, Avatar } from 'antd';
 import { UserOutlined } from '@ant-design/icons';
 
 interface PropsType {
@@ -36,13 +36,7 @@ const AuthImg = ({ path, size = 48, isAvatar = false, preview = false }: PropsTy
       src={imgSrc}
     />
   ) : (
-    <UserOutlined
-      style={{
-        width: `${size}px`,
-        height: `${size}px`,
-        borderRadius: isAvatar ? '50%' : 0,
-      }}
-    />
+    <Avatar size={size} icon={<UserOutlined />} />
   );
 };
 
