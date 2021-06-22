@@ -69,8 +69,9 @@ export default function Create({
         checkFundReceived: true,
         checkClientComfirmed: true,
         checkFundPaid: true,
+        checkConfirmationSent: true,
       });
-      setOrderChecked(true)
+      setOrderChecked(true);
       setAdminChecked(true);
     } else {
       setAdminChecked(false);
@@ -82,6 +83,7 @@ export default function Create({
         checkFundReceived: false,
         checkClientComfirmed: false,
         checkFundPaid: false,
+        checkConfirmationSent: false,
       });
     }
   };
@@ -281,6 +283,20 @@ export default function Create({
             <Form.Item
               label="Check FundReceived"
               name="checkFundReceived"
+              valuePropName="checked"
+              initialValue={false}
+            >
+              <Switch
+                checkedChildren={<CheckOutlined />}
+                unCheckedChildren={<CloseOutlined />}
+                disabled={!orderChecked || adminChecked}
+              />
+            </Form.Item>
+          </Col>
+          <Col xs={24} sm={24} md={24} lg={12} xl={12}>
+            <Form.Item
+              label="Check ConfirmationSent"
+              name="checkConfirmationSent"
               valuePropName="checked"
               initialValue={false}
             >

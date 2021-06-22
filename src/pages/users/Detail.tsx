@@ -13,7 +13,6 @@ import {
   Switch,
   Input,
 } from 'antd';
-import AuthImg from '@/components/AuthImg';
 import { CloseOutlined, CheckOutlined } from '@ant-design/icons';
 import BackButton from '@/components/BackButton';
 import NormalText from '@/components/NormalText';
@@ -100,8 +99,9 @@ const Detail = () => {
         checkFundReceived: true,
         checkClientComfirmed: true,
         checkFundPaid: true,
+        checkConfirmationSent: true,
       });
-      setOrderChecked(true)
+      setOrderChecked(true);
       setAdminChecked(true);
     } else {
       setAdminChecked(false);
@@ -113,6 +113,7 @@ const Detail = () => {
         checkFundReceived: false,
         checkClientComfirmed: false,
         checkFundPaid: false,
+        checkConfirmationSent: false,
       });
     }
   };
@@ -319,6 +320,20 @@ const Detail = () => {
                 name="checkFundReceived"
                 valuePropName="checked"
                 initialValue={data?.checkFundReceived}
+              >
+                <Switch
+                  checkedChildren={<CheckOutlined />}
+                  unCheckedChildren={<CloseOutlined />}
+                  disabled={!editing || !orderChecked || adminChecked}
+                />
+              </Form.Item>
+            </Col>
+            <Col xs={24} sm={24} md={24} lg={12} xl={12}>
+              <Form.Item
+                label="Check ConfirmationSent"
+                name="checkConfirmationSent"
+                valuePropName="checked"
+                initialValue={data?.checkConfirmationSent}
               >
                 <Switch
                   checkedChildren={<CheckOutlined />}
