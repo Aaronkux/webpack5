@@ -115,12 +115,12 @@ const Order = () => {
     },
   });
 
-  const nextHandler = async (orderId: string, stage: string) => {
+  const nextHandler = async (order: OrderInfo, stage: string) => {
     if (!stage) {
       message.error('Already Finished');
       return;
     }
-    if (!orderId) {
+    if (!order.id) {
       message.error('Order ID Does Not Exist');
       return;
     }
@@ -129,9 +129,14 @@ const Order = () => {
       return;
     }
     nextAction(
-      orderId,
+      order.id,
       createFormData({
         [stage]: id,
+        receiver: JSON.stringify(
+          order.orderReceivers.map((item) => {
+            return { id: item.receiver.id, amount: item.amount };
+          }),
+        ),
       }),
     );
   };
@@ -166,17 +171,12 @@ const Order = () => {
       render: (stage: any, record: any, index: number) => index + 1,
     },
     {
-      title: 'Name',
-      dataIndex: 'name',
-      key: 'name',
+      title: 'OrderNumber',
+      dataIndex: 'orderNumber',
+      key: 'orderNumber',
       fixed: 'left' as 'left',
       width: 150,
-      // render: (_: any, record: OrderInfo) =>
-      //   record.individualClient
-      //     ? record.individualClient.name
-      //     : record.companyClient?.name,
     },
-    { title: 'Referral', dataIndex: 'referral', key: 'referral', width: 100 },
     {
       title: 'From Currency',
       dataIndex: 'fromCurrency',
@@ -188,6 +188,7 @@ const Order = () => {
       dataIndex: 'fromAmount',
       key: 'fromAmount',
       width: 100,
+      render: (amount: number) => amount?.toFixed(2),
     },
     {
       title: 'To Currency',
@@ -195,14 +196,40 @@ const Order = () => {
       key: 'toCurrency',
       width: 100,
     },
-    { title: 'To Amount', dataIndex: 'toAmount', key: 'toAmount', width: 100 },
+    {
+      title: 'To Amount',
+      dataIndex: 'toAmount',
+      key: 'toAmount',
+      width: 100,
+      render: (amount: number) => amount?.toFixed(2),
+    },
+    {
+      title: 'Fee Currency',
+      dataIndex: 'feeCurrency',
+      key: 'feeCurrency',
+      width: 100,
+    },
+    {
+      title: 'Fee Amount',
+      dataIndex: 'feeAmount',
+      key: 'feeAmount',
+      width: 100,
+      render: (amount: number) => amount?.toFixed(2),
+    },
     {
       title: 'Exchange Rate',
       dataIndex: 'exchangeRate',
       key: 'exchangeRate',
       width: 100,
+      render: (amount: number) => amount?.toFixed(4),
     },
-    { title: 'BaseRate', dataIndex: 'baseRate', key: 'baseRate', width: 100 },
+    {
+      title: 'BaseRate',
+      dataIndex: 'baseRate',
+      key: 'baseRate',
+      width: 100,
+      render: (amount: number) => amount?.toFixed(4),
+    },
     { title: 'Comment', dataIndex: 'comment', key: 'comment', width: 100 },
     {
       title: 'Department',
@@ -210,6 +237,7 @@ const Order = () => {
       key: 'department',
       width: 120,
     },
+    { title: 'Referral', dataIndex: 'referral', key: 'referral', width: 100 },
     {
       title: 'Special Consideration',
       dataIndex: 'specialConsideration',
@@ -349,7 +377,7 @@ const Order = () => {
               <Popconfirm
                 title="Are you sure push it to next stage?"
                 onConfirm={() =>
-                  nextHandler(record.id, orderedStage[currentStage])
+                  nextHandler(record, orderedStage[currentStage])
                 }
               >
                 <img className={styles.logo} src={next} alt="logo" />
@@ -397,7 +425,11 @@ const Order = () => {
             total={data?.total}
           />
         </Row>
-        <Create queryOrders={queryOrders} newVisible={visible} setNewVisible={setVisible} />
+        <Create
+          queryOrders={queryOrders}
+          newVisible={visible}
+          setNewVisible={setVisible}
+        />
       </Card>
     </div>
   );

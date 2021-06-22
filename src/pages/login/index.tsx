@@ -16,6 +16,7 @@ export default function Login() {
     onSuccess: (res) => {
       let access: string[] = [];
       const {
+        id,
         name,
         username,
         photo,
@@ -37,7 +38,7 @@ export default function Login() {
       if (emailPermission) {
         access.push('emailPermission');
       }
-      store.set('user', { name, username, access, photo });
+      store.set('user', { id, name, username, access, photo });
       store.set('token', token);
       history.replace('/');
     },

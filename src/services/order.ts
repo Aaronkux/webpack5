@@ -1,7 +1,31 @@
 import { request } from 'umi';
 import type { ResponseType } from './index';
-import type {IndividualClientInfo, CompanyClientInfo ,BeneficiaryInfo} from './clients'
-import type {UserInfo} from './users'
+import type {
+  IndividualClientInfo,
+  CompanyClientInfo,
+  BeneficiaryInfo,
+} from './clients';
+import type { UserInfo } from './users';
+
+type OrderReceiver = {
+  id: string;
+  amount: number;
+  name: string;
+  receiver: BeneficiaryInfo;
+};
+
+type OrderIndividualClient = {
+  id: string;
+  amount: number;
+  name: string;
+  client: IndividualClientInfo
+}
+type OrderCompanyClient = {
+  id: string;
+  amount: number;
+  name: string;
+  client: CompanyClientInfo
+}
 
 export interface OrderInfo {
   id: string;
@@ -9,9 +33,9 @@ export interface OrderInfo {
   lastModify: string;
   referral?: string;
   orderNumber: string;
-  individualClient: IndividualClientInfo[]
-  companyClient: CompanyClientInfo[]
-  receiver: BeneficiaryInfo[]
+  orderIndividualClients: OrderIndividualClient[];
+  orderCompanyClients: OrderCompanyClient[];
+  orderReceivers: OrderReceiver[];
   fromCurrency: string;
   fromAmount: number;
   toCurrency: string;
@@ -24,13 +48,13 @@ export interface OrderInfo {
   department?: string;
   specialConsideration?: string;
   dispensingBank?: string;
-  confirmationLetter?: string,
-  compliance?: UserInfo
-  fundNotified?: UserInfo
-  fundReceived?: UserInfo
-  confirmationSent?: UserInfo
-  clientConfirmed?: UserInfo
-  fundPaid?: UserInfo
+  confirmationLetter?: string;
+  compliance?: UserInfo;
+  fundNotified?: UserInfo;
+  fundReceived?: UserInfo;
+  confirmationSent?: UserInfo;
+  clientConfirmed?: UserInfo;
+  fundPaid?: UserInfo;
 }
 
 export type OrdersResponse = ResponseType<{

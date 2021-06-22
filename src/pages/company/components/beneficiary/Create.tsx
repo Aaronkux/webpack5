@@ -108,7 +108,7 @@ export default function Create({
     formatResult: (res) => res.data?.data,
   });
 
-  const onFinishHandler = async (values: FormIndividualReceiverInfo) => {
+  const onFinishHandler = (values: FormIndividualReceiverInfo) => {
     if (!id) {
       message.error('Error URL PATH!');
       return;
@@ -208,11 +208,11 @@ export default function Create({
                   optionFilterProp="children"
                 >
                   {searchReceiversData
-                    ?.filter(
-                      (item) => !ids.includes(item.id) && !item.receiverType,
-                    )
+                    ?.filter((item) => !ids.includes(item.id))
                     .map((val) => (
-                      <Option value={val.id}>{val.name}</Option>
+                      <Option key={val.id} value={val.id}>
+                        {val.name}
+                      </Option>
                     ))}
                 </Select>
               </Form.Item>

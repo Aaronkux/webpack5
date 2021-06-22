@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useRequest } from 'umi';
 import {
   Modal,
@@ -13,7 +13,9 @@ import {
 } from 'antd';
 import { CloseCircleOutlined } from '@ant-design/icons';
 import type { BeneficiaryInfo } from '@/services/clients';
+import type { OrderInfo } from '@/services/order';
 import { addOrder } from '@/services/order';
+import { queryAllSalesByName } from '@/services/sales';
 import { getClients } from '@/services/clients';
 import styles from './Create.less';
 import { createFormData } from '@/utils';
@@ -26,6 +28,17 @@ interface PropsType {
   setNewVisible: React.Dispatch<React.SetStateAction<boolean>>;
   queryOrders: () => void;
 }
+
+type Merge<M, N> = Omit<M, Extract<keyof M, keyof N>> & N;
+
+type FormOrderInfo = Merge<
+  Partial<OrderInfo>,
+  {
+    salesman: string;
+    purpose: string;
+    other: string;
+  }
+>;
 
 const layout = {
   labelCol: { span: 6 },
@@ -46,33 +59,62 @@ const currencies = [
 
 const Create = ({ newVisible, setNewVisible, queryOrders }: PropsType) => {
   const [form] = Form.useForm();
+  const [selectedClients, setSelectedClients] = useState<string[]>([]);
+  const [selectedReceivers, setSelectedReceivers] = useState<string[]>([]);
   const [clientType, setClientType] = useState(0);
   const [clients, setClients] = useState<{
     [prop: string]: {
       id: string;
       name: string;
+      receiver: BeneficiaryInfo[];
       amount?: number;
     };
   }>({});
 
-  const [canSelectedReceivers, setCanSelectedReceivers] = useState<
-    BeneficiaryInfo[]
-  >([]);
-
   const [receivers, setReceivers] = useState<{
     [prop: string]: {
       id: string;
-      name: string;
-      amount: number;
+      name?: string;
+      amount?: number;
     };
   }>({});
+
+  const availableReceivers = useMemo(() => {
+    const filterSet = new Set<string>();
+    const res = Object.values(clients)
+      .map((item) => item.receiver)
+      .flat()
+      .filter((item) => {
+        if (filterSet.has(item.id)) return false;
+        filterSet.add(item.id);
+        return true;
+      });
+    const availableReceiverIds = res.map((val) => val.id);
+    setSelectedReceivers(
+      selectedReceivers.filter((id) => availableReceiverIds.includes(id)),
+    );
+    let newReceivers: {
+      [prop: string]: {
+        id: string;
+        name?: string;
+        amount?: number;
+      };
+    } = {};
+    for (let item of Object.values(receivers)) {
+      if (availableReceiverIds.includes(item.id)) {
+        newReceivers[item.id] = item;
+      }
+    }
+    setReceivers(newReceivers);
+    return res;
+  }, [clients]);
 
   const onCancelHandler = () => {
     form.resetFields();
     setNewVisible(false);
   };
 
-  const { loading: addLoading, run: updateAction } = useRequest(addOrder, {
+  const { loading: addLoading, run: addAction } = useRequest(addOrder, {
     manual: true,
     onSuccess: () => {
       message.success('Add Successfully');
@@ -81,15 +123,33 @@ const Create = ({ newVisible, setNewVisible, queryOrders }: PropsType) => {
     },
   });
 
-  const finishHandler = async (values: any) => {
-    const { clientType, client, ...rest } = values;
+  const finishHandler = async (values: FormOrderInfo) => {
     let clientInfo: any = {};
+    const clientData = JSON.stringify(
+      Object.values(clients).map((item) => {
+        const { id, amount } = item;
+        return { id, amount };
+      }),
+    );
+
+    const receiverData = JSON.stringify(
+      Object.values(receivers).map((item) => {
+        const { id, amount } = item;
+        return { id, amount };
+      }),
+    );
     if (clientType) {
-      clientInfo['companyClient'] = client;
+      clientInfo['companyClient'] = clientData;
     } else {
-      clientInfo['individualClient'] = client;
+      clientInfo['individualClient'] = clientData;
     }
-    updateAction(createFormData({ ...rest, ...clientInfo }));
+    addAction(
+      createFormData({
+        ...values,
+        ...clientInfo,
+        receiver: receiverData,
+      }),
+    );
   };
 
   const {
@@ -104,13 +164,16 @@ const Create = ({ newVisible, setNewVisible, queryOrders }: PropsType) => {
     },
   });
 
-  const fetchClients = (name: string) => {
+  const onFetchClientsHandler = (name: string) => {
     queryClients(clientType ? 'companyclients' : 'individualclients', name);
   };
 
   const onSelectHandler = (id: string) => {
     if (!clients[id]) {
-      setClients({ ...clients, ...{ [id]: clientData?.find(item=>item.id === id)! } });
+      setClients({
+        ...clients,
+        [id]: clientData?.find((item) => item.id === id)!,
+      });
     }
   };
 
@@ -122,15 +185,61 @@ const Create = ({ newVisible, setNewVisible, queryOrders }: PropsType) => {
   const onInputChangeHandler = (amount: number, id: string) => {
     setClients({
       ...clients,
-      ...{ [id]: { id, name: clients[id].name, amount } },
+      [id]: {
+        id,
+        name: clients[id].name,
+        amount,
+        receiver: clients[id].receiver,
+      },
+    });
+  };
+
+  const onReceiverSelectHandler = (id: string) => {
+    if (!receivers[id]) {
+      setReceivers({
+        ...receivers,
+        [id]: availableReceivers?.find((item) => item.id === id)!,
+      });
+    }
+  };
+
+  const onReceiverDeselectHandler = (id: string) => {
+    const { [id]: omitItem, ...rest } = receivers;
+    setReceivers(rest);
+  };
+
+  const onReceiverInputChangeHandler = (amount: number, id: string) => {
+    setReceivers({
+      ...receivers,
+      [id]: {
+        id,
+        name: receivers[id].name,
+        amount,
+      },
     });
   };
 
   const onClientTypeChangeHandler = (val: number) => {
+    //clients
     setClientType(val);
     setClients({});
-    form.setFieldsValue({ client: [] });
+    setSelectedClients([]);
     mutate([]);
+
+    // receivers
+    setReceivers({});
+    setSelectedReceivers([]);
+  };
+
+  const onClientChangeHandler = (val: string[]) => {
+    if (val.length === 0) {
+      mutate([]);
+    }
+    setSelectedClients(val);
+  };
+
+  const onReceiverChangeHandler = (val: string[]) => {
+    setSelectedReceivers(val);
   };
 
   return (
@@ -163,12 +272,10 @@ const Create = ({ newVisible, setNewVisible, queryOrders }: PropsType) => {
           <Col xs={24} sm={24} md={24} lg={12} xl={12}>
             <Form.Item
               label="ClientType"
-              name="clientType"
               rules={[
                 { required: true, message: 'Please select client type!' },
               ]}
               required
-              initialValue={clientType}
             >
               <Select value={clientType} onChange={onClientTypeChangeHandler}>
                 <Option value={0}>Individual</Option>
@@ -180,12 +287,13 @@ const Create = ({ newVisible, setNewVisible, queryOrders }: PropsType) => {
           <Col xs={24} sm={24} md={24} lg={12} xl={12}>
             <Form.Item
               label="Client"
-              name="client"
-              rules={[{ required: true, message: 'Please select client!' }]}
               required
+              rules={[{ required: true, message: 'Please select client!' }]}
             >
               <Select
-                onSearch={(val) => fetchClients(val)}
+                value={selectedClients}
+                onChange={onClientChangeHandler}
+                onSearch={onFetchClientsHandler}
                 loading={clientLoading}
                 showSearch
                 mode="multiple"
@@ -227,29 +335,49 @@ const Create = ({ newVisible, setNewVisible, queryOrders }: PropsType) => {
           <Col xs={24} sm={24} md={24} lg={12} xl={12}>
             <Form.Item
               label="Receiver"
-              name="receiver"
               rules={[{ required: true, message: 'Please select receiver!' }]}
               required
             >
-              <Select>
-                <Option value={'113213'}>Aaron</Option>
-                <Option value={'212321412'}>Loorn</Option>
+              <Select
+                value={selectedReceivers}
+                onChange={onReceiverChangeHandler}
+                mode="multiple"
+                optionFilterProp="children"
+                onSelect={onReceiverSelectHandler}
+                onDeselect={onReceiverDeselectHandler}
+              >
+                {availableReceivers.map((item) => (
+                  <Option key={item.id} value={item.id}>
+                    {item.name}
+                  </Option>
+                ))}
               </Select>
             </Form.Item>
           </Col>
           <Col xs={24} sm={24} md={24} lg={12} xl={12}></Col>
-          <Col xs={24} sm={24} md={24} lg={12} xl={12}>
-            <Form.Item
-              label="Exchange Rate"
-              name="exchangeRate"
-              rules={[
-                { required: true, message: 'Please input exchangeRate!' },
-              ]}
-              required
+          {Object.values(receivers).map((item) => (
+            <Col
+              key={item.id}
+              xs={16}
+              sm={16}
+              md={16}
+              lg={12}
+              xl={12}
+              offset={6}
+              className={styles.test}
             >
-              <InputNumber style={{ width: '100%' }} precision={2} step="1" />
-            </Form.Item>
-          </Col>
+              <div className={styles.testContainer}>
+                <div className={styles.name}>{item.name}: </div>
+                <InputNumber
+                  className={styles.input}
+                  value={item.amount}
+                  onChange={(value) =>
+                    onReceiverInputChangeHandler(value, item.id)
+                  }
+                />
+              </div>
+            </Col>
+          ))}
           <Col xs={24} sm={24} md={24} lg={12} xl={12}>
             <Form.Item
               label="From Currency"
@@ -282,16 +410,11 @@ const Create = ({ newVisible, setNewVisible, queryOrders }: PropsType) => {
             <Form.Item
               label="From Amount"
               name="fromAmount"
+              initialValue={0}
               rules={[{ required: true, message: 'Please input amount!' }]}
               required
             >
-              <InputNumber
-                style={{ width: '100%' }}
-                parser={(value: any) => value.replace(/\$\s?|(,*)/g, '')}
-                precision={2}
-                step="1"
-                stringMode
-              />
+              <InputNumber style={{ width: '100%' }} precision={2} step="1" />
             </Form.Item>
           </Col>
           <Col xs={24} sm={24} md={24} lg={12} xl={12}>
@@ -326,16 +449,11 @@ const Create = ({ newVisible, setNewVisible, queryOrders }: PropsType) => {
             <Form.Item
               label="To Amount"
               name="toAmount"
+              initialValue={0}
               rules={[{ required: true, message: 'Please input amount!' }]}
               required
             >
-              <InputNumber
-                style={{ width: '100%' }}
-                parser={(value: any) => value.replace(/\$\s?|(,*)/g, '')}
-                precision={2}
-                step="1"
-                stringMode
-              />
+              <InputNumber style={{ width: '100%' }} precision={2} step="1" />
             </Form.Item>
           </Col>
           <Col xs={24} sm={24} md={24} lg={12} xl={12}>
@@ -374,6 +492,7 @@ const Create = ({ newVisible, setNewVisible, queryOrders }: PropsType) => {
             <Form.Item
               label="Fee Amount"
               name="feeAmount"
+              initialValue={0}
               rules={[
                 ({ getFieldValue }) => ({
                   validator(_, value) {
@@ -387,24 +506,20 @@ const Create = ({ newVisible, setNewVisible, queryOrders }: PropsType) => {
                 }),
               ]}
             >
-              <InputNumber
-                style={{ width: '100%' }}
-                formatter={(value) =>
-                  `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')
-                }
-                parser={(value: any) => value.replace(/\$\s?|(,*)/g, '')}
-                precision={2}
-                step="1"
-                stringMode
-              />
+              <InputNumber style={{ width: '100%' }} precision={2} step="1" />
             </Form.Item>
           </Col>
           <Col xs={24} sm={24} md={24} lg={12} xl={12}>
-            <Form.Item label="Salesman" name="salesman">
-              <Select>
-                <Option value={'113213'}>Aaron</Option>
-                <Option value={'212321412'}>Loorn</Option>
-              </Select>
+            <Form.Item
+              label="Exchange Rate"
+              name="exchangeRate"
+              rules={[
+                { required: true, message: 'Please input exchangeRate!' },
+              ]}
+              initialValue={0}
+              required
+            >
+              <InputNumber style={{ width: '100%' }} precision={4} step="1" />
             </Form.Item>
           </Col>
           <Col xs={24} sm={24} md={24} lg={12} xl={12}>

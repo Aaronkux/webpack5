@@ -17,6 +17,7 @@ import {
 import UploadPicture from '@/components/UploadPicture';
 import { CloseCircleOutlined } from '@ant-design/icons';
 import { addIndividualClient } from '@/services/clients';
+import { queryAllSalesByName } from '@/services/sales';
 import type { IndividualClientInfo } from '@/services/clients';
 import type { Moment } from 'moment';
 import { createFormData, imageFileProcesser } from '@/utils';
@@ -55,6 +56,17 @@ export default function Create({
 }: PropsType) {
   const [showOther, setShowOther] = useState(false);
   const [form] = Form.useForm();
+  const {
+    data: salesData,
+    loading: salesLoading,
+    mutate,
+    run: querySales,
+  } = useRequest(queryAllSalesByName, {
+    manual: true,
+    formatResult: (res) => {
+      return res.data?.data ?? [];
+    },
+  });
   const { loading: adding, run } = useRequest(addIndividualClient, {
     manual: true,
     onSuccess: () => {
@@ -63,7 +75,7 @@ export default function Create({
       onCancelHandler();
     },
   });
-  const finishHandler = async (values: FormIndividualClientInfo) => {
+  const finishHandler = (values: FormIndividualClientInfo) => {
     const {
       DOB,
       id1front,
@@ -101,7 +113,16 @@ export default function Create({
 
   const onCancelHandler = () => {
     form.resetFields();
+    mutate([]);
     setNewVisible(false);
+  };
+
+  const onSearchHandler = (val: string) => {
+    if (val === '' && salesData?.length) {
+      mutate([]);
+    } else {
+      querySales(val);
+    }
   };
 
   return (
@@ -178,9 +199,19 @@ export default function Create({
           </Col>
           <Col xs={24} sm={24} md={24} lg={12} xl={12}>
             <Form.Item label="Salesman" name="salesman">
-              <Select showSearch allowClear>
-                <Option value={'123321'}>James</Option>
-                <Option value={'132213'}>Lebron</Option>
+              <Select
+                showSearch
+                allowClear
+                placeholder="Salesman"
+                optionFilterProp="children"
+                loading={salesLoading}
+                onSearch={onSearchHandler}
+              >
+                {salesData?.map((sale) => (
+                  <Option key={sale.id} value={sale.id}>
+                    {sale.name}
+                  </Option>
+                ))}
               </Select>
             </Form.Item>
           </Col>
