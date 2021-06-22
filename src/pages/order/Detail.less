@@ -1,11 +1,36 @@
 .form {
   margin-top: 20px;
-  .titleAndButton{
+  .titleAndButton {
     display: flex;
     justify-content: space-between;
     .title {
       font-size: 30px;
       font-weight: 900;
+    }
+    
+  }
+  .test {
+    background-color: rgb(179, 179, 179);
+    margin-bottom: 24px;
+    padding: 5px;
+    position: relative;
+
+    .testContainer {
+      display: flex;
+      justify-content: flex-start;
+      align-items: center;
+      flex: 0;
+      .name {
+        margin-right: 20px;
+      }
+      .input {
+        flex-grow: 0;
+        width: 200px;
+      }
+      .close {
+        position: absolute;
+        right: 5px;
+      }
     }
   }
 }
