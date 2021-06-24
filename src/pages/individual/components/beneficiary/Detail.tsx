@@ -289,7 +289,7 @@ const Detail = ({
                 {editing ? <Input /> : <NormalText />}
               </Form.Item>
             </Col>
-            {remitType && (
+            {!!remitType && (
               <>
                 <Col xs={24} sm={24} md={24} lg={24} xl={12}>
                   <Form.Item label="Name" name="name" initialValue={data?.name}>
@@ -403,7 +403,7 @@ const Detail = ({
                     )}
                   </Form.Item>
                 </Col>
-                {accountType ? (
+                {!!accountType ? (
                   <>
                     <Col xs={24} sm={24} md={24} lg={24} xl={12}>
                       <Form.Item

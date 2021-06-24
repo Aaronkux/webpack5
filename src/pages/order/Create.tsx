@@ -9,13 +9,13 @@ import {
   Select,
   InputNumber,
   Divider,
+  Tag,
   message,
 } from 'antd';
 import { CloseCircleOutlined } from '@ant-design/icons';
 import type { BeneficiaryInfo } from '@/services/clients';
 import type { OrderInfo } from '@/services/order';
 import { addOrder } from '@/services/order';
-import { queryAllSalesByName } from '@/services/sales';
 import { getClients } from '@/services/clients';
 import styles from './Create.less';
 import { createFormData } from '@/utils';
@@ -56,6 +56,24 @@ const currencies = [
   'EUR',
   'JPY',
 ];
+
+function tagRender(props: any) {
+  const { label, closable, onClose } = props;
+  const onPreventMouseDown = (event: any) => {
+    event.preventDefault();
+    event.stopPropagation();
+  };
+  return (
+    <Tag
+      onMouseDown={onPreventMouseDown}
+      closable={closable}
+      onClose={onClose}
+      style={{ fontSize: '14px' }}
+    >
+      {label.split(' - ')?.[0]}
+    </Tag>
+  );
+}
 
 const Create = ({ newVisible, setNewVisible, queryOrders }: PropsType) => {
   const [form] = Form.useForm();
@@ -165,6 +183,10 @@ const Create = ({ newVisible, setNewVisible, queryOrders }: PropsType) => {
   });
 
   const onFetchClientsHandler = (name: string) => {
+    if (name === '') {
+      mutate([]);
+      return;
+    }
     queryClients(clientType ? 'companyclients' : 'individualclients', name);
   };
 
@@ -172,7 +194,7 @@ const Create = ({ newVisible, setNewVisible, queryOrders }: PropsType) => {
     if (!clients[id]) {
       setClients({
         ...clients,
-        [id]: clientData?.find((item) => item.id === id)!,
+        [id]: { ...clientData?.find((item) => item.id === id)!, amount: 0 },
       });
     }
   };
@@ -198,7 +220,7 @@ const Create = ({ newVisible, setNewVisible, queryOrders }: PropsType) => {
     if (!receivers[id]) {
       setReceivers({
         ...receivers,
-        [id]: availableReceivers?.find((item) => item.id === id)!,
+        [id]: {...availableReceivers?.find((item) => item.id === id)!, amount: 0},
       });
     }
   };
@@ -241,13 +263,13 @@ const Create = ({ newVisible, setNewVisible, queryOrders }: PropsType) => {
   const onReceiverChangeHandler = (val: string[]) => {
     setSelectedReceivers(val);
   };
-
   return (
     <Modal
       visible={newVisible}
       width={1300}
       onCancel={() => {
         form.resetFields();
+        mutate([]);
         setNewVisible(false);
       }}
       onOk={() => {
@@ -300,10 +322,11 @@ const Create = ({ newVisible, setNewVisible, queryOrders }: PropsType) => {
                 optionFilterProp="children"
                 onSelect={onSelectHandler}
                 onDeselect={onDeselectHandler}
+                tagRender={tagRender}
               >
                 {clientData?.map((v) => (
                   <Option key={v.id} value={v.id}>
-                    {v.name}
+                    {`${v.name} - ${v.registrationId ?? 'backoffice created'}`}
                   </Option>
                 ))}
               </Select>
@@ -318,17 +341,19 @@ const Create = ({ newVisible, setNewVisible, queryOrders }: PropsType) => {
               md={16}
               lg={12}
               xl={12}
-              offset={6}
-              className={styles.test}
+              offset={4}
             >
-              <div className={styles.testContainer}>
-                <div className={styles.name}>{item.name}: </div>
+              <Form.Item
+                label={item.name}
+                rules={[{ required: true, message: 'Please select receiver!' }]}
+                initialValue={0}
+              >
                 <InputNumber
-                  className={styles.input}
+                  style={{ width: '70%' }}
                   value={item.amount}
                   onChange={(value) => onInputChangeHandler(value, item.id)}
                 />
-              </div>
+              </Form.Item>
             </Col>
           ))}
 
@@ -345,10 +370,17 @@ const Create = ({ newVisible, setNewVisible, queryOrders }: PropsType) => {
                 optionFilterProp="children"
                 onSelect={onReceiverSelectHandler}
                 onDeselect={onReceiverDeselectHandler}
+                tagRender={tagRender}
               >
                 {availableReceivers.map((item) => (
                   <Option key={item.id} value={item.id}>
-                    {item.name}
+                    {`${item.name} - ${
+                      item.phone
+                        ? item.phone
+                        : item.receiverType === 0
+                        ? 'self'
+                        : ''
+                    }`}
                   </Option>
                 ))}
               </Select>
@@ -363,19 +395,21 @@ const Create = ({ newVisible, setNewVisible, queryOrders }: PropsType) => {
               md={16}
               lg={12}
               xl={12}
-              offset={6}
-              className={styles.test}
+              offset={4}
             >
-              <div className={styles.testContainer}>
-                <div className={styles.name}>{item.name}: </div>
+              <Form.Item
+                label={item.name}
+                rules={[{ required: true, message: 'Please select receiver!' }]}
+                initialValue={0}
+              >
                 <InputNumber
-                  className={styles.input}
+                  style={{ width: '70%' }}
                   value={item.amount}
                   onChange={(value) =>
                     onReceiverInputChangeHandler(value, item.id)
                   }
                 />
-              </div>
+              </Form.Item>
             </Col>
           ))}
           <Col xs={24} sm={24} md={24} lg={12} xl={12}>

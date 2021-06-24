@@ -4,6 +4,7 @@ import type { SalesInfo } from './sales';
 
 export interface IndividualClientInfo {
   id: string;
+  registrationId: string;
   name: string;
   createdDate?: string;
   gender?: boolean;
@@ -40,6 +41,7 @@ export type IndividualClientsDetailResponse = ResponseType<IndividualClientInfo>
 
 export interface CompanyClientInfo {
   id: string;
+  registrationId: string;
   createdDate?: string;
   name: string;
   email: string;
@@ -227,22 +229,17 @@ export function addBeneficiary(data: FormData) {
 }
 
 type CommonClientsResponse = ResponseType<{
-  data: {
-    id: string;
-    name: string;
-    receiver: BeneficiaryInfo[];
-  }[];
+  data: (IndividualClientInfo & CompanyClientInfo)[];
   total: number;
 }>;
 
 export function getClients(clientType: string, name: string) {
-  return request<CommonClientsResponse>(
-    `/api/${clientType}?limit=10&offset=0`,
-    {
-      method: 'get',
-      params: {
-        name,
-      },
+  return request<CommonClientsResponse>(`/api/${clientType}`, {
+    method: 'get',
+    params: {
+      name,
+      limit: 10,
+      offset: 0,
     },
-  );
+  });
 }

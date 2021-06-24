@@ -187,7 +187,7 @@ const Detail = () => {
     if (!clients[id]) {
       setClients({
         ...clients,
-        [id]: clientData?.find((item) => item.id === id)!,
+        [id]: { ...clientData?.find((item) => item.id === id)!, amount: 0 },
       });
     }
   };
@@ -213,7 +213,10 @@ const Detail = () => {
     if (!receivers[id]) {
       setReceivers({
         ...receivers,
-        [id]: availableReceivers?.find((item) => item.id === id)!,
+        [id]: {
+          ...availableReceivers?.find((item) => item.id === id)!,
+          amount: 0,
+        },
       });
     }
   };
@@ -398,21 +401,25 @@ const Detail = () => {
                 md={16}
                 lg={12}
                 xl={12}
-                offset={6}
-                className={styles.test}
+                offset={4}
               >
-                <div className={styles.testContainer}>
-                  <div className={styles.name}>{item.name}: </div>
+                <Form.Item
+                  label={item.name}
+                  rules={[
+                    { required: true, message: 'Please select receiver!' },
+                  ]}
+                  initialValue={0}
+                >
                   {editing ? (
                     <InputNumber
-                      className={styles.input}
+                      style={{ width: '70%' }}
                       value={item.amount}
                       onChange={(value) => onInputChangeHandler(value, item.id)}
                     />
                   ) : (
                     <NormalText value={item.amount} />
                   )}
-                </div>
+                </Form.Item>
               </Col>
             ))}
             <Col xs={24} sm={24} md={24} lg={12} xl={12}>
@@ -447,14 +454,18 @@ const Detail = () => {
                 md={16}
                 lg={12}
                 xl={12}
-                offset={6}
-                className={styles.test}
+                offset={4}
               >
-                <div className={styles.testContainer}>
-                  <div className={styles.name}>{item.name}: </div>
+                <Form.Item
+                  label={item.name}
+                  rules={[
+                    { required: true, message: 'Please select receiver!' },
+                  ]}
+                  initialValue={0}
+                >
                   {editing ? (
                     <InputNumber
-                      className={styles.input}
+                      style={{ width: '70%' }}
                       value={item.amount}
                       onChange={(value) =>
                         onReceiverInputChangeHandler(value, item.id)
@@ -463,7 +474,7 @@ const Detail = () => {
                   ) : (
                     <NormalText value={item.amount} />
                   )}
-                </div>
+                </Form.Item>
               </Col>
             ))}
             <Col xs={24} sm={24} md={24} lg={12} xl={12}>

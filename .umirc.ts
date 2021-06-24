@@ -6,16 +6,9 @@ export default defineConfig({
     type: 'none',
   },
   fastRefresh: {},
-  dva: {
-    immer: true,
-    hmr: true,
-  },
   mock: false,
   // remove selectlang warning bug
   locale: { default: 'en-US' },
-  // request: {
-  //   dataField: 'data',
-  // },
   routes: routes,
   // theme: {
   //   // 'layout-sider-background': '#fff',
