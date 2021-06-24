@@ -159,10 +159,10 @@ export default function Create({
             </Form.Item>
           </Col>
           <Col xs={24} sm={24} md={24} lg={12} xl={12}>
-            <Form.Item label="Gender" name="gender" initialValue={1} required>
+            <Form.Item label="Gender" name="gender" initialValue={0} required>
               <Radio.Group>
-                <Radio.Button value={1}>Male</Radio.Button>
-                <Radio.Button value={0}>Female</Radio.Button>
+                <Radio.Button value={0}>Male</Radio.Button>
+                <Radio.Button value={1}>Female</Radio.Button>
               </Radio.Group>
             </Form.Item>
           </Col>

@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Modal, Form, Input, Switch, message } from 'antd';
 import { useRequest } from 'umi';
 import { CloseCircleOutlined } from '@ant-design/icons';
-import { isBlob, createFormData, imageFileProcesser } from '@/utils';
+import { createFormData, imageFileProcesser } from '@/utils';
 import { addSale } from '@/services/sales';
 import AuthAndEditAvatar from '@/components/AuthAndEditAvatar';
 import styles from './Create.less';
@@ -96,8 +96,8 @@ export default function Create({ visible, setVisible, fetchSales }: PropsType) {
           <Input />
         </Form.Item>
         <Form.Item
-          label="Active "
-          name="status"
+          label="Active"
+          name="isActive"
           valuePropName="checked"
           initialValue={true}
           required

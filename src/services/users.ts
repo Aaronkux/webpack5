@@ -38,7 +38,6 @@ export function login(username: string, password: string) {
   return request<UserDetailResponse>('/api/auth-token', {
     method: 'post',
     body: formdata,
-    
   });
 }
 

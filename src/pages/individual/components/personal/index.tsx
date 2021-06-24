@@ -146,9 +146,9 @@ const Personal = () => {
       id1ExpireDate,
       id2ExpireDate,
       purpose,
-      receiver,
       salesman,
       other,
+      receiver,
       ...rest
     } = values;
     const tempData = {
@@ -226,7 +226,7 @@ const Personal = () => {
               <Form.Item
                 label="Gender"
                 name="gender"
-                initialValue={data?.gender ? 0 : 1}
+                initialValue={data?.gender ? 1 : 0}
                 required
               >
                 {editing ? (

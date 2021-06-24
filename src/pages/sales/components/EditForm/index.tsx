@@ -66,7 +66,7 @@ export default function EditForm({
         </Form.Item>
         <Form.Item
           label="Active "
-          name="status"
+          name="isActive"
           valuePropName="checked"
           initialValue={data?.isActive}
           required

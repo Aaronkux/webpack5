@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { Modal, Skeleton, message } from 'antd';
 import { useRequest } from 'umi';
 import { CloseCircleOutlined } from '@ant-design/icons';
 import type { SalesInfo } from '@/services/sales';
 import { querySale, updateSale } from '@/services/sales';
-import { isBlob, createFormData, imageFileProcesser } from '@/utils';
+import { createFormData, imageFileProcesser } from '@/utils';
 import EditForm from './components/EditForm';
 import styles from './Edit.less';
 

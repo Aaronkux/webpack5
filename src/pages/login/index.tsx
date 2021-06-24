@@ -21,6 +21,7 @@ export default function Login() {
         username,
         photo,
         token,
+        isAdmin,
         salesPermission,
         clientPermission,
         orderPermission,
@@ -37,6 +38,9 @@ export default function Login() {
       }
       if (emailPermission) {
         access.push('emailPermission');
+      }
+      if (isAdmin) {
+        access.push('isAdmin');
       }
       store.set('user', { id, name, username, access, photo });
       store.set('token', token);

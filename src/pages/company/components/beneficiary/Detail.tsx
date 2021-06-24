@@ -6,7 +6,6 @@ import {
   Col,
   Divider,
   DatePicker,
-  Select,
   Button,
   Modal,
   InputNumber,
@@ -25,8 +24,6 @@ import {
   updateBeneficiaryDetail,
   updateCompanyClientsDetail,
 } from '@/services/clients';
-
-const { Option } = Select;
 
 const layout = {
   labelCol: { span: 8 },
@@ -129,7 +126,7 @@ const Detail = ({
       ...rest,
       DOB: DOB?.format('YYYY-MM-DD'),
       idExpireDate: idExpireDate?.format('YYYY-MM-DD'),
-      receiverType: remitType ? 0 : 1,
+      receiverType: remitType,
       companyClient: id,
       idFront: imageFileProcesser(idFront),
       idBack: imageFileProcesser(idBack),
@@ -196,7 +193,7 @@ const Detail = ({
               <Form.Item
                 label="Type"
                 name="receiverType"
-                initialValue={remitType ? 0 : 1}
+                initialValue={remitType}
                 required
                 rules={[
                   {
@@ -207,7 +204,7 @@ const Detail = ({
               >
                 <NormalText
                   transform={(value) =>
-                    value
+                    value === 3
                       ? `Remit to personal account`
                       : `Remit to company's account`
                   }
@@ -369,7 +366,7 @@ const Detail = ({
                 {editing ? <Input /> : <NormalText />}
               </Form.Item>
             </Col>
-            {!remitType ? (
+            {remitType === 3 ? (
               <>
                 <Col xs={24} sm={24} md={24} lg={24} xl={12}>
                   <Form.Item
@@ -471,7 +468,7 @@ const Detail = ({
           form.resetFields();
           setEditing(false);
           setModalVisible(false);
-          setRemitType(data?.receiverType ?? false);
+          setRemitType(3);
         }}
         onCancel={() => setModalVisible(false)}
       >

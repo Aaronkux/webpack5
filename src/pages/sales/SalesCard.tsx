@@ -30,11 +30,11 @@ export default function SalesCard({
         alignItems: 'center',
       }}
       actions={[
-        <Popover content="orders">
-          <Link to={`/order?salesmanId=${salesInfo.id}`}>
-            <AccountBookOutlined key="order" />
-          </Link>
-        </Popover>,
+        // <Popover content="orders">
+        //   <Link to={`/order?salesmanId=${salesInfo.id}`}>
+        //     <AccountBookOutlined key="order" />
+        //   </Link>
+        // </Popover>,
         <Popover content="edit">
           <EditOutlined onClick={onCardClick} key="edit" />
         </Popover>,

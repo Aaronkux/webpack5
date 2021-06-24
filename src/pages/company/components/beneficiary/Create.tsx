@@ -63,7 +63,7 @@ export default function Create({
   data,
 }: PropsType) {
   const [method, setMethod] = useState(0);
-  const [remitType, setRemitType] = useState(1);
+  const [remitType, setRemitType] = useState(3);
   const [form] = Form.useForm();
   const match = useRouteMatch<{ id?: string }>();
   const { id } = match.params;
@@ -72,7 +72,7 @@ export default function Create({
   const onCancelHandler = () => {
     setNewVisible(false);
     setMethod(0);
-    setRemitType(1);
+    setRemitType(3);
     form.resetFields();
   };
 
@@ -137,7 +137,7 @@ export default function Create({
         ...rest,
         DOB: DOB?.format('YYYY-MM-DD'),
         idExpireDate: idExpireDate?.format('YYYY-MM-DD'),
-        receiverType: remitType ? 0 : 1,
+        receiverType: remitType ?? 3,
         companyClient: id,
         idFront: imageFileProcesser(idFront),
         idBack: imageFileProcesser(idBack),
@@ -159,7 +159,7 @@ export default function Create({
       onCancel={() => {
         setNewVisible(false);
         form.resetFields();
-        setRemitType(1);
+        setRemitType(3);
         setMethod(0);
       }}
       maskClosable={false}
@@ -231,8 +231,8 @@ export default function Create({
                   initialValue={remitType}
                 >
                   <Select onChange={(value: number) => setRemitType(value)}>
-                    <Option value={1}>Remit to personal account</Option>
-                    <Option value={0}>Remit to company's account</Option>
+                    <Option value={3}>Remit to personal account</Option>
+                    <Option value={4}>Remit to company's account</Option>
                   </Select>
                 </Form.Item>
               </Col>
@@ -399,7 +399,7 @@ export default function Create({
                   <Input />
                 </Form.Item>
               </Col>
-              {remitType === 1 && (
+              {remitType === 3 && (
                 <>
                   <Col xs={24} sm={24} md={24} lg={24} xl={12}>
                     <Form.Item
@@ -427,7 +427,7 @@ export default function Create({
                   <Input />
                 </Form.Item>
               </Col>
-              {remitType === 0 && (
+              {remitType === 4 && (
                 <>
                   <Col xs={24} sm={24} md={24} lg={24} xl={12}></Col>
                   <Col xs={24} sm={24} md={24} lg={24} xl={12}>
@@ -437,7 +437,7 @@ export default function Create({
                   </Col>
                 </>
               )}
-              {remitType === 1 && (
+              {remitType === 3 && (
                 <>
                   <Col xs={24} sm={24} md={24} lg={24} xl={12}>
                     <Form.Item label="ID Front" name="idFront">

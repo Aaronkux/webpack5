@@ -17,6 +17,7 @@ const { SubMenu } = Menu;
 interface PropsType {
   collapsed: boolean;
   setCollapsed: React.Dispatch<React.SetStateAction<boolean>>;
+  userData: any;
 }
 
 const antdIconModule = require('@ant-design/icons');
@@ -98,12 +99,16 @@ const MenuComponent = ({
   );
 };
 
-export default function MySider({ collapsed, setCollapsed }: PropsType) {
+export default function MySider({
+  collapsed,
+  setCollapsed,
+  userData,
+}: PropsType) {
   const responsive = useResponsive();
   const location = useLocation();
   const drawerSider = !responsive['md'];
-  const user = store.get('user');
-  const [routeMap, routeList] = useMemo(() => route2List(routes, user), []);
+  const user = userData || store.get('user');
+  const [routeMap, routeList] = useMemo(() => route2List(routes, user), [user]);
   // prevent default pathname change
   const defaultPathname = useMemo(() => {
     let path = location.pathname;

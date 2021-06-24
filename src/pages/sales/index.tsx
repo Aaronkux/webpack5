@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Button, Col, Row, Pagination } from 'antd';
 import type { PaginationProps } from 'antd';
-import { connect, useRequest } from 'umi';
-import type { SalesModelState, Loading } from 'umi';
+import { useRequest } from 'umi';
 import { queryAllSales } from '@/services/sales';
 import SalesCard from './SalesCard';
 import useURLParams from '@/hooks/useURLParams';
@@ -78,10 +77,4 @@ const Sales = () => {
   );
 };
 
-export default connect(
-  ({ sales, loading }: { sales: SalesModelState; loading: Loading }) => ({
-    sales: sales.sales,
-    total: sales.total,
-    loading: loading.models.sales,
-  }),
-)(React.memo(Sales));
+export default React.memo(Sales);

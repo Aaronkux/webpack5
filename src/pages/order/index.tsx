@@ -6,7 +6,6 @@ import {
   Table,
   Card,
   Popover,
-  Avatar,
   Tag,
   message,
   Popconfirm,
@@ -17,6 +16,7 @@ import {
   SyncOutlined,
 } from '@ant-design/icons';
 import type { PaginationProps } from 'antd';
+import AuthImg from '@/components/AuthImg';
 import useURLParams from '@/hooks/useURLParams';
 import type { OrderInfo } from '@/services/order';
 import { getOrders, updateOrder, deleteOrder } from '@/services/order';
@@ -81,7 +81,7 @@ const StagePopoverContent = ({
         justifyContent: 'center',
       }}
     >
-      <Avatar src={photo} size={64} />
+      <AuthImg path={photo} size={64} isAvatar />
       <p style={{ marginTop: '10px', textAlign: 'center' }}>{name}</p>
     </Card>
   );
@@ -251,11 +251,21 @@ const Order = () => {
       width: 120,
     },
     {
-      title: 'Receiver',
-      dataIndex: 'receiver',
-      key: 'receiver',
+      title: 'Clients',
+      key: 'clients',
       width: 150,
-      // render: (stage: any, record: OrderInfo) => record.receiver.name,
+      render: (_:any, record: OrderInfo) => {
+        const clients = record.orderIndividualClients.length ? record.orderIndividualClients : record.orderCompanyClients
+        return clients.map(item=><Tag key={item.id}>{item.name}</Tag>)
+      }
+    },
+    {
+      title: 'Receivers',
+      dataIndex: 'orderReceivers',
+      key: 'orderReceivers',
+      width: 150,
+      render: (receiver: OrderInfo['orderReceivers'], record: OrderInfo) =>
+        receiver?.map((item) => <Tag key={item.id}>{item.name}</Tag>),
     },
     {
       title: 'Stage',

@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
-import { useHistory } from 'umi';
-import { Avatar, Dropdown, Menu, Modal } from 'antd';
+import { useHistory, useRequest } from 'umi';
+import { Avatar, Dropdown, Menu, Modal, Skeleton } from 'antd';
+import AuthImg from '@/components/AuthImg';
 import { CloseCircleOutlined, UserOutlined } from '@ant-design/icons';
 import store from 'store';
+import { getUserDetail } from '@/services/users';
 import Setting from './Setting';
 import styles from './HeaderRight.less';
 
@@ -10,6 +12,9 @@ export default function HeaderRight() {
   const user = store.get('user');
   const [visible, setVisible] = useState(false);
   const history = useHistory();
+  const { data: userData, loading, run: getSelf } = useRequest(getUserDetail, {
+    manual: true,
+  });
   const menu = (
     <Menu className={styles.menu}>
       <Menu.Item
@@ -20,29 +25,39 @@ export default function HeaderRight() {
       >
         Sign out
       </Menu.Item>
-      <Menu.Item onClick={() => setVisible(true)}>Setting</Menu.Item>
+      <Menu.Item
+        onClick={() => {
+          setVisible(true);
+          getSelf(user.id);
+        }}
+      >
+        Setting
+      </Menu.Item>
     </Menu>
   );
+  const onCancelHandler = () => {
+    setVisible(false);
+  };
   return (
     <div className={styles.container}>
       {user && (
         <Dropdown placement="bottomCenter" overlay={menu}>
-          {user.photo ? (
-            <Avatar size={32} src={user.photo} />
-          ) : (
-            <Avatar size={32} icon={<UserOutlined />} />
-          )}
+          <AuthImg size={32} path={user.photo} isAvatar />
         </Dropdown>
       )}
       <Modal
         closeIcon={<CloseCircleOutlined />}
-        width={1300}
+        width={520}
         centered
         visible={visible}
         footer={null}
-        onCancel={() => setVisible(false)}
+        onCancel={onCancelHandler}
       >
-        <Setting />
+        {loading ? (
+          <Skeleton active avatar />
+        ) : (
+          <Setting userData={userData} onCancelHandler={onCancelHandler} />
+        )}
       </Modal>
     </div>
   );

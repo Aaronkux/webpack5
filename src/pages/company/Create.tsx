@@ -257,7 +257,7 @@ export default function Create({
                 placeholder="Purpose"
               >
                 <Option value="provider">Provider</Option>
-                <Option value="salary">salary</Option>
+                <Option value="salary">Salary</Option>
                 <Option value="property">Property</Option>
                 <Option value="Loan_Mortgage_Rent_Billing">
                   Loan/Mortgage/Rent/Billing

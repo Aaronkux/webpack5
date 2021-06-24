@@ -75,12 +75,7 @@ const Users = () => {
       dataIndex: 'photo',
       key: 'photo',
       width: 100,
-      render: (img: string) =>
-        img ? (
-          <AuthImg path={'/' + img} />
-        ) : (
-          <Avatar size={48} icon={<UserOutlined />} />
-        ),
+      render: (img: string) => <AuthImg path={img} size={48} isAvatar />,
     },
     {
       title: 'IsActive',

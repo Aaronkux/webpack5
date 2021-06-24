@@ -7,10 +7,16 @@ interface PropsType {
   path?: string;
   size?: number;
   isAvatar?: boolean;
-  preview?: boolean
+  preview?: boolean;
 }
 
-const AuthImg = ({ path, size = 48, isAvatar = false, preview = false }: PropsType) => {
+const AuthImg = ({
+  path,
+  size = 48,
+  isAvatar = false,
+  preview = false,
+  ...rest
+}: PropsType) => {
   const [imgSrc, setImgSrc] = useState<string>();
   useEffect(() => {
     const test = async (path: string) => {
@@ -27,6 +33,7 @@ const AuthImg = ({ path, size = 48, isAvatar = false, preview = false }: PropsTy
   }, []);
   return path ? (
     <Image
+      {...rest}
       width={size}
       height={size}
       style={{
@@ -36,7 +43,7 @@ const AuthImg = ({ path, size = 48, isAvatar = false, preview = false }: PropsTy
       src={imgSrc}
     />
   ) : (
-    <Avatar size={size} icon={<UserOutlined />} />
+    <Avatar {...rest} size={size} icon={<UserOutlined />} />
   );
 };
 

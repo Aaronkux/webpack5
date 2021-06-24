@@ -7,7 +7,6 @@ import {
   Row,
   Tag,
   Popconfirm,
-  Image,
   message,
 } from 'antd';
 import { CheckCircleOutlined, CloseCircleOutlined } from '@ant-design/icons';
@@ -15,6 +14,7 @@ import type { PaginationProps } from 'antd';
 import useURLParams from '@/hooks/useURLParams';
 import { useRequest } from 'umi';
 import moment from 'moment';
+import AuthImg from '@/components/AuthImg';
 import { getCompanyClients, deleteCompanyClient } from '@/services/clients';
 import type { CompanyClientInfo } from '@/services/clients';
 import Create from './Create';
@@ -126,35 +126,35 @@ const CompanyClients = () => {
       dataIndex: 'legalPerson1front',
       key: 'legalPerson1front',
       width: 150,
-      render: (img: string) => <Image src={img} width="64px" height="64px" />,
+      render: (img: string) => img && <AuthImg path={img} size={64} preview />,
     },
     legalPerson1back: {
       title: 'Legal Person1 Back',
       dataIndex: 'legalPerson1back',
       key: 'legalPerson1back',
       width: 150,
-      render: (img: string) => <Image src={img} width="64px" height="64px" />,
+      render: (img: string) => img && <AuthImg path={img} size={64} preview />,
     },
     legalPerson2front: {
       title: 'Legal Person2 Front',
       dataIndex: 'legalPerson2front',
       key: 'legalPerson2front',
       width: 150,
-      render: (img: string) => <Image src={img} width="64px" height="64px" />,
+      render: (img: string) => img && <AuthImg path={img} size={64} preview />,
     },
     legalPersion2back: {
       title: 'Legal Persion2 Back',
       dataIndex: 'legalPersion2back',
       key: 'legalPersion2back',
       width: 150,
-      render: (img: string) => <Image src={img} width="64px" height="64px" />,
+      render: (img: string) => img && <AuthImg path={img} size={64} preview />,
     },
     companyExtract: {
       title: 'Company Extract',
       dataIndex: 'companyExtract',
       key: 'companyExtract',
       width: 150,
-      render: (img: string) => <Image src={img} width="64px" height="64px" />,
+      render: (img: string) => img && <AuthImg path={img} size={64} preview />,
     },
     accountHolderName: {
       title: 'AccountHolder Name',
@@ -206,7 +206,7 @@ const CompanyClients = () => {
       dataIndex: 'signature',
       key: 'signature',
       width: 150,
-      render: (img: string) => <Image src={img} width="64px" height="64px" />,
+      render: (img: string) => img && <AuthImg path={img} size={64} preview />,
     },
     unsubscribe: {
       title: 'Unsubscribe',

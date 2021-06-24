@@ -152,7 +152,6 @@ const Personal = () => {
       ...rest,
       ...{
         salesman: salesmanChanged ? salesman : undefined,
-        receiver: JSON.stringify(receiver ?? []),
         accountHolderDOB: accountHolderDOB?.format('YYYY-MM-DD'),
         id1ExpireDate: person1ExpireDate?.format('YYYY-MM-DD'),
         id2ExpireDate: person2ExpireDate?.format('YYYY-MM-DD'),

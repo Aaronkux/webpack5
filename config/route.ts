@@ -24,6 +24,7 @@ export const routes: IBestAFSRoute[] = [
         name: 'Order',
         icon: 'SnippetsOutlined',
         component: '@/pages/order',
+        access: 'orderPermission'
       },
       {
         path: '/order/:id',
@@ -35,6 +36,7 @@ export const routes: IBestAFSRoute[] = [
         path: '/clients',
         name: 'Clients',
         icon: 'ContactsOutlined',
+        access: 'clientPermission'
       },
       {
         path: '/clients/individual',
@@ -42,6 +44,7 @@ export const routes: IBestAFSRoute[] = [
         name: 'Individual Client',
         icon: 'ContactsOutlined',
         parentPath: '/clients',
+        access: 'clientPermission'
       },
       {
         path: '/clients/individual/:id',
@@ -55,6 +58,7 @@ export const routes: IBestAFSRoute[] = [
         name: 'Company Client',
         icon: 'HomeOutlined',
         parentPath: '/clients',
+        access: 'clientPermission'
       },
       {
         path: '/clients/company/:id',
@@ -67,6 +71,7 @@ export const routes: IBestAFSRoute[] = [
         name: 'User',
         icon: 'UserOutlined',
         component: '@/pages/users',
+        access: 'isAdmin'
       },
       {
         path: '/users/:id',

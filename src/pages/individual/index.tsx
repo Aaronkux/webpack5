@@ -14,13 +14,14 @@ import { CheckCircleOutlined, CloseCircleOutlined } from '@ant-design/icons';
 import type { PaginationProps } from 'antd';
 import { useRequest } from 'umi';
 import moment from 'moment';
-import AuthImg from '@/components/AuthImg'
+import AuthImg from '@/components/AuthImg';
 import useURLParams from '@/hooks/useURLParams';
 import type { IndividualClientInfo } from '@/services/clients';
 import {
   getIndividualClients,
   deleteIndividualClient,
 } from '@/services/clients';
+import { ManOutlined, WomanOutlined } from '@ant-design/icons';
 import Filter from './components/Filter';
 import Create from './Create';
 import { Link } from 'react-router-dom';
@@ -79,9 +80,17 @@ const IndividualClients = () => {
       title: 'Gender',
       dataIndex: 'gender',
       key: 'gender',
-      width: 100,
+      width: 90,
       render: (gender: boolean, record: any) => {
-        return <>{gender ? 'male' : 'female'}</>;
+        return (
+          <>
+            {!gender ? (
+              <ManOutlined style={{ color: '#1890ff', fontSize: '24px' }} />
+            ) : (
+              <WomanOutlined style={{ color: 'pink', fontSize: '24px' }} />
+            )}
+          </>
+        );
       },
     },
     DOB: {
@@ -144,48 +153,42 @@ const IndividualClients = () => {
       dataIndex: 'id1front',
       key: 'id1front',
       width: 150,
-      render: (img: string) =>
-        img && <AuthImg path={img} size={64} preview />,
+      render: (img: string) => img && <AuthImg path={img} size={64} preview />,
     },
     id1back: {
       title: 'Id1 Back',
       dataIndex: 'id1back',
       key: 'id1back',
       width: 150,
-      render: (img: string) =>
-        img && <AuthImg path={img} size={64} preview />,
+      render: (img: string) => img && <AuthImg path={img} size={64} preview />,
     },
     id2front: {
       title: 'Id2 Front',
       dataIndex: 'id2front',
       key: 'id2front',
       width: 150,
-      render: (img: string) =>
-        img && <AuthImg path={img} size={64} preview />,
+      render: (img: string) => img && <AuthImg path={img} size={64} preview />,
     },
     id2back: {
       title: 'Id2 Back',
       dataIndex: 'id2back',
       key: 'id2back',
       width: 150,
-      render: (img: string) =>
-        img && <AuthImg path={img} size={64} preview />,
+      render: (img: string) => img && <AuthImg path={img} size={64} preview />,
     },
     faceImage: {
       title: 'Face Image',
       dataIndex: 'faceImage',
       key: 'faceImage',
       width: 150,
-      render: (img: string) =>
-        img && <AuthImg path={img} size={64} preview />,
+      render: (img: string) => img && <AuthImg path={img} size={64} preview />,
     },
     faceTest: {
       title: 'Face Test',
       dataIndex: 'faceTest',
       key: 'faceTest',
       width: 150,
-      render: (img: string) =>
-        img && <AuthImg path={img} size={64} preview />,
+      render: (img: string) => img && <AuthImg path={img} size={64} preview />,
     },
     purpose: {
       title: 'Purpose',
@@ -255,8 +258,7 @@ const IndividualClients = () => {
       dataIndex: 'signature',
       key: 'signature',
       width: 150,
-      render: (img: string) =>
-        img && <AuthImg path={img} size={64} preview />,
+      render: (img: string) => img && <AuthImg path={img} size={64} preview />,
     },
   };
   // let dynamicColumns: any = clientlistcolumns.map((value) => allColumns[value]);

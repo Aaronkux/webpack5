@@ -80,7 +80,7 @@ export interface BeneficiaryInfo {
   companyClient?: string;
   name?: string;
   DOB?: string;
-  receiverType: boolean;
+  receiverType: number;
   address?: string;
   suburb?: string;
   state?: string;
