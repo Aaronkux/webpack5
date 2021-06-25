@@ -205,8 +205,8 @@ const Detail = ({
                 <NormalText
                   transform={(value) =>
                     value === 3
-                      ? `Remit to personal account`
-                      : `Remit to company's account`
+                      ? `Remit to company's account`
+                      : `Remit to personal account`
                   }
                 />
               </Form.Item>
@@ -366,7 +366,7 @@ const Detail = ({
                 {editing ? <Input /> : <NormalText />}
               </Form.Item>
             </Col>
-            {remitType === 3 ? (
+            {remitType === 2 ? (
               <>
                 <Col xs={24} sm={24} md={24} lg={24} xl={12}>
                   <Form.Item
@@ -468,7 +468,7 @@ const Detail = ({
           form.resetFields();
           setEditing(false);
           setModalVisible(false);
-          setRemitType(3);
+          setRemitType(2);
         }}
         onCancel={() => setModalVisible(false)}
       >
